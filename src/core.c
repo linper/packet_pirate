@@ -13,19 +13,21 @@ static status_val build_ef_tree()
     }
 
     bool found = true;
-    while(found) {
+    while(found) { //till all filters reachable from root are added
         found = false;
 
         for (struct filter **f = filter_arr; *f; f++) {
-            if (ef_tree_contains_by_tag(ef_root, (*f)->packet_tag) && /* does not contain packet */\
-		    (!*(*f)->parent_tag || 				/* is link layer packet */\
-		     !ef_tree_contains_by_tag(ef_root, (*f)->parent_tag))) { /*contains parent packet*/ 
-                if (!(ef = ext_filter_new(*f))) {
+	    //checking if parent filter is in the tree and curent is not
+            if (ef_tree_contains_by_tag(ef_root, (*f)->packet_tag) && /*does not contain filter*/\
+		    (!*(*f)->parent_tag || 				/*is link layer filter*/\
+		     !ef_tree_contains_by_tag(ef_root, (*f)->parent_tag))) { /*contains parent filter*/ 
+		//now we know that current filter can be added to tree
+                if (!(ef = ext_filter_new(*f))) { //createing new extended filter
                     ret = STATUS_OMEM;
                     goto err;
                 }
 
-                if (ef_tree_put(ef_root, ef)) {
+                if (ef_tree_put(ef_root, ef)) { //adding new filter to filter tree
                     ext_filter_free(ef);
                     ret = STATUS_OMEM;
                     goto err;

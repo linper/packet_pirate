@@ -8,6 +8,7 @@ static inline void build_port_string(char *dst, const char *src, char *prefix)
     sprintf(dst, "%s %s %s ", prefix, strstr(src, "-") ? "portrange" : "port", src);
 }
 
+//todo study bfp syntax and correct errors if they exist
 status_val build_bpf(struct prog_args *pa)
 {
     status_val status = STATUS_ERROR;

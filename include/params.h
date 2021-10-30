@@ -6,10 +6,7 @@
 #include "utils.h"
 
 
-
-
-
-struct filter_args {
+struct filter_args { 	//struct ot hold all command line parameters
     const char *proto;
     const char *shost;
     const char *dhost;
@@ -24,7 +21,6 @@ struct prog_args {
     prog_verb verbosity;
     bool bpf_enabled;
     struct filter_args filter;
-
 };
 
 status_val parse_params (int argc, char **argv, struct prog_args *args);

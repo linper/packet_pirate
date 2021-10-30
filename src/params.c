@@ -1,7 +1,7 @@
 #include "../include/params.h"
 
 const char *argp_program_version =
-    "sniff 1.0";
+    "packet pirate 1.0";
 const char *argp_program_bug_address =
     "<none@none.none>";
 
@@ -67,19 +67,8 @@ static error_t parse_p (int key, char *arg, struct argp_state *state)
         args->bpf_enabled = true;
         break;
 
-        case ARGP_KEY_ARG:
-//        if (state->arg_num >= 2)
-//            /* Too many arguments. */
-//            argp_usage (state);
-
-//        args->args[state->arg_num] = arg;
-
-        break;
-
+    case ARGP_KEY_ARG:
     case ARGP_KEY_END:
-//        if (state->arg_num < 2)
-            /* Not enough arguments. */
-//            argp_usage (state);
         break;
 
     default:

@@ -4,10 +4,10 @@
 
 #include "../include/utils.h"
 
-static struct {
-    status_val val;
-    bool err;
-    const char *msg;
+static struct { 	//structure to describe messages
+    status_val val; 	//message status to compare too
+    bool err; 		//is this an error
+    const char *msg; 	//default message
 } msg_map[] = {
     {.val = STATUS_OK, 		.err = false,   .msg = NULL},
     {.val = STATUS_ERROR, 	.err = true,    .msg = "Error occured"},
@@ -21,7 +21,6 @@ static struct {
 
 void log_msg(status_val status, const char *file, int line, const char *format, ...)
 {
-    
     va_list vl;
 
     for (size_t i = 0; msg_map[i].val < STATUS_COUNT; i++) {

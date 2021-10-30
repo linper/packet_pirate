@@ -18,7 +18,7 @@ struct ext_filter *ext_filter_new(struct filter *f)
     return NULL;
     }
 
-    for (size_t i = 0; i < f->n_entries; i++) {
+    for (size_t i = 0; i < f->n_entries; i++) { //putting all filter entries into hash map
         fhmap_put(hflt, &f->entries[i]);
     }
 

@@ -46,7 +46,7 @@ status_val fhmap_put(struct fhmap *map, struct entry *e)
         return STATUS_FULL;
     }
 
-    while (map->arr[idx]) {
+    while (map->arr[idx]) { //linear probing
         idx = (idx + 1) % map->cap;
     }
 
