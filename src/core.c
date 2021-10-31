@@ -9,6 +9,7 @@ static status_val build_ef_tree()
     status_val ret = STATUS_BAD_INPUT;
     struct ext_filter *ef = NULL;
     if (!(ef_root = ef_tree_base())) {
+	LOG(L_CRIT, STATUS_OMEM);
 	return STATUS_OMEM;	    
     }
 
@@ -24,12 +25,13 @@ static status_val build_ef_tree()
 		//now we know that current filter can be added to tree
                 if (!(ef = ext_filter_new(*f))) { //createing new extended filter
                     ret = STATUS_OMEM;
+		    LOG(L_CRIT, ret);
                     goto err;
                 }
 
-                if (ef_tree_put(ef_root, ef)) { //adding new filter to filter tree
+                if ((ret = ef_tree_put(ef_root, ef))) { //adding new filter to filter tree
+		    LOG(L_CRIT, ret);
                     ext_filter_free(ef);
-                    ret = STATUS_OMEM;
                     goto err;
                 }
                 found = true;
@@ -45,8 +47,11 @@ err:
 
 status_val core_init()
 {
-
-    build_ef_tree();
+    status_val status;
+    status = build_ef_tree();
+    if (status) {
+	LOG(L_CRIT, status);
+    }
     /*struct filter **p_filter_arr;*/
 
     /*collect_packets(&p_filter_arr);*/
@@ -57,7 +62,7 @@ status_val core_init()
 
     //todo converting filter_arr to tree structure
 
-    return 0;
+    return status;
 }
 
 status_val core_filter(u_char *args, const struct pcap_pkthdr *header, const u_char *packet)
@@ -67,5 +72,5 @@ status_val core_filter(u_char *args, const struct pcap_pkthdr *header, const u_c
 
 
 
-    return 0;
+    return STATUS_OK;
 }

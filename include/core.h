@@ -14,7 +14,7 @@ status_val core_init();
 
 status_val core_filter(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
 
-
+void core_destroy();
 
 
 #endif

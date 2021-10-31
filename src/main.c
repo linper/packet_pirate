@@ -102,16 +102,23 @@ void got_packet_cb(u_char *args, const struct pcap_pkthdr *header, const u_char 
 
 int main(int argc, char *argv[])
 {
-    status_val status;
     struct prog_args pr_args = {0};
 
-    parse_params(argc, argv, &pr_args);
+    parse_params(argc, argv, &pr_args); //geting command line parameters
 
-    if ((status = setup_prog_ctx(&pr_args)) != STATUS_OK)
+    status_val status = setup_prog_ctx(&pr_args); //setting up program context
+    if (status) {
+	LOG(L_CRIT, status);
         goto error;
+    }
 
-    if (!pr_args.bpf_enabled)
-        build_bpf(&pr_args);
+    if (!pr_args.bpf_enabled) {
+	status = build_bpf(&pr_args);
+	if (status) {
+	    LOG(L_CRIT, status);
+	    goto error;
+	}
+    }
 
     pcap_t *handle;
 //	char *dev;
@@ -167,7 +174,10 @@ int main(int argc, char *argv[])
 //    }
 
 //	packet = pcap_next(handle, &header);
-    core_init();
+    status = core_init();
+    if (status) {
+	LOG(L_CRIT, status);
+    }
     
     pcap_loop(handle, -1, got_packet_cb, NULL);
 

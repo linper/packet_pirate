@@ -32,18 +32,22 @@ typedef enum {
 } status_val;
 
 typedef enum {
-    VERB_DEFAULT,
-    VERB_VERBOSE,
-    VERB_QUIET,
-} prog_verb;
+    L_QUIET, 	//using this in LOG*() is pointless
+    L_CRIT, 	//irecoverable state
+    L_ERR, 	//may be recoverable state
+    L_WARN, 	//recoverable abnormal state
+    L_NOTICE, 	//low importance messages
+    L_INFO, 	//informational messages
+    L_DEBUG, 	//debugging messages
+    _L_COUNT, 	//should not me used in LOG*()
+} verb;
 
 struct prog_ctx { 		//struct for program context
-    prog_verb verbosity; 	//program verbosity
+    verb verbosity; 		//program verbosity
     char *bpf; 			//built or given bfp filter query
 };
 
 extern struct prog_ctx pc; 	//program context instance
-
 
 #define ARR_LEN(arr) sizeof arr / sizeof(arr[0])
 
@@ -56,6 +60,11 @@ extern struct prog_ctx pc; 	//program context instance
  * @param ... __VA_ARGS__ as parameters to format
  * @return Void
  */
-void log_msg(status_val status, const char *file, int line, const char *format, ...);
+void log_msg(verb lvl, status_val status, const char *file, int line, const char *format, ...);
+
+//different message logging macros
+#define LOGF(lvl, status, fmt, ...) if (lvl != L_QUIET && lvl <= pc.verbosity) log_msg(lvl, status, __FILE__, __LINE__, fmt, __VA_ARGS__)
+#define LOGM(lvl, status, msg) if (lvl != L_QUIET && lvl <= pc.verbosity) log_msg(lvl, status, __FILE__, __LINE__, msg)
+#define LOG(lvl, status) if (lvl != L_QUIET && lvl <= pc.verbosity) log_msg(lvl, status, __FILE__, __LINE__, NULL)
 
 #endif

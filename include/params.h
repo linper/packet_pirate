@@ -18,7 +18,7 @@ struct filter_args { 	//struct ot hold all command line parameters
 };
 
 struct prog_args {
-    prog_verb verbosity;
+    verb verbosity;
     bool bpf_enabled;
     struct filter_args filter;
 };

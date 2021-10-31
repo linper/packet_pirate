@@ -22,7 +22,7 @@ static struct argp_option options[] = {
     {"snet",        'n', "snet", 	 	 	0, 	"Filter for the IPv4/v6 when source network address is <snet>", 0 },
     {"dnet",        'N', "dnet", 	 	 	0, 	"Filter for the IPv4/v6 when destination network address is <dnet>", 0 },
     {"bpf",         'b', "bpf", 	 	 	0, 	"BPF program, with full support. If given, overrides all filters above", 0 },
-    {"verbose",     'v', "verbose", 	 	0, 	"Produce verbose output", 0 },
+    {"verbose",     'v', "verbose", 	 		0, 	"Set verbosity [0-6]", 0 },
     { 0 }
 };
 
@@ -35,11 +35,8 @@ static error_t parse_p (int key, char *arg, struct argp_state *state)
     struct prog_args *args = state->input;
 
     switch (key) {
-    case 'q':
-        args->verbosity = VERB_QUIET;
-        break;
     case 'v':
-        args->verbosity = VERB_VERBOSE;
+        args->verbosity = atoi(arg) >= _L_COUNT ? _L_COUNT - 1 : atoi(arg);
         break;
     case 'h':
         args->filter.shost = arg;
@@ -82,6 +79,7 @@ static struct argp argp = { options, parse_p, args_doc, doc };
 
 status_val parse_params (int argc, char *argv[], struct prog_args *args)
 {
+    args->verbosity = L_INFO; 			//setting default verbosity
     argp_parse (&argp, argc, argv, 0, 0, args);
     return STATUS_OK;
 }

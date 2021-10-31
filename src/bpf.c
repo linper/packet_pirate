@@ -21,11 +21,11 @@ status_val build_bpf(struct prog_args *pa)
     if (pa->bpf_enabled) {
         if (pa->filter.bpf && strlen(pa->filter.bpf) >= BPF_PR_LEN) {
             status = STATUS_BAD_INPUT;
-            log_msg(status, __FILE__, __LINE__, "Bpf is too long");
+            LOGM(L_CRIT, status, "Bpf is too long");
             goto end;
         } else if (!(pc.bpf = strdup(pa->filter.bpf))) {
             status = STATUS_OMEM;
-            log_msg(status, __FILE__, __LINE__, NULL);
+            LOG(L_CRIT, status);
             goto end;
         }
         status = STATUS_OK;
@@ -34,19 +34,19 @@ status_val build_bpf(struct prog_args *pa)
 
     if (pa->filter.dhost && pa->filter.dnet) {
         status = STATUS_BAD_INPUT;
-        log_msg(status, __FILE__, __LINE__, "Dhost and dnet can't exist in unison");
+        LOGM(L_CRIT, status, "Dhost and dnet can't exist in unison");
         goto end;
     } else if (pa->filter.dhost) {
         if (strlen(pa->filter.dhost) >= NET_LEN) {
             status = STATUS_BAD_INPUT;
-            log_msg(status, __FILE__, __LINE__, "Dhost is too long");
+            LOGM(L_CRIT, status, "Dhost is too long");
             goto end;
         }
         sprintf(dst_net, "dst host %s ", pa->filter.dhost);
     } else if (pa->filter.dnet) {
         if (strlen(pa->filter.dnet) >= NET_LEN) {
             status = STATUS_BAD_INPUT;
-            log_msg(status, __FILE__, __LINE__, "Dnet is too long");
+            LOGM(L_CRIT, status, "Dnet is too long");
             goto end;
         }
         sprintf(dst_net, "dst net %s ", pa->filter.dnet);
@@ -54,19 +54,19 @@ status_val build_bpf(struct prog_args *pa)
 
     if (pa->filter.shost && pa->filter.snet) {
         status = STATUS_BAD_INPUT;
-        log_msg(status, __FILE__, __LINE__, "Shost and snet can't exist in unison");
+        LOGM(L_CRIT, status, "Shost and snet can't exist in unison");
         goto end;
     } else if (pa->filter.shost) {
         if (strlen(pa->filter.dnet) >= NET_LEN) {
             status = STATUS_BAD_INPUT;
-            log_msg(status, __FILE__, __LINE__, "Shost is too long");
+            LOGM(L_CRIT, status, "Shost is too long");
             goto end;
         }
         sprintf(src_net, "src host %s ", pa->filter.shost);
     } else if (pa->filter.snet) {
         if (strlen(pa->filter.snet) >= NET_LEN) {
             status = STATUS_BAD_INPUT;
-            log_msg(status, __FILE__, __LINE__, "Snet is too long");
+            LOGM(L_CRIT, status, "Snet is too long");
             goto end;
         }
         sprintf(src_net, "src net %s ", pa->filter.snet);
@@ -75,7 +75,7 @@ status_val build_bpf(struct prog_args *pa)
     if (pa->filter.dport) {
         if (strlen(pa->filter.dport) >= PORT_LEN) {
             status = STATUS_BAD_INPUT;
-            log_msg(status, __FILE__, __LINE__, "Dport is too long");
+            LOGM(L_CRIT, status, "Dport is too long");
             goto end;
         }
         build_port_string(dst_ports, pa->filter.dport, "dst");
@@ -84,7 +84,7 @@ status_val build_bpf(struct prog_args *pa)
     if (pa->filter.sport) {
         if (strlen(pa->filter.sport) >= PORT_LEN) {
             status = STATUS_BAD_INPUT;
-            log_msg(status, __FILE__, __LINE__, "Sport is too long");
+            LOGM(L_CRIT, status, "Sport is too long");
             goto end;
         }
         build_port_string(src_ports, pa->filter.sport, "src");
@@ -94,10 +94,12 @@ status_val build_bpf(struct prog_args *pa)
 
     if (!(pc.bpf = calloc(sizeof (char), comb_len))) {
         status = STATUS_OMEM;
-        log_msg(status, __FILE__, __LINE__, NULL);
+        LOG(L_CRIT, status);
         goto end;
     }
+    
     sprintf(pc.bpf, "%s %s%s%s%s", pa->filter.proto, src_net, src_ports, dst_net, dst_ports);
+    status = STATUS_OK;
 
 end:
     return status;

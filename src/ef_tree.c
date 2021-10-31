@@ -5,11 +5,13 @@ struct ef_tree *ef_tree_base()
 {
     struct ext_filter *f = ext_filter_base();
     if (!f) {
+	LOG(L_CRIT, STATUS_OMEM);
         return NULL;
     }
 
     struct ef_tree *root = calloc(1 , sizeof(struct ef_tree));
     if (!root) {
+	LOG(L_CRIT, STATUS_OMEM);
         ext_filter_free(f);
         return NULL;
     }
@@ -21,6 +23,7 @@ struct ef_tree *ef_tree_new(struct ext_filter *f)
 {
     struct ef_tree *root = calloc(1 , sizeof(struct ef_tree));
     if (!root) {
+	LOG(L_CRIT, STATUS_OMEM);
         ext_filter_free(f);
         return NULL;
     }
@@ -38,6 +41,7 @@ status_val ef_tree_put(struct ef_tree *root, struct ext_filter *e)
 	    || (root->flt && !strcmp(root->flt->filter->packet_tag, e->filter->parent_tag))) { //checking is this correct parent node
         struct ef_tree *ef = ef_tree_new(e);
         if (!ef) {
+	    LOG(L_CRIT, STATUS_OMEM);
             return STATUS_OMEM;
         }
 
@@ -64,6 +68,7 @@ status_val ef_tree_put(struct ef_tree *root, struct ext_filter *e)
         cur = cur->next;
     }
 
+    LOG(L_WARN, STATUS_NOT_FOUND);
     return STATUS_NOT_FOUND;
 }
 
@@ -91,6 +96,7 @@ status_val ef_tree_get(struct ef_tree *root, const char *tag, struct ext_filter 
         cur = cur->next;
     }
 
+    LOG(L_WARN, STATUS_NOT_FOUND);
     return STATUS_NOT_FOUND;
 }
 
@@ -98,6 +104,7 @@ status_val ef_tree_get(struct ef_tree *root, const char *tag, struct ext_filter 
 status_val ef_tree_contains_by_tag(struct ef_tree *root, const char *tag)
 {
     if (!root) {
+	LOG(L_WARN, STATUS_NOT_FOUND);
 	return STATUS_NOT_FOUND;
     }
 
@@ -122,6 +129,7 @@ status_val ef_tree_contains_by_tag(struct ef_tree *root, const char *tag)
         cur = cur->next;
     }
 
+    LOG(L_WARN, STATUS_NOT_FOUND);
     return STATUS_NOT_FOUND;
 }
 

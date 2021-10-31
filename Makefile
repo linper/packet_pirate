@@ -16,6 +16,7 @@ OBJ = $(patsubst %.c, %.o, $(SRC))
 TARGET = sniff
 LDFLAGS += -lpcap
 CFLAGS += -Wall -Wextra -ggdb
+#CFLAGS += -Wall -Wextra -ggdb -std=c99
 DEFS += -DDEBUG
 
 RUNARGS = eno1
