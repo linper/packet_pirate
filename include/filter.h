@@ -27,14 +27,25 @@ enum entry_len_tp {
 enum entry_read_format {
     ERF_NONE,
     ERF_UINT,
-    ERF_STRING,
+    ERF_UINT_BE,
+    ERF_STR,
+    _ERF_COUNT,
 };
 
 enum entry_write_format {
     EWF_NONE,
     EWF_UINT,
-    EWF_STRING,
+    EWF_UINT_BE,
+    EWF_STR,
+    EWF_HEX_STR,
+    EWF_B64_STR,
+    _EWF_COUNT,
 };
+
+//compatability matrix between read and write formats
+//lines - write
+//columns - read
+extern unsigned char rw_comp_mat[_EWF_COUNT][_ERF_COUNT];
 
 enum entry_flags {
     EF_NONE 	= 0,

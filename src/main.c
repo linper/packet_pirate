@@ -1,10 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-//#include "/usr/include/pcap/pcap.h"
 #include <sys/types.h>
 #include <pcap/pcap.h>
-/*#include "pcal/pcap.h"*/
 
 #include "../include/params.h"
 #include "../include/setup.h"

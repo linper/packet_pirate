@@ -57,11 +57,6 @@ status_val core_init()
     /*collect_packets(&p_filter_arr);*/
 
 
-    //todo register filters to tree structure
-
-
-    //todo converting filter_arr to tree structure
-
     return status;
 }
 
@@ -69,6 +64,8 @@ status_val core_filter(u_char *args, const struct pcap_pkthdr *header, const u_c
 {
     (void)args;
     (void)header;
+
+
 
 
 

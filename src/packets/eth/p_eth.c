@@ -2,9 +2,9 @@
 
 
 static struct entry eth_packet[] = {
-/*  TAG 		ENTRY TYPE	LENGTH 		FLAGS 	READ FORMAT 	WRITE FORMAT */
-    {"dhost", 	ET_DATA, 	E_LEN(6), 	0, 	ERF_STRING, 	EWF_STRING},
-    {"shost", 	ET_DATA,	E_LEN(6), 	0, 	ERF_STRING, 	EWF_STRING},
+/*  TAG 	ENTRY TYPE	LENGTH 		FLAGS 	READ FORMAT 	WRITE FORMAT */
+    {"dhost", 	ET_DATA, 	E_LEN(6), 	0, 	ERF_STR, 	EWF_STR},
+    {"shost", 	ET_DATA,	E_LEN(6), 	0, 	ERF_STR, 	EWF_STR},
     {"type", 	ET_DATA,	E_LEN(2), 	0, 	ERF_UINT, 	EWF_UINT},
 }; 
 
