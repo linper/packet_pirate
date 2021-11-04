@@ -1,8 +1,11 @@
 #include <stdbool.h>
+#include <stddef.h>
 
 #include "../include/core.h"
 
 static struct ef_tree *ef_root;
+
+static struct glist *cap_pckts;
 
 static status_val build_ef_tree()
 {
@@ -45,29 +48,69 @@ err:
     return ret;
 }
 
+static status_val filter_rec(struct ef_tree *node, const u_char *data, u_char *args, const struct pcap_pkthdr *header, size_t read_off)
+{
+    status_val status;
+    struct packet *p;
+    const size_t base_read_off = read_off;
+
+    if (node->lvl) { //skiping root root node
+	status = derive_packet(&p, node, data, header->caplen, &read_off); //trying to split data to packet fields
+	if (status) {
+	    read_off = base_read_off; //reverting read offset
+	    LOGF(L_DEBUG, STATUS_NOT_FOUND, "Packet dropped for %s\n", node->flt->filter->packet_tag);
+	    return STATUS_NOT_FOUND; //if this filter fails, then all children filter must fail
+	}
+	
+	//TODO call validateion callback here 
+	
+	status = glist_push(cap_pckts, p); //appending packet to packet list;
+	if (status) {
+	    LOG(L_ERR, status);
+	    packet_free(p);
+	}
+    }
+    
+    if (node->chld) { //desending down into first child filter if it exists
+	filter_rec(node->chld, data, args, header, read_off); //persist filtering on failure
+    }
+
+    if (node->next) { // going to sibling filter
+	filter_rec(node->next, data, args, header, read_off); //persist filtering on failure
+    }   
+
+    return STATUS_OK;
+}
+
 status_val core_init()
 {
+    cap_pckts = glist_new(CAP_PKTS);
+    if (!cap_pckts) {
+	LOG(L_CRIT, STATUS_OMEM);
+	return STATUS_OMEM;
+    }
+
+    glist_set_free_cb(cap_pckts, (void(*)(void*))packet_free);
+    
     status_val status;
     status = build_ef_tree();
     if (status) {
 	LOG(L_CRIT, status);
+	free(cap_pckts);
+	return status;
     }
-    /*struct filter **p_filter_arr;*/
-
-    /*collect_packets(&p_filter_arr);*/
-
 
     return status;
 }
 
-status_val core_filter(u_char *args, const struct pcap_pkthdr *header, const u_char *packet)
+
+void core_filter(u_char *args, const struct pcap_pkthdr *header, const u_char *packet)
 {
     (void)args;
     (void)header;
+    
+    status_val status = filter_rec(ef_root, packet, args, header, 0);
 
 
 
-
-
-    return STATUS_OK;
 }

@@ -1,7 +1,7 @@
 #include "p_ipv4.h"
 
 
-static struct entry ipv4_packet[] = {
+static struct f_entry ipv4_packet[] = {
 /*  TAG 		ENTRY TYPE	LENGTH 				FLAGS 	READ FORMAT 	WRITE FORMAT */
     {"ipv4_vhl", 	ET_BITFIELD,	E_LEN(1), 			0, 	ERF_NONE, 	EWF_NONE},
     {"ipv4_ver", 	ET_FLAG,	E_BITS("ipv4_vhl", 0, 4), 	0, 	ERF_UINT, 	EWF_UINT},
@@ -22,6 +22,13 @@ static struct entry ipv4_packet[] = {
     {"ipv4_opt", 	ET_DATA,	E_PAC_OFF_OF("ipv4_ihl"),	EF_OPT,	ERF_UINT, 	EWF_UINT},
 }; 
 
+static void intercept(u_char *args, const struct pcap_pkthdr *header, const u_char *packet) {
+    (void)args;
+    (void)header;
+    (void)packet;
+    return;
+}
+    
 static bool validate()
 {
     return true;
@@ -30,7 +37,7 @@ static bool validate()
 struct filter ipv4_filter = {
     .parent_tag = "ethernet",
     .packet_tag = "ipv4",
-    .pre_filter = NULL,
+    .pre_filter = intercept,
     .post_filter = NULL,
     .validate = validate,
     .entries = ipv4_packet,

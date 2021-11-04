@@ -4,7 +4,7 @@
 #include "packets/ipv4/p_ipv4.h"
 //gen end
 
-#include "../include/packet_registry.h"
+#include "../include/f_reg.h"
 
 
 struct filter *filter_arr[] = {

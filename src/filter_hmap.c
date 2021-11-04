@@ -22,7 +22,7 @@ struct fhmap *fhmap_new(size_t cap)
         goto err;
     }
 
-    m->arr = (struct entry**) calloc(cap, sizeof(struct entry*));
+    m->arr = (struct f_entry**) calloc(cap, sizeof(struct f_entry*));
 
     if(!m->arr) {
 	LOG(L_CRIT, STATUS_OMEM);
@@ -40,7 +40,7 @@ err:
     return NULL;
 }
 
-status_val fhmap_put(struct fhmap *map, struct entry *e)
+status_val fhmap_put(struct fhmap *map, struct f_entry *e)
 {
     size_t idx = hash_val(e->tag) % map->cap;
 
@@ -59,7 +59,7 @@ status_val fhmap_put(struct fhmap *map, struct entry *e)
     return STATUS_OK;
 }
 
-status_val fhmap_get(struct fhmap *map, const char *key, struct entry **e)
+status_val fhmap_get(struct fhmap *map, const char *key, struct f_entry **e)
 {
     int idx = hash_val(key) % map->cap;
 

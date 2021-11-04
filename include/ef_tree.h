@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "ext_filter.h"
+#include "utils.h"
 
 struct ef_tree {
     struct ef_tree *par; 	//parent node
@@ -52,6 +53,14 @@ status_val ef_tree_get(struct ef_tree *root, const char *tag, struct ext_filter 
  * @return STATUS_OK if succeded
  */ 
 status_val ef_tree_contains_by_tag(struct ef_tree *root, const char *tag);
+
+/**
+ * @brief Gets entry field indicated by tag while propagating upwards to root
+ * @param node Tree node node to start search from
+ * @param tag Entry tag value to compare too
+ * @return STATUS_OK if succeded, STATUS_NOT_FOUND otherwise
+ */ 
+status_val ef_tree_get_entry(struct ef_tree *node, const char *tag, struct f_entry **e);
 
 /**
  * @brief Frees whole tree structure including contained ext_filters

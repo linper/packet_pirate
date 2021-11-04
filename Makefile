@@ -13,7 +13,7 @@ SRC = $(wildcard $(SRC_DIR)/*.c) $(PAC_SRC)
 #SRC = $(wildcard $(SRC_DIR)/*.c)
 OBJ = $(patsubst %.c, %.o, $(SRC))
 
-TARGET = sniff
+TARGET = pp
 LDFLAGS += -lpcap
 CFLAGS += -Wall -Wextra -ggdb
 #CFLAGS += -Wall -Wextra -ggdb -std=c99

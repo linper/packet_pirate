@@ -6,7 +6,7 @@
 
 #include "filter.h"
 #include "filter_hmap.h"
-#include "packet_registry.h"
+#include "f_reg.h"
 
 struct ext_filter {
     struct filter *filter; 		//user defined filter

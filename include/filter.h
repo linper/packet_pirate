@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <pcap.h>
+#include <sys/types.h>
 
 
 #define TAG_LEN 16
@@ -134,7 +136,7 @@ struct entry_len {
     }
 
 
-struct entry { 					//packet field/entry
+struct f_entry { 				//packet field/entry
     char tag[TAG_LEN]; 				//globaly unique entry id
     enum entry_type type; 			//entry type
     struct entry_len len; 			//struct to define entry length
@@ -143,16 +145,44 @@ struct entry { 					//packet field/entry
     enum entry_write_format write_form; 	//data dump format
 };
 
-#define FILTER_LEN(arr) sizeof arr / sizeof(struct entry) //gets defined filter length
+#define FILTER_LEN(arr) sizeof arr / sizeof(struct f_entry) //gets defined filter length
 
 struct filter {
-    char parent_tag[TAG_LEN]; //tag for parent(lower level) packet 
-    char packet_tag[TAG_LEN]; //tag for current packet 
-    void(*pre_filter)();      //function to call before filter is applied
-    void(*post_filter)();     //function to call after filter is applied(for filtered packets)
-    bool(*validate)();        //packet validation function, can be used for low level filtering
-    struct entry *entries;    //array of packet field entries
-    size_t n_entries;         //length of entries 
+    char parent_tag[TAG_LEN]; 			//tag for parent(lower level) packet 
+    char packet_tag[TAG_LEN]; 			//tag for current packet 
+    void(*pre_filter)( \
+	    u_char*, \
+	    const struct pcap_pkthdr*, \
+	    const u_char*); 			//function to call before filter is applied
+    void(*post_filter)();     			//function to call after filter is applied(for filtered packets)
+    bool(*validate)();        			//packet validation function, can be used for low level filtering
+    struct f_entry *entries;    			//array of packet field entries
+    size_t n_entries;         			//length of entries 
+};
+
+enum p_status {  //TODO is this even needed
+    P_SPLIT,
+    P_WF_CONV,
+    P_VALID,
+    P_WRITTEN,
+};
+
+struct p_entry { 			//struct to store individual packet entry data
+    const char *tag; 			//tag for parent(lower level) packet 
+    bool in_bits; 			//is length represented in bits
+    size_t raw_len; 			//length of received entry
+    size_t conv_len; 			//length of entry in write format
+    u_char *raw_data; 			//pointer to allocated buffer with entry data
+    u_char *conv_data; 			//pointe to allocated buffer wiith entry data in write format
+};
+
+struct packet { 			//struct to store received and filtered packet data
+    size_t id; 				//UID for received packet
+    enum p_status status;
+    const char *parent_tag; 		//tag for parent(lower level) packet 
+    const char *packet_tag; 		//tag for current packet 
+    size_t e_len; 			//count of entry fields
+    struct p_entry *entries; 		//array of entries
 };
 
 #endif

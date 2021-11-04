@@ -8,9 +8,9 @@
 #include "filter.h"
 
 struct fhmap {
-    size_t cap; 	//capacity of array
-    size_t len; 	//elements in array
-    struct entry **arr; //array of filter entries
+    size_t cap; 		//capacity of array
+    size_t len; 		//elements in array
+    struct f_entry **arr; 	//array of filter entries
 };
 
 /**
@@ -26,7 +26,7 @@ struct fhmap *fhmap_new(size_t cap);
  * @param e Filter entry to insert
  * @return STATUS_OK if succeded
  */
-status_val fhmap_put(struct fhmap *map, struct entry *e);
+status_val fhmap_put(struct fhmap *map, struct f_entry *e);
 
 /**
  * @brief Gets filter entry by tag from hashmap
@@ -35,7 +35,7 @@ status_val fhmap_put(struct fhmap *map, struct entry *e);
  * @param e Pointer to return walue
  * @return STATUS_OK if succeded
  */
-status_val fhmap_get(struct fhmap *map, const char *tag, struct entry **e);
+status_val fhmap_get(struct fhmap *map, const char *tag, struct f_entry **e);
 
 /**
  * @brief Frees hashmap

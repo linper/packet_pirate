@@ -9,7 +9,7 @@
 
 #include "utils.h"
 
-struct glist_meta {
+struct glist_meta { //TODO is this even needed
     void *meta;
     void (*meta_free_cb)(void*);
 };

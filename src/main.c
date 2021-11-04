@@ -177,7 +177,8 @@ int main(int argc, char *argv[])
 	LOG(L_CRIT, status);
     }
     
-    pcap_loop(handle, -1, got_packet_cb, NULL);
+    /*pcap_loop(handle, -1, got_packet_cb, NULL);*/
+    pcap_loop(handle, -1, core_filter, NULL);
 
     printf("Packet received of length: %d/n", header.len);
 

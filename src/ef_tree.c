@@ -133,6 +133,19 @@ status_val ef_tree_contains_by_tag(struct ef_tree *root, const char *tag)
     return STATUS_NOT_FOUND;
 }
 
+status_val ef_tree_get_entry(struct ef_tree *node, const char *tag, struct f_entry **e)
+{
+    while (node) {
+	if (!fhmap_get(node->flt->mapped_filter, tag, e)) {
+	    return STATUS_OK;
+	}
+
+	node = node->par;
+    }
+    
+    return STATUS_NOT_FOUND;
+}
+
 void ef_tree_free(struct ef_tree *root)
 {
     if (root->chld) {

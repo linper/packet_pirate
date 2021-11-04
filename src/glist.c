@@ -1,6 +1,4 @@
 #include "../include/glist.h"
-#include <stddef.h>
-#include <stdlib.h>
 
 static status_val extend_glist(struct glist *lst)
 {

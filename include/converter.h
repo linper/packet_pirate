@@ -8,14 +8,14 @@
 #include "utils.h"
 #include "filter.h"
 
-
-typedef (status_val)(conv*)() converter;
+//format for every conferter function
+typedef status_val(*converter)(struct p_entry*);
 
 //Converter matrix between types
-//Entry positionns must match rw_comp_mat from filter.c
+//Entry positions must match rw_comp_mat from filter.c
 //lines - write
 //columns - read
-extern unsigned char rw_comp_mat[_EWF_COUNT][_ERF_COUNT];
+extern converter converter_mat[_EWF_COUNT][_ERF_COUNT];
 
 
 

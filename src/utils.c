@@ -29,7 +29,7 @@ static struct { 	//structure to describe messages
 
 void log_msg(verb lvl, status_val status, const char *file, int line, const char *format, ...)
 {
-    char loc[strlen(file) + strlen(prog_verb_str[lvl] + strlen(msg_map[status].desc) + 8)];
+    char loc[strlen(file) + strlen(prog_verb_str[lvl]) + strlen(msg_map[status].desc) + 8];
     char msg[256] = {0};
 
     sprintf(loc, "%s:[%d]:%s:%s", file, line, prog_verb_str[lvl], msg_map[status].desc);

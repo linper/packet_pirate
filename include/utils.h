@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 //#include <stdarg.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -43,6 +44,7 @@ typedef enum {
 } verb;
 
 struct prog_ctx { 		//struct for program context
+    size_t next_puid;		//id that will be assigned to next packet
     verb verbosity; 		//program verbosity
     char *bpf; 			//built or given bfp filter query
 };
@@ -61,6 +63,8 @@ extern struct prog_ctx pc; 	//program context instance
  * @return Void
  */
 void log_msg(verb lvl, status_val status, const char *file, int line, const char *format, ...);
+
+#define PRINT_HEX(str, len) for (size_t i = 0; i < len; ++i) printf("0x%02x ", str[i]);printf("\n")
 
 //different message logging macros
 #define LOGF(lvl, status, fmt, ...) if (lvl != L_QUIET && lvl <= pc.verbosity) log_msg(lvl, status, __FILE__, __LINE__, fmt, __VA_ARGS__)
