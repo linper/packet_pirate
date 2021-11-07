@@ -42,7 +42,7 @@ err:
 
 status_val fhmap_put(struct fhmap *map, struct f_entry *e)
 {
-    size_t idx = hash_val(e->tag) % map->cap;
+    unsigned idx = hash_val(e->tag) % map->cap;
 
     if (map->cap == map->len) {
 	LOG(L_WARN, STATUS_FULL);

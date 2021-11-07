@@ -4,8 +4,8 @@
 #include "../include/core.h"
 
 static struct ef_tree *ef_root;
-
-static struct glist *cap_pckts;
+static struct glist *cap_pkts;
+static struct glist *single_cap_pkt;
 
 static status_val build_ef_tree()
 {
@@ -48,14 +48,13 @@ err:
     return ret;
 }
 
-static status_val filter_rec(struct ef_tree *node, const u_char *data, u_char *args, const struct pcap_pkthdr *header, size_t read_off)
+static status_val filter_rec(struct ef_tree *node, const u_char *data, u_char *args, const struct pcap_pkthdr *header, unsigned read_off)
 {
     status_val status;
-    struct packet *p;
-    const size_t base_read_off = read_off;
+    const unsigned base_read_off = read_off;
 
     if (node->lvl) { //skiping root root node
-	status = derive_packet(&p, node, data, header->caplen, &read_off); //trying to split data to packet fields
+	status = derive_packet(single_cap_pkt, node, data, header->caplen, &read_off); //trying to split data to packet fields
 	if (status) {
 	    read_off = base_read_off; //reverting read offset
 	    LOGF(L_DEBUG, STATUS_NOT_FOUND, "Packet dropped for %s\n", node->flt->filter->packet_tag);
@@ -64,11 +63,6 @@ static status_val filter_rec(struct ef_tree *node, const u_char *data, u_char *a
 	
 	//TODO call validateion callback here 
 	
-	status = glist_push(cap_pckts, p); //appending packet to packet list;
-	if (status) {
-	    LOG(L_ERR, status);
-	    packet_free(p);
-	}
     }
     
     if (node->chld) { //desending down into first child filter if it exists
@@ -84,19 +78,26 @@ static status_val filter_rec(struct ef_tree *node, const u_char *data, u_char *a
 
 status_val core_init()
 {
-    cap_pckts = glist_new(CAP_PKTS);
-    if (!cap_pckts) {
+    cap_pkts = glist_new(CAP_PKTS);
+    if (!cap_pkts) {
 	LOG(L_CRIT, STATUS_OMEM);
 	return STATUS_OMEM;
     }
 
-    glist_set_free_cb(cap_pckts, (void(*)(void*))packet_free);
-    
+    glist_set_free_cb(cap_pkts, (void(*)(void*))packet_free);
+
+    single_cap_pkt = glist_new(64);
+    if (!single_cap_pkt) {
+	LOG(L_CRIT, STATUS_OMEM);
+	glist_free(cap_pkts);
+	return STATUS_OMEM;
+    }
     status_val status;
     status = build_ef_tree();
     if (status) {
 	LOG(L_CRIT, status);
-	free(cap_pckts);
+	glist_free(single_cap_pkt);
+	glist_free(cap_pkts);
 	return status;
     }
 
@@ -108,9 +109,23 @@ void core_filter(u_char *args, const struct pcap_pkthdr *header, const u_char *p
 {
     (void)args;
     (void)header;
-    
+
+    glist_clear_shallow(single_cap_pkt); //clearing old single packet capture list
+
     status_val status = filter_rec(ef_root, packet, args, header, 0);
+    (void)status; //TODO fix
+
+    if (glist_copy_to(single_cap_pkt, cap_pkts)) { //copying elements ot main captured packet list
+	LOG(L_ERR, STATUS_OMEM);
+    }
 
 
 
+}
+
+void core_destroy()
+{
+    glist_free_shallow(single_cap_pkt); //do not need to free containing elements; just unlinking
+    glist_free(cap_pkts);
+    ef_tree_free(ef_root);
 }

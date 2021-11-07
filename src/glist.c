@@ -127,10 +127,6 @@ void glist_clear_shallow(struct glist *lst)
 
 void glist_free(struct glist *lst)
 {
-    if (lst->meta.meta_free_cb) {
-	lst->meta.meta_free_cb(lst->meta.meta);
-    }
-
     if (lst != NULL) {
         glist_clear(lst);
         free(lst->array);
@@ -140,10 +136,6 @@ void glist_free(struct glist *lst)
 
 void glist_free_shallow(struct glist *lst)
 {
-    if (lst->meta.meta_free_cb) {
-	lst->meta.meta_free_cb(lst->meta.meta);
-    }
-
     if (lst != NULL) {
         free(lst->array);
         free(lst);
@@ -359,6 +351,25 @@ status_val glist_forget(struct glist *lst, int index)
         return STATUS_ERROR;
     }
 
+    return STATUS_OK;
+}
+
+status_val glist_copy_to(struct glist *src, struct glist *dst)
+{
+    status_val status;
+
+    while (src->count + dst->count >= dst->cap) {
+	if ((status = extend_glist(dst))) {
+	    LOG(L_ERR, status);
+	    return status;
+	}
+    }
+
+    //could use memncpy for all elements, but this is good enough
+    for (size_t i = 0; i < src->count; i++) {
+	dst->array[dst->count++] = src->array[i];
+    }
+    
     return STATUS_OK;
 }
 
