@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <string.h>
+#include <sys/types.h>
 
 #include "ext_filter.h"
 #include "utils.h"
@@ -13,7 +14,7 @@ struct ef_tree {
     struct ef_tree *chld; 	//first child node
     struct ef_tree *next; 	//sibling node
     struct ext_filter *flt; 	//data, filter for current packet
-    size_t lvl; 		//filter level - packet layer
+    u_char lvl; 		//filter level - packet layer
 };
 
 /**

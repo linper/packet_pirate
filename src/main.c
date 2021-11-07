@@ -184,6 +184,8 @@ int main(int argc, char *argv[])
 
     pcap_close(handle);
 
+core_destroy();
+
     return 0;
 error:
     return 1;

@@ -28,7 +28,7 @@ enum entry_len_tp {
 
 enum entry_read_format {
     ERF_NONE,
-    ERF_UINT,
+    ERF_UINT_LE,
     ERF_UINT_BE,
     ERF_STR,
     _ERF_COUNT,
@@ -58,38 +58,28 @@ enum entry_flags {
 struct entry_len {
     union {
         struct { 		//length given directly
-            long length;
+            unsigned length;
         } e_len_val; 
-        struct { 		//length from current packet begining
-            long length;
-        } e_pact_off; 
         struct { 		//length as other entry's data
             char tag[TAG_LEN];
         } e_len_tag;
+        struct { 		//length from current packet begining
+            unsigned length;
+            char tag[TAG_LEN];
+        } e_pact_off; 
         struct { 		//length as other entry's data from current packet begining
             char tag[TAG_LEN];
         } e_pac_off_tag;
         struct { 		//number of bits with offset from entry with given tag
             char tag[TAG_LEN];
-            long offset;
-            long nbits;
+            unsigned offset;
+            unsigned nbits;
         } e_len_bits;
     } data;
     enum entry_len_tp type; 	//used to identify length calculation method
 };
 
-//length from current packet begining
-#define E_PAC_OFF(_length)   	   \
-    {                    	   \
-	.data = {           	   \
-	    .e_pac_off = {         \
-		.length = _length  \
-	    }              	   \
-	},                  	   \
-	.type = ELT_PAC_OFF        \
-    }
-
-//length given directly
+//length of current entry given directly
 #define E_LEN(_length)      	   \
     {                    	   \
 	.data = {           	   \
@@ -100,7 +90,7 @@ struct entry_len {
 	.type = ELT_OFF  	   \
     }
     
-//length as other entry's data
+//length of current entry's as other entry's data
 #define E_LEN_OF(_tag)      \
     {                       \
 	.data = {           \
@@ -111,7 +101,19 @@ struct entry_len {
         .type = ELT_TAG     \
     }
 
-//length as other entry's data from current packet begining
+//_length - total length from given packet's begining to current's end
+#define E_PAC_OFF(_tag, _length)   \
+    {                    	   \
+	.data = {           	   \
+	    .e_pac_off = {         \
+		.tag = _tag, 	   \
+		.length = _length, \
+	},                  	   \
+	.type = ELT_PAC_OFF        \
+    }
+
+
+//current packet end is calculated from given packet's begining with offset of its data
 #define E_PAC_OFF_OF(_tag)      \
     {                           \
 	.data = {               \
@@ -156,32 +158,25 @@ struct filter {
 	    const u_char*); 			//function to call before filter is applied
     void(*post_filter)();     			//function to call after filter is applied(for filtered packets)
     bool(*validate)();        			//packet validation function, can be used for low level filtering
-    struct f_entry *entries;    			//array of packet field entries
-    size_t n_entries;         			//length of entries 
-};
-
-enum p_status {  //TODO is this even needed
-    P_SPLIT,
-    P_WF_CONV,
-    P_VALID,
-    P_WRITTEN,
+    struct f_entry *entries; 			//array of packet field entries
+    unsigned n_entries;         			//length of entries 
 };
 
 struct p_entry { 			//struct to store individual packet entry data
     const char *tag; 			//tag for parent(lower level) packet 
     bool in_bits; 			//is length represented in bits
-    size_t raw_len; 			//length of received entry
-    size_t conv_len; 			//length of entry in write format
+    unsigned raw_len; 			//length of received entry
+    unsigned conv_len; 			//length of entry in write format
     u_char *raw_data; 			//pointer to allocated buffer with entry data
     u_char *conv_data; 			//pointe to allocated buffer wiith entry data in write format
 };
 
 struct packet { 			//struct to store received and filtered packet data
-    size_t id; 				//UID for received packet
-    enum p_status status;
+    unsigned id; 			//UID for received packet
+    //enum p_status sta tus;
     const char *parent_tag; 		//tag for parent(lower level) packet 
     const char *packet_tag; 		//tag for current packet 
-    size_t e_len; 			//count of entry fields
+    unsigned e_len; 			//count of entry fields
     struct p_entry *entries; 		//array of entries
 };
 
