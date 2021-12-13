@@ -1,7 +1,6 @@
 
-obj-y += src/
+obj-y += p_ipv4.o
 
-inc-y += include/
 
 .PHONY all:
 

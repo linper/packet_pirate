@@ -1,7 +1,7 @@
 
 //gen start
-#include "packets/eth/p_eth.h"
-#include "packets/ipv4/p_ipv4.h"
+#include "packets/eth/include/p_eth.h"
+#include "packets/ipv4/include/p_ipv4.h"
 //gen end
 
 #include "../include/f_reg.h"

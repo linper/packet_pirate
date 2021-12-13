@@ -1,7 +1,7 @@
 
-obj-y += src/
+obj-y += p_eth.o
 
-inc-y += include/
+$(info $(obj-y))
 
 .PHONY all:
 
