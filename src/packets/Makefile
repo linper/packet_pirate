@@ -1,7 +1,9 @@
 
-obj-y += src/
+obj-y += eth/
+obj-y += ipv4/
 
-inc-y += include/
+inc-y += eth/
+inc-y += ipv4/
 
 .PHONY all:
 

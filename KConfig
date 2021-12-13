@@ -1,0 +1,119 @@
+config SELECT_DEF
+    bool "Defaults"
+    default y
+    
+    config SELECT_DEF_FS1
+	bool "Stage I"
+	default n
+	depends on SELECT_DEF
+
+    config SELECT_DEF_FS1_USE_BPF
+	bool "Use BPF"
+	default n
+	depends on SELECT_DEF_FS1
+	help
+	    Utilize full Berkley packet filter support with query string
+
+	config SELECT_DEF_FS1_BPF
+	    string "BPF"
+	    default ""
+	    depends on SELECT_DEF_FS1_USE_BPF
+    
+	config SELECT_DEF_FS1_DHOST
+	    string "Destination host"
+	    default ""
+	    depends on !SELECT_DEF_FS1_USE_BPF && SELECT_DEF_FS1
+
+	config SELECT_DEF_FS1_DNET
+	    string "Destination network"
+	    default ""
+	    depends on !SELECT_DEF_FS1_USE_BPF && SELECT_DEF_FS1
+    
+	config SELECT_DEF_FS1_DPORT
+	    int "Destination port"
+	    depends on !SELECT_DEF_FS1_USE_BPF && SELECT_DEF_FS1
+
+	config SELECT_DEF_FS1_PROTO
+	    string "Protocol"
+	    depends on !SELECT_DEF_FS1_USE_BPF && SELECT_DEF_FS1
+    
+	config SELECT_DEF_FS1_SHOST
+	    string "Source host"
+	    default ""
+	    depends on !SELECT_DEF_FS1_USE_BPF && SELECT_DEF_FS1
+    
+	config SELECT_DEF_FS1_SNET
+	    string "Source network"
+	    default ""
+	    depends on !SELECT_DEF_FS1_USE_BPF && SELECT_DEF_FS1
+    
+	config SELECT_DEF_FS1_SPORT
+	    int "Source port"
+	    depends on !SELECT_DEF_FS1_USE_BPF && SELECT_DEF_FS1
+    
+config SELECT_DEV
+    bool "Development"
+    default y
+    help
+	Framework testing and development configurations
+    
+    config SELECT_DEV_SANITY
+	bool "NOT IMPL Sanity checking"
+	default y
+	depends on SELECT_DEV
+
+config SELECT_FLT
+    bool "Filters"
+    default y
+
+config SELECT_LOGGING
+    bool "Logging"
+    default y
+    help
+	Message logging will be enabled. If unchecked - will not be compiled in filal binary. Othervise may decrease performance
+
+    choice SELECT_VERBOSITY
+	prompt "Select logging verbosity"
+	depends on SELECT_LOGGING
+	default SELECT_VERB_WARN
+
+    config SELECT_VERB_CRIT
+	bool "Critical"
+	help
+	    "Logs only critical messages"
+
+    config SELECT_VERB_ERR
+	bool "Error"
+	help
+	    "Logs error and highier priority messages"
+
+    config SELECT_VERB_WARN
+	bool "Warning"
+	help
+	    "Logs warning and highier priority messages"
+
+    config SELECT_VERB_NOTICE
+	bool "Notice"
+	help
+	    "Logs notice and highier priority messages"
+
+    config SELECT_VERB_INFO
+	bool "Info"
+	help
+	    "Logs informational and highier priority messages"
+
+    config SELECT_VERB_DEBUG
+	bool "Debug"
+	help
+	    "Logs debug and highier priority messages"
+    endchoice
+    
+config SELECT_TESTS
+    bool "Testing"
+    default n
+    help
+	Plugin testing configuration
+    
+    config SELECT_PLUGIN_TEST_SIMPLE
+	bool "NOT IMPL simple test, just example"
+	depends on SELECT_TESTS

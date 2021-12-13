@@ -1,25 +1,9 @@
 
-INC = $(wildcard *.h)
-SRC = $(wildcard *.c)
-OBJ = $(patsubst %.c, %.o, $(SRC))
+obj-y += src/
 
-#TARGET = sniff
-LDFLAGS += 
-CFLAGS += -Wall -Wextra -g -Og
+inc-y += include/
 
-RM = rm -f
+.PHONY all:
 
-all: compile
-
-compile: $(OBJ)
-
-$.o: %.c $(INC)
-	$(CC) -c -o $@ $< $(CFLAGS)
-
-#$(TARGET): $(OBJ)
-	#$(CC) -o $@ $^ $(LDFLAGS) $(CFLAGS)
-
-.PHONY: clean
-
-clean:
-	$(RM) $(OBJ)
+all:
+	$(MAKE) -f $(SCR_DIR)/Makefile.build dir=$(dir) obj=$(obj) objs="$($(obj)-y)"

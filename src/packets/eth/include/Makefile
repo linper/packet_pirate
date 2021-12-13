@@ -1,7 +1,5 @@
 
-obj-y += src/
-
-inc-y += include/
+inc-y += p_eth.h
 
 .PHONY all:
 
