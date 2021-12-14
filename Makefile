@@ -16,6 +16,9 @@ export PAC_DIR = $(SRC_DIR)/packets
 ######################
 OBJ-Y = obj
 INC-Y = inc
+KCONFIG = .config
+Q = @
+#Q =
 
 ######################
 #  COMPILE ARGS  #
@@ -36,6 +39,11 @@ RM = rm -f
 MAKE = make
 
 ######################
+#  PRE-BUILD  #
+######################
+$(foreach conf,$(shell grep -E '.*=.*' $(KCONFIG)),$(eval export $(conf)))
+
+######################
 #  BUILD  #
 ######################
 all: build
@@ -50,19 +58,25 @@ build: clean_tmp collect
 collect: collect_obj collect_inc
 
 clean_tmp:
-	rm -rf $(BLD_TMP_DIR)/*
+	$(Q)rm -rf $(BLD_TMP_DIR)/*
 
 collect_inc:
-	$(MAKE) -C $(SRC_DIR) dir=$(SRC_DIR) obj=$(INC-Y)
+	$(Q)$(MAKE) -C $(SRC_DIR) dir=$(SRC_DIR) obj=$(INC-Y)
 
 collect_obj:
-	$(MAKE) -C $(SRC_DIR) dir=$(SRC_DIR) obj=$(OBJ-Y)
+	$(Q)$(MAKE) -C $(SRC_DIR) dir=$(SRC_DIR) obj=$(OBJ-Y)
 
-.PHONY: clean run
+.PHONY: clean run menuconfig help
+
+menuconfig:
+	kconfig-mconf KConfig
 
 run: build
-	$(EVAL) ./$(TARGET) $(RUNARGS)
+	$(Q)$(EVAL) ./$(TARGET) $(RUNARGS)
 
 clean:
-	$(RM) $$(cat $(BLD_TMP_DIR)/$(OBJ-Y) | xargs) $(BIN_DIR)/$(TARGET)
+	$(Q)$(RM) $$(cat $(BLD_TMP_DIR)/$(OBJ-Y) | xargs) $(BIN_DIR)/$(TARGET)
+
+help:
+	$(Q)echo "help message not implemented yet"
 

@@ -1,6 +1,7 @@
 
 obj-y += eth/
-obj-y += ipv4/
+obj-$(CONFIG_SELECT_DEV) += ipv4/
+#obj-y += ipv4/
 
 inc-y += eth/
 inc-y += ipv4/
