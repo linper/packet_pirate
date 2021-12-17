@@ -6,10 +6,12 @@ export ROOT_DIR = $(abspath ./)
 export SRC_DIR = $(ROOT_DIR)/src
 export SCR_DIR = $(ROOT_DIR)/scripts
 export INC_DIR = $(ROOT_DIR)/include
+export TMP_DIR = $(ROOT_DIR)/tmp
+export RES_DIR = $(ROOT_DIR)/resources
 export BLD_DIR = $(ROOT_DIR)/build
 export BIN_DIR = $(BLD_DIR)/bin
 export BLD_TMP_DIR = $(BLD_DIR)/tmp
-export PAC_DIR = $(SRC_DIR)/packets
+export FIL_DIR = $(SRC_DIR)/filters
 
 ######################
 #  MISC  #
@@ -70,12 +72,13 @@ collect_obj:
 
 menuconfig:
 	kconfig-mconf KConfig
+	$(SCR_DIR)/generate_registry.sh
 
 run: build
 	$(Q)$(EVAL) ./$(TARGET) $(RUNARGS)
 
 clean:
-	$(Q)$(RM) $$(cat $(BLD_TMP_DIR)/$(OBJ-Y) | xargs) $(BIN_DIR)/$(TARGET)
+	$(Q)$(RM) $$(cat $(BLD_TMP_DIR)/$(OBJ-Y) | xargs) $(BIN_DIR)/$(TARGET) $(TMP_DIR)/*
 
 help:
 	$(Q)echo "help message not implemented yet"

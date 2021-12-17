@@ -1,5 +1,6 @@
 
-inc-y += p_eth.h
+obj-y += ipv4.o
+
 
 .PHONY all:
 

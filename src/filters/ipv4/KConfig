@@ -1,0 +1,5 @@
+config FILTER_IPV4    
+    bool "ipv4 filter"
+	default n
+	select FILTER_ETH
+

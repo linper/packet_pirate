@@ -1,5 +1,5 @@
 
-obj-y += p_ipv4.o
+inc-y += ipv4.h
 
 
 .PHONY all:

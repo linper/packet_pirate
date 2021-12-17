@@ -3,3 +3,4 @@ pp.*
 .vscode
 todo
 build/tmp/*
+tmp/*

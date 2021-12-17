@@ -1,7 +1,5 @@
 
-obj-y += p_eth.o
-
-$(info $(obj-y))
+inc-y += eth.h
 
 .PHONY all:
 

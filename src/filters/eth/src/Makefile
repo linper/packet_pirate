@@ -1,6 +1,7 @@
 
-inc-y += p_ipv4.h
+obj-y += eth.o
 
+$(info $(obj-y))
 
 .PHONY all:
 

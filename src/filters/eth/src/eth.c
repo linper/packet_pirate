@@ -1,4 +1,4 @@
-#include "../include/p_eth.h"
+#include "../include/eth.h"
 
 
 static struct f_entry eth_packet[] = {
