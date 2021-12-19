@@ -1,7 +1,7 @@
-#include "../include/eth.h"
+#include "../include/ethernet.h"
 
 
-static struct f_entry eth_packet[] = {
+static struct f_entry ethernet_packet[] = {
 /*  TAG 	ENTRY TYPE	LENGTH 		FLAGS 	READ FORMAT 	WRITE FORMAT */
     {"dhost", 	ET_DATA, 	E_LEN(6), 	0, 	ERF_STR, 	EWF_HEX_STR},
     {"shost", 	ET_DATA,	E_LEN(6), 	0, 	ERF_STR, 	EWF_HEX_STR},
@@ -23,14 +23,14 @@ static bool validate()
     return true;
 }
 
-struct filter eth_filter = {
+struct filter ethernet_filter = {
     .parent_tag = {0},
     .packet_tag = "ethernet",
     .pre_filter = intercept,
     .post_filter = NULL,
     .validate = validate,
-    .entries = eth_packet,
-    .n_entries = FILTER_LEN(eth_packet),
+    .entries = ethernet_packet,
+    .n_entries = FILTER_LEN(ethernet_packet),
 };
     
 

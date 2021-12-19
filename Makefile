@@ -54,8 +54,7 @@ build: clean_tmp collect
 	OBJ=$$(cat $(BLD_TMP_DIR)/$(OBJ-Y) | xargs); \
 	INC=$$(cat $(BLD_TMP_DIR)/$(INC-Y) | xargs); \
 	SRC=$$(echo $${OBJ} | sed 's/\.o/\.c/g'); \
-	$(CC) -o $(TARGET) $${INC} $${SRC} $(INC_PATH) $(LDFLAGS) $(CFLAGS) $(DEFS); \
-	cp $(TARGET) $(BIN_DIR)/$(TARGET)
+	$(CC) -o $(BIN_DIR)/$(TARGET) $${INC} $${SRC} $(INC_PATH) $(LDFLAGS) $(CFLAGS) $(DEFS)
 
 collect: collect_obj collect_inc
 

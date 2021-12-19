@@ -1,5 +1,5 @@
 
-inc-y += eth.h
+inc-y += ethernet.h
 
 .PHONY all:
 

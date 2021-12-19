@@ -1,19 +1,15 @@
 
-//gen start
-#include "filters/eth/include/eth.h"
-#include "filters/eth/include/ipv4.h"
+#include "filters/ethernet/include/ethernet.h"
+#include "filters/ipv4/include/ipv4.h"
 
-//gen end
 
 #include "../include/f_reg.h"
 
 
 struct filter *filter_arr[] = {
-//gen start
-    &eth_filter,
+    &ethernet_filter,
     &ipv4_filter,
 
-//gen end
     NULL
 };
 

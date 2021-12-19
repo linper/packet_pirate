@@ -1,0 +1,3 @@
+config FILTER_ETHERNET    
+    bool "ethernet filter"
+	default y

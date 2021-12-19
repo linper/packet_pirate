@@ -1,5 +1,5 @@
 
-obj-y += eth.o
+obj-y += ethernet.o
 
 $(info $(obj-y))
 

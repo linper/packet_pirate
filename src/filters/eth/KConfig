@@ -1,3 +1,0 @@
-config FILTER_ETH    
-    bool "eth filter"
-	default y
