@@ -10,11 +10,11 @@
 #include "utils.h"
 
 struct ef_tree {
-    struct ef_tree *par; 	//parent node
-    struct ef_tree *chld; 	//first child node
-    struct ef_tree *next; 	//sibling node
-    struct ext_filter *flt; 	//data, filter for current packet
-    u_char lvl; 		//filter level - packet layer
+	struct ef_tree *par; //parent node
+	struct ef_tree *chld; //first child node
+	struct ef_tree *next; //sibling node
+	struct ext_filter *flt; //data, filter for current packet
+	u_char lvl; //filter level - packet layer
 };
 
 /**
@@ -45,14 +45,15 @@ status_val ef_tree_put(struct ef_tree *root, struct ext_filter *e);
  * @param e Pointer to return walue
  * @return STATUS_OK if succeded
  */
-status_val ef_tree_get(struct ef_tree *root, const char *tag, struct ext_filter **e);
+status_val ef_tree_get(struct ef_tree *root, const char *tag,
+					   struct ext_filter **e);
 
 /**
  * @brief Checks if tree contains filter identified by given tag
  * @param root Tree root node
  * @param tag Value to compare too
  * @return STATUS_OK if succeded
- */ 
+ */
 status_val ef_tree_contains_by_tag(struct ef_tree *root, const char *tag);
 
 /**
@@ -60,8 +61,9 @@ status_val ef_tree_contains_by_tag(struct ef_tree *root, const char *tag);
  * @param node Tree node node to start search from
  * @param tag Entry tag value to compare too
  * @return STATUS_OK if succeded, STATUS_NOT_FOUND otherwise
- */ 
-status_val ef_tree_get_entry(struct ef_tree *node, const char *tag, struct f_entry **e);
+ */
+status_val ef_tree_get_entry(struct ef_tree *node, const char *tag,
+							 struct f_entry **e);
 
 /**
  * @brief Frees whole tree structure including contained ext_filters

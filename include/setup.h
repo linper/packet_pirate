@@ -1,7 +1,6 @@
 #ifndef H_SETUP
 #define H_SETUP
 
-
 #include "utils.h"
 #include "../include/params.h"
 

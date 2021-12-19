@@ -1,5 +1,5 @@
-#ifndef EXT_FILTER_H 
-#define EXT_FILTER_H 
+#ifndef EXT_FILTER_H
+#define EXT_FILTER_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,8 +9,8 @@
 #include "f_reg.h"
 
 struct ext_filter {
-    struct filter *filter; 		//user defined filter
-    struct fhmap *mapped_filter; 	//tag=>entry mapped user defined filter
+	struct filter *filter; //user defined filter
+	struct fhmap *mapped_filter; //tag=>entry mapped user defined filter
 };
 
 /**

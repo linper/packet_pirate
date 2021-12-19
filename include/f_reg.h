@@ -3,7 +3,6 @@
 
 #include "../include/filter.h"
 
-
 extern struct filter *filter_arr[];
 
 void collect_packets(struct filter ***arr_ptr);

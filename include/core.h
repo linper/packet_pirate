@@ -27,13 +27,13 @@ status_val core_init();
  * @param packet captured packet data
  * @return Void
  */
-void core_filter(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
+void core_filter(u_char *args, const struct pcap_pkthdr *header,
+				 const u_char *packet);
 
 /**
  * @brief Frees whole filtering system
  * @return status value wether destruction succeded
  */
 void core_destroy();
-
 
 #endif

@@ -5,7 +5,6 @@
 
 #include "../../../../include/filter.h"
 
-
 extern struct filter >>>FILTER_NAME<<<_filter;
 
 #endif

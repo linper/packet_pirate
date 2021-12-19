@@ -5,7 +5,6 @@
 
 #include "../../../../include/filter.h"
 
-
 extern struct filter ipv4_filter;
 
 #endif

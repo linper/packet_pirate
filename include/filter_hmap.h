@@ -8,9 +8,9 @@
 #include "filter.h"
 
 struct fhmap {
-    size_t cap; 		//capacity of array
-    size_t len; 		//elements in array
-    struct f_entry **arr; 	//array of filter entries
+	size_t cap; //capacity of array
+	size_t len; //elements in array
+	struct f_entry **arr; //array of filter entries
 };
 
 /**

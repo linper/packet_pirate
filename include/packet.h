@@ -13,7 +13,6 @@
 #include "ef_tree.h"
 #include "converter.h"
 
-
 /**
  * @brief Builds packet struct based on provided extended filter tree node and fills entries
  * with supplied data. 
@@ -24,7 +23,8 @@
  * @param read_off pointer pointed to current read position in 'data'
  * @return status wether packet ware split succesfully
  */
-status_val derive_packet(struct glist *pkt_list, struct ef_tree *node, const u_char *data, unsigned len, unsigned *read_off);
+status_val derive_packet(struct glist *pkt_list, struct ef_tree *node,
+						 const u_char *data, unsigned len, unsigned *read_off);
 
 /**
  * @brief Frees packet stuct and all its entries

@@ -10,21 +10,19 @@
 #include "filter.h"
 
 enum uint_len {
-    L8,
-    L16,
-    L32,
-    L64,
+	L8,
+	L16,
+	L32,
+	L64,
 };
 
 //struct uint_conv {
-    //u_int64_t data;
-    //enum uint_len type;
+//u_int64_t data;
+//enum uint_len type;
 //};
 
-
 //format for every conferter function
-typedef status_val(*converter)(struct p_entry*);
-
+typedef status_val (*converter)(struct p_entry *);
 
 status_val bytes_to_uint(u_char *data, unsigned u_len, unsigned long *res);
 //status_val bytes_to_uint(u_char *data, unsigned u_len, struct uint_conv *res);
@@ -34,7 +32,5 @@ status_val bytes_to_uint(u_char *data, unsigned u_len, unsigned long *res);
 //lines - write
 //columns - read
 extern converter converter_mat[_EWF_COUNT][_ERF_COUNT];
-
-
 
 #endif
