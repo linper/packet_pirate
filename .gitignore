@@ -2,4 +2,6 @@ pp.*
 *.o
 .vscode
 todo
-
+build/tmp/*
+build/bin/*
+tmp/*

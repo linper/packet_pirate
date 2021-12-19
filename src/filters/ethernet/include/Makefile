@@ -1,9 +1,5 @@
 
-obj-y += eth/
-obj-y += ipv4/
-
-inc-y += eth/
-inc-y += ipv4/
+inc-y += ethernet.h
 
 .PHONY all:
 

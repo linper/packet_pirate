@@ -1,6 +1,5 @@
 
-obj-y += p_ipv4.o
-
+inc-y += >>>FILTER_NAME<<<.h
 
 .PHONY all:
 

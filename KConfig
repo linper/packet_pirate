@@ -1,3 +1,8 @@
+
+mainmenu "Packet pirate configurations"
+
+source "src/filters/KConfig"
+
 config SELECT_DEF
     bool "Defaults"
     default y
@@ -62,10 +67,6 @@ config SELECT_DEV
 	default y
 	depends on SELECT_DEV
 
-config SELECT_FLT
-    bool "Filters"
-    default y
-
 config SELECT_LOGGING
     bool "Logging"
     default y
@@ -117,3 +118,5 @@ config SELECT_TESTS
     config SELECT_PLUGIN_TEST_SIMPLE
 	bool "NOT IMPL simple test, just example"
 	depends on SELECT_TESTS
+
+

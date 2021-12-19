@@ -1,5 +1,7 @@
 
-inc-y += p_eth.h
+obj-y += ethernet.o
+
+$(info $(obj-y))
 
 .PHONY all:
 

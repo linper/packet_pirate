@@ -14,9 +14,9 @@ obj-y += params.o
 obj-y += setup.o
 obj-y += utils.o
 
-obj-y += packets/
+obj-y += filters/
 
-inc-y += packets/
+inc-y += filters/
  
 .PHONY all:
 

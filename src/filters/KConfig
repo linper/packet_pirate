@@ -1,0 +1,8 @@
+
+menu "Filters"
+
+source "src/filters/ethernet/KConfig"
+source "src/filters/ipv4/KConfig"
+
+endmenu
+
