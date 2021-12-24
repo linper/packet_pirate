@@ -16,11 +16,6 @@ enum uint_len {
 	L64,
 };
 
-//struct uint_conv {
-//u_int64_t data;
-//enum uint_len type;
-//};
-
 //format for every conferter function
 typedef status_val (*converter)(struct p_entry *);
 

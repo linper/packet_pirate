@@ -4,15 +4,6 @@
 #include <pcap.h>
 
 #include "utils.h"
-#include "packet.h"
-#include "filter.h"
-#include "ext_filter.h"
-#include "filter_hmap.h"
-#include "ef_tree.h"
-#include "f_reg.h"
-#include "glist.h"
-
-#define CAP_PKTS 256 //initial captured packets list capacity
 
 /**
  * @brief Initializes whole filtering system

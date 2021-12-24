@@ -2,7 +2,6 @@
 #define H_BPF
 
 #include "utils.h"
-#include "params.h"
 
 /**
  * @brief Builds bfp filter query from given command line arguments

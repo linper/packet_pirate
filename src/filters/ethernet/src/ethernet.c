@@ -1,13 +1,14 @@
 #include "../include/ethernet.h"
 
+
 static struct f_entry ethernet_packet[] = {
 /*  TAG 		ENTRY TYPE	LENGTH 		FLAGS 	READ FORMAT 	WRITE FORMAT */
-	{"dhost", 	ET_DATA, 	E_LEN(6), 	0, 	ERF_STR, 		EWF_HEX_STR},
-	{"shost", 	ET_DATA,	E_LEN(6), 	0, 	ERF_STR, 		EWF_HEX_STR},
-	{"type", 	ET_DATA,	E_LEN(2), 	0, 	ERF_UINT_LE, 	EWF_HEX_STR},
-	/*{"dhost",	ET_DATA, 	E_LEN(6), 	0, 	ERF_STR, 		EWF_STR},*/
-	/*{"shost",	ET_DATA,	E_LEN(6), 	0, 	ERF_STR, 		EWF_STR},*/
-	/*{"type", 	ET_DATA,	E_LEN(2), 	0, 	ERF_UINT_LE, 	EWF_UINT},*/
+	{"dhost", 	ET_DATAFIELD, 	E_LEN(6), 	0, 	ERF_STR, 		EWF_HEX_STR},
+	{"shost", 	ET_DATAFIELD,	E_LEN(6), 	0, 	ERF_STR, 		EWF_HEX_STR},
+	{"type", 	ET_DATAFIELD,	E_LEN(2), 	0, 	ERF_UINT_LE, 	EWF_HEX_STR},
+	/*{"dhost",	ET_DATAFIELD, 	E_LEN(6), 	0, 	ERF_STR, 		EWF_STR},*/
+	/*{"shost",	ET_DATAFIELD,	E_LEN(6), 	0, 	ERF_STR, 		EWF_STR},*/
+	/*{"type", 	ET_DATAFIELD,	E_LEN(2), 	0, 	ERF_UINT_LE, 	EWF_UINT},*/
 }; 
 
 static void intercept(u_char *args, const struct pcap_pkthdr *header, const u_char *packet) {

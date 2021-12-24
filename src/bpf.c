@@ -1,6 +1,7 @@
 
 #include <string.h>
 
+#include "../include/params.h"
 #include "../include/bpf.h"
 
 static inline void build_port_string(char *dst, const char *src, char *prefix)
@@ -15,10 +16,10 @@ status_val build_bpf(struct prog_args *pa)
 	status_val status = STATUS_ERROR;
 
 	//+<some value> is for aditional "src/dst host/net" and similar
-	char dst_net[NET_LEN + 9];
-	char src_net[NET_LEN + 9];
-	char dst_ports[PORT_LEN + 14];
-	char src_ports[PORT_LEN + 14];
+	char dst_net[NET_LEN + 9] = {0};
+	char src_net[NET_LEN + 9] = {0};
+	char dst_ports[PORT_LEN + 14] = {0};
+	char src_ports[PORT_LEN + 14] = {0};
 
 	if (pa->bpf_enabled) {
 		if (pa->filter.bpf && strlen(pa->filter.bpf) >= BPF_PR_LEN) {
@@ -92,16 +93,13 @@ status_val build_bpf(struct prog_args *pa)
 		build_port_string(src_ports, pa->filter.sport, "src");
 	}
 
-	size_t comb_len = strlen(dst_net) + strlen(src_net) + strlen(dst_ports) +
-					  strlen(src_ports);
-
-	if (!(pc.bpf = calloc(sizeof(char), comb_len))) {
+	if (!(pc.bpf = calloc(sizeof(char), BPF_PR_LEN))) {
 		status = STATUS_OMEM;
 		LOG(L_CRIT, status);
 		goto end;
 	}
 
-	sprintf(pc.bpf, "%s %s%s%s%s", pa->filter.proto, src_net, src_ports,
+	snprintf(pc.bpf, BPF_PR_LEN - 1, "%s %s%s%s%s", pa->filter.proto, src_net, src_ports,
 			dst_net, dst_ports);
 	status = STATUS_OK;
 
