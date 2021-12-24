@@ -7,11 +7,6 @@
 #include <pcap.h>
 
 #include "utils.h"
-#include "glist.h"
-#include "filter.h"
-#include "ext_filter.h"
-#include "ef_tree.h"
-#include "converter.h"
 
 /**
  * @brief Builds packet struct based on provided extended filter tree node and fills entries

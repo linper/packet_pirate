@@ -10,8 +10,7 @@
 #define TAG_LEN 16
 
 enum entry_type {
-	ET_DATA,
-	ET_OFFSET,
+	ET_DATAFIELD,
 	ET_BITFIELD,
 	ET_FLAG,
 };
@@ -49,8 +48,10 @@ extern unsigned char rw_comp_mat[_EWF_COUNT][_ERF_COUNT];
 
 enum entry_flags {
 	EF_NONE = 0,
-	EF_PLD = 1 << 1,
-	EF_OPT = 1 << 2,
+	EF_16BIT_MUL = 1 << 1,
+	EF_32BIT_MUL = 1 << 2,
+	EF_PLD = 1 << 3,
+	EF_OPT = 1 << 4,
 };
 
 struct entry_len {
@@ -64,9 +65,10 @@ struct entry_len {
 		struct { //length from current packet begining
 			unsigned length;
 			char tag[TAG_LEN];
-		} e_pact_off;
+		} e_pac_off;
 		struct { //length as other entry's data from current packet begining
-			char tag[TAG_LEN];
+			char start_tag[TAG_LEN];
+			char offset_tag[TAG_LEN];
 		} e_pac_off_tag;
 		struct { //number of bits with offset from entry with given tag
 			char tag[TAG_LEN];
@@ -78,50 +80,51 @@ struct entry_len {
 };
 
 //length of current entry given directly
-#define E_LEN(_length)														 \
-	{																		  \
-		.data = { .e_len_val = { .length = _length } }, .type = ELT_OFF		\
+#define E_LEN(_length)                                                         \
+	{                                                                          \
+		.data = { .e_len_val = { .length = _length } }, .type = ELT_OFF        \
 	}
 
 //length of current entry's as other entry's data
-#define E_LEN_OF(_tag)														 \
-	{																		  \
-		.data = { .e_len_tag = { .tag = _tag } }, .type = ELT_TAG			  \
+#define E_LEN_OF(_tag)                                                         \
+	{                                                                          \
+		.data = { .e_len_tag = { .tag = _tag } }, .type = ELT_TAG              \
 	}
 
 //_length - total length from given packet's begining to current's end
-#define E_PAC_OFF(_tag, _length)											   \
-	{																		  \
-		.data = {		   	   \
-		.e_pac_off = {		 \
-		.tag = _tag, 	   \
-		.length = _length, \
-	},				  	   \
-	.type = ELT_PAC_OFF		\
+#define E_PAC_OFF(_tag, _length)                                               \
+	{                                                                          \
+		.data = {															\
+		.e_pac_off = { 														\
+		.tag = _tag, 														\
+		.length = _length, 													\
+	},				  	   													\
+	.type = ELT_PAC_OFF														\
 	}
 
-//current packet end is calculated from given packet's begining with offset of its data
-#define E_PAC_OFF_OF(_tag)													 \
-	{																		  \
-		.data = {			   \
-		.e_pac_off_tag = {  \
-		.tag = _tag,	\
-		}				   \
-	},					  \
-	.type = ELT_PAC_OFF_TAG													   \
+//current packet end is calculated from given "start" packet's begining with offset of "offset" packet's its data
+#define E_PAC_OFF_OF(_start_tag, _offset_tag)                                  \
+	{                                                                          \
+		.data = {															\
+		.e_pac_off_tag = { 													\
+		.start_tag = _start_tag,											\
+		.offset_tag = _offset_tag,											\
+		}																	\
+	},																		\
+	.type = ELT_PAC_OFF_TAG                                              \
 	}
 
 //number of bits with offset from entry with given tag
-#define E_BITS(_tag, _offset, _nbits)										  \
-	{																		  \
-		.data = {					   \
-		.e_len_bits = {			 \
-		.tag = _tag,			\
-		.offset = _offset,	  \
-		.nbits = _nbits,		\
-		}						   \
-	},							  \
-		.type = ELT_FLAG													 \
+#define E_BITS(_tag, _offset, _nbits)                                          \
+	{                                                                          \
+		.data = {															\
+		.e_len_bits = {														\
+		.tag = _tag,														\
+		.offset = _offset,													\
+		.nbits = _nbits,													\
+		}																	\
+	},																		\
+		.type = ELT_FLAG                                              \
 	}
 
 struct f_entry { //packet field/entry
@@ -133,7 +136,7 @@ struct f_entry { //packet field/entry
 	enum entry_write_format write_form; //data dump format
 };
 
-#define FILTER_LEN(arr)														\
+#define FILTER_LEN(arr)                                                        \
 	sizeof arr / sizeof(struct f_entry) //gets defined filter length
 
 struct filter {
@@ -152,21 +155,21 @@ struct filter {
 
 struct p_entry { //struct to store individual packet entry data
 	const char *tag; //tag for parent(lower level) packet
-	bool in_bits; //is length represented in bits
 	unsigned raw_len; //length of received entry
 	unsigned conv_len; //length of entry in write format
 	u_char *raw_data; //pointer to allocated buffer with entry data
 	u_char *
-		conv_data; //pointe to allocated buffer wiith entry data in write format
+		conv_data; //pointer to allocated buffer wiith entry data in write format
+	unsigned glob_bit_off; //global offset from root packet's begining in bits
 };
 
 struct packet { //struct to store received and filtered packet data
 	unsigned id; //UID for received packet
-	//enum p_status sta tus;
 	const char *parent_tag; //tag for parent(lower level) packet
 	const char *packet_tag; //tag for current packet
 	unsigned e_len; //count of entry fields
 	struct p_entry *entries; //array of entries
+	unsigned glob_bit_off; //global offset from root packet's begining in bits
 };
 
 #endif

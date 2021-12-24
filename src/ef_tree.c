@@ -1,17 +1,14 @@
+
+#include "../include/filter.h"
+#include "../include/fhmap.h"
+#include "../include/ext_filter.h"
 #include "../include/ef_tree.h"
 
 struct ef_tree *ef_tree_base()
 {
-	struct ext_filter *f = ext_filter_base();
-	if (!f) {
-		LOG(L_CRIT, STATUS_OMEM);
-		return NULL;
-	}
-
 	struct ef_tree *root = calloc(1, sizeof(struct ef_tree));
 	if (!root) {
 		LOG(L_CRIT, STATUS_OMEM);
-		ext_filter_free(f);
 		return NULL;
 	}
 
@@ -153,18 +150,16 @@ status_val ef_tree_get_entry(struct ef_tree *node, const char *tag,
 
 void ef_tree_free(struct ef_tree *root)
 {
+	if (!root) {
+		return;
+	}
+
 	if (root->chld) {
 		ef_tree_free(root->chld);
 	}
 
-	struct ef_tree *cur = root;
-	struct ef_tree *next = NULL;
-
-	while (cur) {
-		//cur will be freed in next step, so I have to get next node now
-		next = cur->next;
-		ef_tree_free(cur);
-		cur = next;
+	if (root->next) {
+		ef_tree_free(root->next);
 	}
 
 	ext_filter_free(root->flt);

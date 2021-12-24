@@ -1,7 +1,10 @@
+
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "../include/filter_hmap.h"
+
+#include "../include/filter.h"
+#include "../include/fhmap.h"
 
 // djb2 hashing
 static unsigned long hash_val(const char *str)
@@ -34,8 +37,9 @@ struct fhmap *fhmap_new(size_t cap)
 	return m;
 err:
 	if (m) {
-		fhmap_free(m);
+		fhmap_shallow_free(m);
 	}
+
 	return NULL;
 }
 
@@ -63,7 +67,7 @@ status_val fhmap_get(struct fhmap *map, const char *key, struct f_entry **e)
 	int idx = hash_val(key) % map->cap;
 
 	for (size_t i = 0; i < map->cap; i++) {
-		if (map->arr[idx] && map->arr[idx]->tag == key) {
+		if (map->arr[idx] && !strcmp(map->arr[idx]->tag, key)) {
 			*e = map->arr[idx];
 			return STATUS_OK;
 		}
@@ -76,9 +80,10 @@ status_val fhmap_get(struct fhmap *map, const char *key, struct f_entry **e)
 	return STATUS_NOT_FOUND;
 }
 
-void fhmap_free(struct fhmap *map)
+void fhmap_shallow_free(struct fhmap *map)
 {
-	struct fhmap *m = (struct fhmap *)map;
-	free(m->arr);
-	free(m);
+	if (map) {
+		free(map->arr);
+		free(map);
+	}
 }

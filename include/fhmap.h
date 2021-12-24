@@ -1,11 +1,10 @@
-#ifndef FILTER_HMAP_H
-#define FILTER_HMAP_H
+#ifndef FHMAP_H
+#define FHMAP_H
 
 #include <stddef.h>
 #include <stdbool.h>
 
 #include "utils.h"
-#include "filter.h"
 
 struct fhmap {
 	size_t cap; //capacity of array
@@ -42,6 +41,6 @@ status_val fhmap_get(struct fhmap *map, const char *tag, struct f_entry **e);
  * @param map hashmap to free
  * @return Void
  */
-void fhmap_free(struct fhmap *map);
+void fhmap_shallow_free(struct fhmap *map);
 
 #endif

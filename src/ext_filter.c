@@ -1,7 +1,12 @@
 
+#include <stddef.h>
+
+
+#include "../include/filter.h"
+#include "../include/fhmap.h"
+#include "../include/f_reg.h"
 #include "../include/ext_filter.h"
 
-#define FHSTATUS_CAP_MULTIPLIER 2
 
 struct ext_filter *ext_filter_new(struct filter *f)
 {
@@ -12,7 +17,7 @@ struct ext_filter *ext_filter_new(struct filter *f)
 		return NULL;
 	}
 
-	struct fhmap *hflt = fhmap_new(f->n_entries * FHSTATUS_CAP_MULTIPLIER);
+	struct fhmap *hflt = fhmap_new(f->n_entries * FH_CAP_MULTIPLIER);
 	if (!hflt) {
 		LOG(L_CRIT, STATUS_OMEM);
 		free(ef);
@@ -27,6 +32,13 @@ struct ext_filter *ext_filter_new(struct filter *f)
 			ext_filter_free(ef);
 			return NULL;
 		}
+
+		status = fhmap_put(pc.f_entries, &f->entries[i]);
+		if (status) {
+			LOG(L_CRIT, status);
+			ext_filter_free(ef);
+			return NULL;
+		}
 	}
 
 	ef->filter = f;
@@ -35,18 +47,11 @@ struct ext_filter *ext_filter_new(struct filter *f)
 	return ef;
 }
 
-struct ext_filter *ext_filter_base()
-{
-	struct ext_filter *f = calloc(1, sizeof(struct ext_filter));
-	if (!f) {
-		LOG(L_CRIT, STATUS_OMEM);
-	}
-	return f;
-}
-
 void ext_filter_free(struct ext_filter *f)
 {
-	fhmap_free(f->mapped_filter);
-	free(f);
+	if (f) {
+		fhmap_shallow_free(f->mapped_filter);
+		free(f);
+	}
 }
 

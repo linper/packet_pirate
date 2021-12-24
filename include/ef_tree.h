@@ -6,7 +6,6 @@
 #include <string.h>
 #include <sys/types.h>
 
-#include "ext_filter.h"
 #include "utils.h"
 
 struct ef_tree {

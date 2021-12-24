@@ -52,6 +52,6 @@ void glist_set_clone_cb(struct glist *lst, void (*cb)(void **, void *));
 #define glist_foreach(item, list)											  \
 	for (int keep = 1, count = 0, size = list->count; keep && count != size;   \
 		 keep = !keep, count++)												\
-		for (item = (list->array) + count; keep; keep = !keep)
+		for (item = *(list->array + count); keep; keep = !keep)
 
 #endif

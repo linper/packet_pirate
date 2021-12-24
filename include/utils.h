@@ -2,14 +2,16 @@
 #define H_UTILS
 
 #include <stdbool.h>
-//#include <stdarg.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <pcap/pcap.h>
 
 #define BUF_SIZE 512
 #define ERRBUF_SIZE 256
+
+#define FH_CAP_MULTIPLIER 2
 
 typedef __u_char u_char;
 typedef __u_short u_short;
@@ -19,6 +21,9 @@ typedef __u_long u_long;
 #define BPF_PR_LEN 1024
 #define NET_LEN 256
 #define PORT_LEN 12
+
+#define BIT(b) 1 << b
+#define BITS(b) ~(~(0u) << b)
 
 typedef enum {
 	STATUS_OK = 0,
@@ -42,9 +47,15 @@ typedef enum {
 } verb;
 
 struct prog_ctx { //struct for program context
-	size_t next_puid; //id that will be assigned to next packet
-	verb verbosity; //program verbosity
+	size_t next_pid; //id that will be assigned to next packet
+	pcap_t *handle;
+	verb verbosity; //program verbosity, this is verb enum
 	char *bpf; //built or given bfp filter query
+	struct bpf_program bpf_prog;
+	struct ef_tree *ef_root;
+	struct fhmap *f_entries;
+	struct glist *cap_pkts;
+	struct glist *single_cap_pkt;
 };
 
 extern struct prog_ctx pc; //program context instance

@@ -1,18 +1,33 @@
 
-#include "../include/converter.h"
 #include <sys/types.h>
 
-status_val bytes_to_uint(u_char *data, unsigned u_len, unsigned long *res)
+#include "../include/converter.h"
+
+status_val bytes_to_uint(u_char *data, u_int u_len, u_long *res)
 {
-	if (u_len > 8) {
-		LOGM(L_ERR, STATUS_BAD_INPUT, "Int longer than 64 bits detected");
+	switch (u_len) { //TODO: this may break on big endian machines
+	case 1:
+		*res = *data;
+		break;
+
+	case 2:
+		*res = __bswap_16(*(u_short *)data);
+		break;
+
+	case 4:
+		*res = __bswap_32(*(u_short *)data);
+		break;
+
+	case 8:
+		*res = __bswap_64(*(u_short *)data);
+		break;
+
+	default:
+		LOGF(L_ERR, STATUS_BAD_INPUT, "Unsupported integer length detected:%ld",
+			 u_len);
 		return STATUS_BAD_INPUT;
 	}
 
-	unsigned padding = 8 - u_len;
-	memcpy((void *)(((u_char *)(res)) + padding), data,
-		   u_len); //TODO never tested, hope this works
-	/*memcpy((void*)(((u_char*)(&res->data)) + padding), data, u_len);*/
 	return STATUS_OK;
 }
 
