@@ -2,6 +2,7 @@
 mainmenu "Packet pirate configurations"
 
 source "src/filters/KConfig"
+source "src/dump/KConfig"
 
 config SELECT_DEF
     bool "Defaults"
