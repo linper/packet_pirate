@@ -33,6 +33,7 @@ typedef enum {
 	STATUS_FULL,
 	STATUS_BAD_INPUT,
 	STATUS_COUNT,
+	STATUS_DB,
 } status_val;
 
 typedef enum {
@@ -48,6 +49,7 @@ typedef enum {
 
 struct prog_ctx { //struct for program context
 	size_t next_pid; //id that will be assigned to next packet
+	u_long pp_hash; //hash value of compiled filters
 	pcap_t *handle;
 	verb verbosity; //program verbosity, this is verb enum
 	char *bpf; //built or given bfp filter query
@@ -62,6 +64,8 @@ extern struct prog_ctx pc; //program context instance
 
 #define ARR_LEN(arr) sizeof arr / sizeof(arr[0])
 
+u_long get_global_hash();
+
 /**
  * @brief Logs messages
  * @param status Message status 
@@ -75,7 +79,7 @@ void log_msg(verb lvl, status_val status, const char *file, int line,
 			 const char *format, ...);
 
 #define PRINT_HEX(str, len)                                                    \
-	for (size_t i = 0; i < len; ++i)                                           \
+	for (size_t i = 0; i < (size_t)len; ++i)                                           \
 		printf("0x%02x ", str[i]);                                             \
 	printf("\n")
 

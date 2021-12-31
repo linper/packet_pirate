@@ -13,9 +13,7 @@
 
 static u_int get_off_multiplier(struct f_entry *fe)
 {
-	if (fe->flags & EF_16BIT_MUL) {
-		return 2;
-	} else if (fe->flags & EF_32BIT_MUL) {
+	if (fe->flags & EF_32BITW) {
 		return 4;
 	} else {
 		return 1;
@@ -85,9 +83,10 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 
 	switch (fe->len.type) { //switching by entry length extraction method
 	case ELT_TAG:
-		if (!(pe = packet_get_entry(pkt_list, p, fe->tag)) &&
+		if (!(pe = packet_get_entry(pkt_list, p, fe->tag)) ||
 			bytes_to_uint(pe->raw_data, pe->raw_len,
-						  (unsigned long *)&e->raw_len)) {
+						  (unsigned long *)&e->raw_len) ||
+			pe->rfc != ERFC_INT) {
 			LOG(L_ERR, STATUS_BAD_INPUT);
 			return STATUS_BAD_INPUT;
 		}
@@ -107,12 +106,12 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 			return STATUS_BAD_INPUT;
 		}
 
-		if (*read_off < len + pe->glob_bit_off / 8) {
+		if (*read_off > (long)len + pe->glob_bit_off / 8) {
 			LOGM(L_NOTICE, STATUS_BAD_INPUT, "Packet is longer than expected");
 			return STATUS_BAD_INPUT;
 		}
 
-		e->raw_len = len + pe->glob_bit_off / 8 - *read_off;
+		e->raw_len = (long)len + pe->glob_bit_off / 8 - *read_off;
 
 		break;
 
@@ -120,7 +119,8 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 		//getting previous parsed entry with offset info and retreiving its data as uint
 		if (!(pe = packet_get_entry(pkt_list, p,
 									fe->len.data.e_pac_off_tag.offset_tag)) ||
-			bytes_to_uint(pe->raw_data, pe->raw_len, &len)) {
+			bytes_to_uint(pe->raw_data, pe->raw_len, &len) ||
+			pe->rfc != ERFC_INT) {
 			LOG(L_ERR, STATUS_BAD_INPUT);
 			return STATUS_BAD_INPUT;
 		}
@@ -143,18 +143,16 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 		//retreiving length nultiplier from offset filter entry
 		mul = get_off_multiplier(ref_fe);
 
-		if (*read_off < mul * len + pe->glob_bit_off / 8) {
+		if (*read_off > mul * (long)len + pe->glob_bit_off / 8) {
 			LOGM(L_NOTICE, STATUS_BAD_INPUT, "Packet is longer than expected");
 			return STATUS_BAD_INPUT;
 		}
 
-		e->raw_len = mul * len + pe->glob_bit_off / 8 - *read_off;
-
+		e->raw_len = mul * (long)len + pe->glob_bit_off / 8 - *read_off;
 		break;
 
 	case ELT_FLAG: //this is basicaly pointless
 		e->raw_len = (fe->len.data.e_len_bits.nbits - 1) / 8 + 1;
-		/*e->in_bits = true;*/
 		break;
 
 	default:
@@ -194,13 +192,15 @@ static status_val derive_entry(struct glist *pkt_list, struct packet *p,
 			LOGF(L_NOTICE, STATUS_BAD_INPUT,
 				 "Packet:%d, faild to split as %s\n", p->id, p->packet_tag);
 			free(e->raw_data);
+			return STATUS_BAD_INPUT;
 		}
 
 		//extracting entry data
 		memcpy(e->raw_data, data + (*read_off), e->raw_len);
 		e->glob_bit_off = *read_off * 8;
 		*read_off += e->raw_len; //showing that data was succesfully read
-		/*PRINT_HEX(data, e->raw_len);*/
+		e->wfc = wfc_arr[fe->write_form];
+		e->rfc = rfc_arr[fe->read_form];
 		break;
 	case ET_FLAG:
 		ref_entry = packet_get_entry(pkt_list, p, fe->len.data.e_len_bits.tag);
@@ -221,6 +221,8 @@ static status_val derive_entry(struct glist *pkt_list, struct packet *p,
 				  fe->len.data.e_len_bits.nbits);
 
 		e->glob_bit_off = *read_off * 8 + fe->len.data.e_len_bits.offset;
+		e->wfc = wfc_arr[fe->write_form];
+		e->rfc = rfc_arr[fe->read_form];
 
 		break;
 	default:
@@ -239,7 +241,8 @@ static status_val derive_entry(struct glist *pkt_list, struct packet *p,
 				 "Conversion from read to write format failed\n");
 			return status;
 		}
-		LOGF(L_DEBUG, STATUS_OK, "entry:%s data: %s\n", e->tag, e->conv_data);
+		LOGF(L_DEBUG, STATUS_OK, "entry:%s", e->tag);
+		/*PRINT_HEX(e->raw_data, e->raw_len);*/
 	}
 
 	return STATUS_OK;
@@ -296,13 +299,29 @@ status_val derive_packet(struct glist *pkt_list, struct ef_tree *node,
 void packet_free(struct packet *p)
 {
 	if (p) {
+		struct p_entry *pe;
 		for (u_int i = 0; i < p->e_len; i++) {
-			if (p->entries[i].raw_data) {
-				free(p->entries[i].raw_data);
-			}
+			pe = &p->entries[i];
+			//if raw_data and converted data (string/blob) is the same memory addres.
+			//this may be done to save memory.
+			if (pe->raw_data && pe->wfc == EWFC_STR &&
+				pe->raw_data == pe->conv_data.string) {
+				free(pe->raw_data);
+			} else if (pe->raw_data && pe->wfc == EWFC_BLOB &&
+					   pe->raw_data == pe->conv_data.blob.arr) {
+				free(pe->raw_data);
+			} else { // no shenanigans
+				if (pe->raw_data) {
+					free(pe->raw_data);
+				}
 
-			if (p->entries[i].conv_data) {
-				free(p->entries[i].conv_data);
+				if (pe->wfc == EWFC_STR && pe->conv_data.string) {
+					free(pe->conv_data.string);
+				}
+
+				if (pe->wfc == EWFC_BLOB && pe->conv_data.blob.arr) {
+					free(pe->conv_data.blob.arr);
+				}
 			}
 		}
 

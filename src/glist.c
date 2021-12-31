@@ -54,7 +54,7 @@ static status_val convert_index_glist(struct glist *lst, int *index)
 }
 
 //cap must be power of 2 and highier than 0, if not defaults to 16;
-struct glist *glist_new(int cap)
+struct glist *glist_new(int cap, float shrink_thr)
 {
 	if (cap < 1 || cap % 2 == 1) {
 		cap = 16;
@@ -68,7 +68,8 @@ struct glist *glist_new(int cap)
 
 	lst->cap = cap;
 	lst->min_cap = cap;
-	lst->shrink_threshold = 0.25;
+	lst->shrink_threshold = shrink_thr;
+
 	void **array = calloc(cap, sizeof(void *));
 	if (!array) {
 		free(lst);

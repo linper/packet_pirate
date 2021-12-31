@@ -130,7 +130,7 @@ status_val ef_tree_contains_by_tag(struct ef_tree *root, const char *tag)
 		cur = cur->next;
 	}
 
-	LOG(L_WARN, STATUS_NOT_FOUND);
+	LOG(L_INFO, STATUS_NOT_FOUND);
 	return STATUS_NOT_FOUND;
 }
 

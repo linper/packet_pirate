@@ -8,8 +8,3 @@ struct filter *filter_arr[] = {
 	NULL
 };
 
-void collect_filters(struct filter ***arr_ptr)
-{
-	*arr_ptr = filter_arr;
-}
-

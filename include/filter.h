@@ -24,46 +24,65 @@ enum entry_len_tp {
 };
 
 enum entry_read_format {
-	ERF_NONE,
-	ERF_UINT_LE,
+	ERF_UINT_LE, //TODO in order to use as offset packet must me marked by this or one below
 	ERF_UINT_BE,
 	ERF_STR,
+	ERF_BIN,
 	_ERF_COUNT,
 };
 
 enum entry_write_format {
 	EWF_NONE,
+	EWF_RAW,
 	EWF_UINT,
-	EWF_UINT_BE,
 	EWF_STR,
 	EWF_HEX_STR,
 	EWF_B64_STR,
 	_EWF_COUNT,
 };
 
+enum ewf_comp {
+	EWFC_NONE,
+	EWFC_INT,
+	EWFC_REAL, //currently unused
+	EWFC_STR,
+	EWFC_BLOB,
+};
+
+enum erf_comp {
+	ERFC_INT,
+	ERFC_REAL, //currently unused
+	ERFC_STR,
+	ERFC_BLOB,
+};
+
 //compatability matrix between read and write formats
 //lines - write
 //columns - read
-extern unsigned char rw_comp_mat[_EWF_COUNT][_ERF_COUNT];
+extern u_char rw_comp_mat[_EWF_COUNT][_ERF_COUNT];
+//array that determines compatability between entry
+//write format and actual database supported types
+extern enum ewf_comp wfc_arr[_EWF_COUNT];
+//similar to above, but for data "on wire"
+extern enum erf_comp rfc_arr[_ERF_COUNT];
 
 enum entry_flags {
 	EF_NONE = 0,
-	EF_16BIT_MUL = 1 << 1,
-	EF_32BIT_MUL = 1 << 2,
-	EF_PLD = 1 << 3,
-	EF_OPT = 1 << 4,
+	EF_32BITW = 1 << 1,
+	EF_PLD = 1 << 2,
+	EF_OPT = 1 << 3,
 };
 
 struct entry_len {
 	union {
 		struct { //length given directly
-			unsigned length;
+			u_int length;
 		} e_len_val;
 		struct { //length as other entry's data
 			char tag[TAG_LEN];
 		} e_len_tag;
 		struct { //length from current packet begining
-			unsigned length;
+			u_int length;
 			char tag[TAG_LEN];
 		} e_pac_off;
 		struct { //length as other entry's data from current packet begining
@@ -72,8 +91,8 @@ struct entry_len {
 		} e_pac_off_tag;
 		struct { //number of bits with offset from entry with given tag
 			char tag[TAG_LEN];
-			unsigned offset;
-			unsigned nbits;
+			u_int offset;
+			u_int nbits;
 		} e_len_bits;
 	} data;
 	enum entry_len_tp type; //used to identify length calculation method
@@ -150,26 +169,35 @@ struct filter {
 	bool (
 		*validate)(); //packet validation function, can be used for low level filtering
 	struct f_entry *entries; //array of packet field entries
-	unsigned n_entries; //length of entries
+	u_int n_entries; //length of entries
 };
 
 struct p_entry { //struct to store individual packet entry data
 	const char *tag; //tag for parent(lower level) packet
-	unsigned raw_len; //length of received entry
-	unsigned conv_len; //length of entry in write format
+	long raw_len; //length of received entry
 	u_char *raw_data; //pointer to allocated buffer with entry data
-	u_char *
-		conv_data; //pointer to allocated buffer wiith entry data in write format
-	unsigned glob_bit_off; //global offset from root packet's begining in bits
+	long glob_bit_off; //global offset from root packet's begining in bits
+	union {
+		u_long ulong; //integer complient data to write
+		double real; //floating point complient value to write
+		u_char *string; //printable string value to write
+		struct {
+			u_char *arr; //binnary data itself
+			long len; //length of binnary data
+		} blob; //any binnary data to write
+	} conv_data; //union of with entry data in write format
+	enum ewf_comp
+		wfc; //write datatype compatability. Also gives info which data is stored in "conv_data" union
+	enum erf_comp rfc; //read datatype compatability
 };
 
 struct packet { //struct to store received and filtered packet data
-	unsigned id; //UID for received packet
+	u_int id; //UID for received packet
 	const char *parent_tag; //tag for parent(lower level) packet
 	const char *packet_tag; //tag for current packet
-	unsigned e_len; //count of entry fields
+	long e_len; //count of entry fields
 	struct p_entry *entries; //array of entries
-	unsigned glob_bit_off; //global offset from root packet's begining in bits
+	long glob_bit_off; //global offset from root packet's begining in bits
 };
 
 #endif

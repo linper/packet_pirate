@@ -27,7 +27,7 @@ Q = @
 ######################
 TARGET = pp
 CC = gcc
-LDFLAGS += -lpcap
+LDFLAGS += -lpcap -lsqlite3
 CFLAGS += -Wall -Wextra -ggdb
 #CFLAGS += -Wall -Wextra -ggdb -std=c99
 DEFS += -DDEBUG
@@ -43,7 +43,12 @@ MAKE = make
 ######################
 #  PRE-BUILD  #
 ######################
-$(foreach conf,$(shell grep -E '.*=.*' $(KCONFIG)),$(eval export $(conf)))
+$(foreach conf,$(shell grep -E '.*=.*' $(KCONFIG)),$(eval CONF += $(conf)))
+$(foreach conf,$(CONF),$(eval export $(conf)))
+CONF := $(patsubst %=y, %, $(CONF))
+CONF := $(subst =",="\", $(CONF))
+CONF := $(subst " ,\"" , $(CONF))
+DEFS += $(patsubst CONFIG_%, -D%, $(CONF))
 
 ######################
 #  BUILD  #

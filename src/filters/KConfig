@@ -3,6 +3,8 @@ menu "Filters"
 
 source "src/filters/ethernet/KConfig"
 source "src/filters/ipv4/KConfig"
+source "src/filters/tcp/KConfig"
+source "src/filters/udp4/KConfig"
 
 endmenu
 
