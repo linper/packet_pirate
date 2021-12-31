@@ -8,10 +8,10 @@
 #include "../include/ext_filter.h"
 #include "../include/packet.h"
 #include "../include/ef_tree.h"
+#include "../include/dump/dump.h"
 #include "../include/core.h"
 
 #define FH_GLOB_INIT_CAP 256
-#define CAP_PKTS 256 //initial captured packets list capacity
 
 static status_val build_ef_tree()
 {
@@ -87,7 +87,7 @@ static status_val filter_rec(struct ef_tree *node, const u_char *data,
 
 	if (node->next) { // going to sibling filter
 		//persist filtering on failure
-		filter_rec(node->next, data, args, header, read_off);
+		filter_rec(node->next, data, args, header, base_read_off);
 	}
 
 	return STATUS_OK;
@@ -95,48 +95,68 @@ static status_val filter_rec(struct ef_tree *node, const u_char *data,
 
 status_val core_init()
 {
-	pc.cap_pkts = glist_new(CAP_PKTS);
+	status_val status;
+
+	pc.cap_pkts = glist_new(2 * DUMP_BATCH, GLIST_NO_SHRINK);
 	if (!pc.cap_pkts) {
 		LOG(L_CRIT, STATUS_OMEM);
-		return STATUS_OMEM;
+		status = STATUS_OMEM;
+		goto cp_err;
 	}
 
 	glist_set_free_cb(pc.cap_pkts, (void (*)(void *))packet_free);
 
-	pc.single_cap_pkt = glist_new(64);
+	pc.single_cap_pkt = glist_new(64, GLIST_ST_DEFAULT);
 	if (!pc.single_cap_pkt) {
 		LOG(L_CRIT, STATUS_OMEM);
-		glist_free(pc.cap_pkts);
-		return STATUS_OMEM;
+		status = STATUS_OMEM;
+		goto scp_err;
 	}
 
 	pc.f_entries = fhmap_new(FH_GLOB_INIT_CAP * FH_CAP_MULTIPLIER);
 	if (!pc.f_entries) {
 		LOG(L_CRIT, STATUS_OMEM);
-		glist_free(pc.single_cap_pkt);
-		glist_free(pc.cap_pkts);
-		return STATUS_OMEM;
+		status = STATUS_OMEM;
+		goto fhmap_err;
 	}
 
-	status_val status;
 	status = build_ef_tree();
 	if (status) {
 		LOG(L_CRIT, status);
-		glist_free(pc.single_cap_pkt);
-		glist_free(pc.cap_pkts);
-		fhmap_shallow_free(pc.f_entries);
-		return status;
+		goto tree_err;
 	}
 
+	status = dctx.open();
+	if (status) {
+		LOG(L_CRIT, status);
+		goto dump_open_err;
+	}
+
+	status = dctx.build(pc.ef_root);
+	if (status) {
+		LOG(L_CRIT, status);
+		goto dump_build_err;
+	}
+
+	return status;
+
+dump_build_err:
+	dctx.close();
+dump_open_err:
+	ef_tree_free(pc.ef_root);
+tree_err:
+	fhmap_shallow_free(pc.f_entries);
+fhmap_err:
+	glist_free(pc.single_cap_pkt);
+scp_err:
+	glist_free(pc.cap_pkts);
+cp_err:
 	return status;
 }
 
 void core_filter(u_char *args, const struct pcap_pkthdr *header,
 				 const u_char *packet)
 {
-	/*(void)args;*/
-	/*(void)header;*/
-
 	//clearing old single packet capture list
 	glist_clear_shallow(pc.single_cap_pkt);
 	filter_rec(pc.ef_root, packet, args, header, 0);
@@ -144,6 +164,11 @@ void core_filter(u_char *args, const struct pcap_pkthdr *header,
 	//copying elements ot main captured packet list
 	if (glist_copy_to(pc.single_cap_pkt, pc.cap_pkts)) {
 		LOG(L_ERR, STATUS_OMEM);
+	}
+
+	if (glist_count(pc.cap_pkts) >= DUMP_BATCH) {
+		dctx.dump(pc.cap_pkts);
+		glist_clear(pc.cap_pkts);
 	}
 
 	pc.next_pid++;
@@ -155,6 +180,9 @@ void core_destroy()
 		pcap_freecode(&pc.bpf_prog);
 		pcap_close(pc.handle);
 	}
+
+	//syncing db before freeing everyting else
+	dctx.close();
 	//do not need to free containing elements; just unlinking
 	glist_free_shallow(pc.single_cap_pkt);
 	glist_free(pc.cap_pkts);

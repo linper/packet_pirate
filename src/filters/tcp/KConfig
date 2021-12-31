@@ -1,0 +1,4 @@
+config FILTER_TCP    
+    bool "tcp filter"
+	default n
+	select FILTER_IPV4

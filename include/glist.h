@@ -9,6 +9,9 @@
 
 #include "utils.h"
 
+#define GLIST_NO_SHRINK -1.0
+#define GLIST_ST_DEFAULT 0.25
+
 struct glist {
 	void **array;
 	size_t count;
@@ -19,7 +22,7 @@ struct glist {
 	void (*clone_cb)(void **, void *);
 };
 
-struct glist *glist_new(int cap);
+struct glist *glist_new(int cap, float shrink_thr);
 //creates shallow clone unless clone_cb is set
 struct glist *glist_clone(struct glist *lst);
 void glist_clear(struct glist *lst);

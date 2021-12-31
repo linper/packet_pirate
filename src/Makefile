@@ -15,6 +15,7 @@ obj-y += setup.o
 obj-y += utils.o
 
 obj-y += filters/
+obj-y += dump/
 
 inc-y += filters/
  

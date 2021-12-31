@@ -7,6 +7,7 @@
 #include <sys/types.h>
 
 #include "utils.h"
+#include "filter.h"
 
 struct ef_tree {
 	struct ef_tree *par; //parent node
