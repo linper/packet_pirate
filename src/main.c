@@ -10,11 +10,17 @@
 #include "../include/bpf.h"
 #include "../include/core.h"
 
+static volatile bool in_cap = false;
+
 void sig_exit(int signo)
 {
 	(void)signo;
-	core_destroy();
-	exit(0);
+	if (in_cap) {
+		pcap_breakloop(pc.handle);
+	} else {
+		core_destroy();
+		exit(0);
+	}
 }
 
 int main(int argc, char *argv[])
@@ -93,6 +99,7 @@ int main(int argc, char *argv[])
 		goto error;
 	}
 
+	in_cap = true; //lets say scheduling can not occur right after this
 	pcap_loop(pc.handle, -1, core_filter, NULL);
 
 	core_destroy();

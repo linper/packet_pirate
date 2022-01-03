@@ -10,12 +10,14 @@ static struct f_entry ipv4_packet[] = {
 	{"ipv4_ecn", 	ET_FLAG,		E_BITS("ipv4_tos", 6, 2), 	0, 		ERF_UINT_LE, 	EWF_HEX_STR},
 	{"ipv4_len", 	ET_DATAFIELD,	E_LEN(2), 					0, 		ERF_UINT_LE, 	EWF_UINT},
 	{"ipv4_id", 	ET_DATAFIELD,	E_LEN(2), 					0, 		ERF_UINT_LE, 	EWF_UINT},
+	/*{"ipv4_fl_off", ET_BITFIELD, 	E_LEN(2), 					0, 		ERF_BIN, 		EWF_RAW},*/
 	{"ipv4_fl_off", ET_BITFIELD, 	E_LEN(2), 					0, 		ERF_BIN, 		EWF_NONE},
 	{"ipv4_flags", 	ET_FLAG,		E_BITS("ipv4_fl_off", 0, 2),0, 		ERF_UINT_LE, 	EWF_HEX_STR},
 	{"ipv4_frag_off",	ET_FLAG, 	E_BITS("ipv4_fl_off", 2, 14),	0, 	ERF_UINT_LE, 	EWF_HEX_STR},
 	{"ipv4_ttl", 	ET_DATAFIELD,	E_LEN(1), 					0, 		ERF_UINT_LE, 	EWF_UINT},
 	{"ipv4_proto", 	ET_DATAFIELD,	E_LEN(1), 					0, 		ERF_UINT_LE, 	EWF_UINT},
 	{"ipv4_cksum", 	ET_DATAFIELD,	E_LEN(2), 					0, 		ERF_UINT_LE, 	EWF_UINT},
+	/*{"ipv4_src", 	ET_DATAFIELD,	E_LEN(4), 					0, 		ERF_BIN, 		EWF_RAW},*/
 	{"ipv4_src", 	ET_DATAFIELD,	E_LEN(4), 					0, 		ERF_UINT_LE, 	EWF_HEX_STR},
 	{"ipv4_dest", 	ET_DATAFIELD,	E_LEN(4), 					0, 		ERF_UINT_LE, 	EWF_HEX_STR},
 	{"ipv4_opt", 	ET_DATAFIELD,	E_PAC_OFF_OF("ipv4_vhl", "ipv4_ihl"),	EF_OPT,	ERF_UINT_LE, 	EWF_HEX_STR},

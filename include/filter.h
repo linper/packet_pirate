@@ -183,7 +183,7 @@ struct p_entry { //struct to store individual packet entry data
 		u_char *string; //printable string value to write
 		struct {
 			u_char *arr; //binnary data itself
-			long len; //length of binnary data
+			u_long len; //length of binnary data
 		} blob; //any binnary data to write
 	} conv_data; //union of with entry data in write format
 	enum ewf_comp
