@@ -27,7 +27,7 @@ Q = @
 ######################
 TARGET = pp
 CC = gcc
-LDFLAGS += -lpcap -lsqlite3
+LDFLAGS += -lpcap
 CFLAGS += -Wall -Wextra -ggdb
 #CFLAGS += -Wall -Wextra -ggdb -std=c99
 DEFS += -DDEBUG
@@ -49,6 +49,14 @@ CONF := $(patsubst %=y, %, $(CONF))
 CONF := $(subst =",="\", $(CONF))
 CONF := $(subst " ,\"" , $(CONF))
 DEFS += $(patsubst CONFIG_%, -D%, $(CONF))
+
+ifeq ($(CONFIG_DUMP_TYPE_SQLITE3),y)
+   LDFLAGS += -lsqlite3
+else ifeq ($(CONFIG_DUMP_TYPE_MYSQL),y)
+   LDFLAGS += -lmysqlclient
+else ifeq ($(CONFIG_DUMP_TYPE_PQ),y)
+   LDFLAGS += -lpq
+endif
 
 ######################
 #  BUILD  #

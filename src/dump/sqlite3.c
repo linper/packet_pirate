@@ -14,13 +14,15 @@
 #include "../../include/dump/dump.h"
 #include "../../include/dump/sqlite3.h"
 
+static struct sqlite3 *db;
+
 static status_val compare_db()
 {
 	long new_hash = (long)get_global_hash();
 	long old_hash = 0;
 	sqlite3_stmt *stmt;
 	const char *sql = "SELECT pp_hash FROM context";
-	int rc = sqlite3_prepare_v2(dctx.db, sql, -1, &stmt, NULL);
+	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		return STATUS_DB;
 	}
@@ -47,8 +49,8 @@ static void sync_db_context()
 	char buff[BUF_SIZE];
 	sprintf(buff, "UPDATE context SET pp_hash = %ld, next_idx = %ld;",
 			pc.pp_hash, pc.next_pid);
-	if (sqlite3_exec(dctx.db, buff, 0, 0, NULL) != SQLITE_OK) {
-		LOGF(L_ERR, STATUS_DB, "%s", sqlite3_errmsg(dctx.db));
+	if (sqlite3_exec(db, buff, 0, 0, NULL) != SQLITE_OK) {
+		LOGF(L_ERR, STATUS_DB, "%s", sqlite3_errmsg(db));
 	}
 }
 
@@ -66,9 +68,9 @@ static status_val create_or_sync_prog_context(char *buff)
 			INSERT INTO context VALUES(%ld, 0);",
 				pp_hash);
 
-		rc = sqlite3_exec(dctx.db, buff, 0, 0, NULL);
+		rc = sqlite3_exec(db, buff, 0, 0, NULL);
 		if (rc != SQLITE_OK) {
-			LOGF(L_ERR, STATUS_DB, "%s", sqlite3_errmsg(dctx.db));
+			LOGF(L_ERR, STATUS_DB, "%s", sqlite3_errmsg(db));
 			return STATUS_DB;
 		}
 
@@ -76,8 +78,8 @@ static status_val create_or_sync_prog_context(char *buff)
 		pc.next_pid = 0;
 	} else { //database exists and is identical
 		sqlite3_stmt *stmt;
-		rc = sqlite3_prepare_v2(dctx.db, "SELECT pp_hash, next_idx FROM context",
-								-1, &stmt, NULL);
+		rc = sqlite3_prepare_v2(db, "SELECT pp_hash, next_idx FROM context", -1,
+								&stmt, NULL);
 		if (rc != SQLITE_OK) {
 			return STATUS_DB;
 		}
@@ -106,7 +108,7 @@ static status_val build_table(struct ef_tree *root, char *buff)
 	struct filter *f = root->flt->filter;
 
 	off += sprintf(buff + off, "id INT PRIMARY KEY NOT NULL");
-	off += sprintf(buff + off, ", timestamp TEXT NOT NULL");
+	off += sprintf(buff + off, ", tmst TEXT NOT NULL");
 
 	for (size_t i = 0; i < f->n_entries; i++) {
 		const char *mand = f->entries[i].flags & EF_OPT ? "" : " NOT NULL";
@@ -134,8 +136,8 @@ static status_val build_table(struct ef_tree *root, char *buff)
 
 	off += sprintf(buff + off, ");");
 
-	if ((rc = sqlite3_exec(dctx.db, buff, 0, 0, NULL)) != SQLITE_OK) {
-		LOGF(L_CRIT, STATUS_DB, "%s", sqlite3_errmsg(dctx.db));
+	if ((rc = sqlite3_exec(db, buff, 0, 0, NULL)) != SQLITE_OK) {
+		LOGF(L_CRIT, STATUS_DB, "%s", sqlite3_errmsg(db));
 		return STATUS_DB;
 	}
 
@@ -160,48 +162,48 @@ status_val dump_sqlite3_open()
 	char path[BUF_SIZE] = { 0 };
 	bool exists = false;
 
-	sprintf(path, "%s/%s.db", DUMP_SQLITE3_PATH, DUMP_SQLITE3_NAME);
+	sprintf(path, "%s/%s.db", DUMP_SQLITE3_PATH, DUMP_SQLITE3_DB);
 
 	if (!access(path, F_OK)) {
 		exists = true;
 	}
 
-#ifdef DUMP_SQLITE3_APPEND
+#ifdef DUMP_APPEND
 	if (exists) {
-		if ((rc = sqlite3_open_v2(path, &dctx.db, SQLITE_OPEN_READWRITE,
-								  "unix")) != SQLITE_OK) {
+		if ((rc = sqlite3_open_v2(path, &db, SQLITE_OPEN_READWRITE, "unix")) !=
+			SQLITE_OK) {
 			return STATUS_DB;
 		}
 
 		if (compare_db()) {
 			dump_sqlite3_close();
-			return STATUS_DB;
+			return STATUS_DB; //TODO do I really need this?
 		} else {
 			return STATUS_OK;
 		}
 	}
 #endif
 
-#ifdef DUMP_SQLITE3_OVERRIDE
+#ifdef DUMP_OVERRIDE
 	if (exists && remove(path)) {
 		LOGF(L_CRIT, STATUS_DB, "Unable to delete: %s", path);
 		return STATUS_DB;
 	}
 
-	if ((rc = sqlite3_open_v2(path, &dctx.db,
+	if ((rc = sqlite3_open_v2(path, &db,
 							  SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
 							  "unix")) != SQLITE_OK) {
-		LOGF(L_CRIT, STATUS_DB, "%s:%d", sqlite3_errmsg(dctx.db), rc);
+		LOGF(L_CRIT, STATUS_DB, "%s:%d", sqlite3_errmsg(db), rc);
 		return STATUS_DB;
 	}
 
 	return STATUS_OK;
 #else
 	if (!exists) {
-		if ((rc = sqlite3_open_v2(path, &dctx.db,
+		if ((rc = sqlite3_open_v2(path, &db,
 								  SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
 								  "unix")) != SQLITE_OK) {
-			LOGF(L_CRIT, STATUS_DB, "%s:%d", sqlite3_errmsg(dctx.db), rc);
+			LOGF(L_CRIT, STATUS_DB, "%s:%d", sqlite3_errmsg(db), rc);
 			return STATUS_DB;
 		} else {
 			return STATUS_OK;
@@ -210,7 +212,7 @@ status_val dump_sqlite3_open()
 
 	size_t counter = 1;
 	while (exists) {
-		sprintf(path, "%s/%s.%ld.db", DUMP_SQLITE3_PATH, DUMP_SQLITE3_NAME,
+		sprintf(path, "%s/%s_%ld.db", DUMP_SQLITE3_PATH, DUMP_SQLITE3_DB,
 				counter++);
 
 		if (access(path, F_OK)) {
@@ -218,10 +220,10 @@ status_val dump_sqlite3_open()
 		}
 	}
 
-	if ((rc = sqlite3_open_v2(path, &dctx.db,
+	if ((rc = sqlite3_open_v2(path, &db,
 							  SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
 							  "unix")) != SQLITE_OK) {
-		LOGF(L_CRIT, STATUS_DB, "%s:%d", sqlite3_errmsg(dctx.db), rc);
+		LOGF(L_CRIT, STATUS_DB, "%s:%d", sqlite3_errmsg(db), rc);
 		return STATUS_DB;
 	}
 	return STATUS_OK;
@@ -251,21 +253,9 @@ status_val dump_sqlite3_build(struct ef_tree *root)
 	}
 
 	if (ident) { //skipping if identical database already exists
+		free(buff);
 		return STATUS_OK;
 	}
-	/*sprintf(buff,*/
-	/*"CREATE TABLE IF NOT EXISTS context(pp_hash INT, next_idx INT);");*/
-	/*if ((rc = sqlite3_exec(dctx.db, buff, 0, 0, NULL)) != SQLITE_OK) {*/
-	/*LOGF(L_INFO, STATUS_DB, "%s", sqlite3_errmsg(dctx.db));*/
-	/*goto end;*/
-	/*}*/
-
-	/*sprintf(buff, "INSERT INTO context VALUES(%ld, 0);",*/
-	/*(long)get_global_hash());*/
-	/*if ((rc = sqlite3_exec(dctx.db, buff, 0, 0, NULL)) != SQLITE_OK) {*/
-	/*LOGF(L_INFO, STATUS_DB, "%s", sqlite3_errmsg(dctx.db));*/
-	/*goto end;*/
-	/*}*/
 
 	//desending down into first child filter if it exists
 	if (root->chld && build_table(root->chld, buff)) {
@@ -287,7 +277,7 @@ end:
 status_val dump_sqlite3_dump(struct glist *lst)
 {
 	int rc;
-	struct p_entry *pe_blob_arr[128] = { 0 };
+	struct p_entry *pe_blob_arr[PEBA_CAP] = { 0 };
 	u_int peba_len = 0;
 	status_val status = STATUS_DB;
 
@@ -317,8 +307,15 @@ status_val dump_sqlite3_dump(struct glist *lst)
 							   p->entries[i].conv_data.string);
 				break;
 			case EWFC_BLOB:
+				if (peba_len + 1 == PEBA_CAP) {
+					LOGM(L_ERR, STATUS_BAD_INPUT,
+						 "Too many replaceable parameters(BLOB)");
+					goto end;
+				}
+
 				off += sprintf(buff + off, ", ?");
-				pe_blob_arr[peba_len++] = &p->entries[i];
+				pe_blob_arr[peba_len] = &p->entries[i];
+				peba_len++;
 				break;
 			case EWFC_REAL:
 				off +=
@@ -336,9 +333,8 @@ status_val dump_sqlite3_dump(struct glist *lst)
 		off += sprintf(buff + off, ");");
 
 		sqlite3_stmt *stmt;
-		if ((rc = sqlite3_prepare_v2(dctx.db, buff, -1, &stmt, NULL)) !=
-			SQLITE_OK) {
-			LOGF(L_ERR, STATUS_DB, "%s", sqlite3_errmsg(dctx.db));
+		if ((rc = sqlite3_prepare_v2(db, buff, -1, &stmt, NULL)) != SQLITE_OK) {
+			LOGF(L_ERR, STATUS_DB, "%s", sqlite3_errmsg(db));
 			goto end;
 		}
 
@@ -348,7 +344,7 @@ status_val dump_sqlite3_dump(struct glist *lst)
 								   pe_blob_arr[i]->conv_data.blob.len,
 								   SQLITE_STATIC);
 			if (rc != SQLITE_OK) {
-				LOGF(L_ERR, STATUS_DB, "%s", sqlite3_errmsg(dctx.db));
+				LOGF(L_ERR, STATUS_DB, "%s", sqlite3_errmsg(db));
 			}
 		}
 
@@ -369,7 +365,7 @@ status_val dump_sqlite3_close()
 {
 	dump_sqlite3_dump(pc.cap_pkts); //syncing unwritten data
 	sync_db_context();
-	sqlite3_close_v2(dctx.db);
+	sqlite3_close_v2(db);
 	return STATUS_OK;
 }
 

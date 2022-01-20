@@ -35,7 +35,7 @@ static void hash(u_char *data, size_t len, u_long *hash)
 {
 	u_char c;
 	for (size_t i = 0; i < len; ++i) {
-		c = *data + i;
+		c = *(data + i);
 		*hash = ((*hash << 5) + *hash) + c; /* *hash * 33 + c */
 	}
 
@@ -49,9 +49,7 @@ u_long get_global_hash()
 		hash((u_char *)(*f)->packet_tag, TAG_LEN, &g_hash);
 		hash((u_char *)(*f)->parent_tag, TAG_LEN, &g_hash);
 
-		for (size_t i = 0; i < (*f)->n_entries; ++i) {
-			hash((u_char *)(*f)->entries + i, sizeof(struct f_entry), &g_hash);
-		}
+		hash((u_char *)(*f)->entries, (*f)->n_entries * sizeof(struct f_entry), &g_hash);
 	}
 
 	return g_hash;

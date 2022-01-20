@@ -129,7 +129,7 @@ status_val core_init()
 	status = dctx.open();
 	if (status) {
 		LOG(L_CRIT, status);
-		goto dump_open_err;
+		goto dump_build_err;
 	}
 
 	status = dctx.build(pc.ef_root);
@@ -142,7 +142,6 @@ status_val core_init()
 
 dump_build_err:
 	dctx.close();
-dump_open_err:
 	ef_tree_free(pc.ef_root);
 tree_err:
 	fhmap_shallow_free(pc.f_entries);

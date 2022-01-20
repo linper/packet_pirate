@@ -121,16 +121,13 @@ status_val ef_tree_contains_by_tag(struct ef_tree *root, const char *tag)
 		}
 	}
 
-	struct ef_tree *cur = root->next;
-
-	while (cur) {
-		if (!(ret = ef_tree_contains_by_tag(cur->next, tag))) {
+	if (root->next) {
+		if (!(ret = ef_tree_contains_by_tag(root->next, tag))) {
 			return ret; //returning back to beginning
 		}
-		cur = cur->next;
 	}
 
-	LOG(L_INFO, STATUS_NOT_FOUND);
+	/*LOG(L_INFO, STATUS_NOT_FOUND);*/
 	return STATUS_NOT_FOUND;
 }
 

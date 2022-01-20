@@ -1,6 +1,6 @@
-#include "../include/>>>FILTER_NAME<<<.h"
+#include "../include/>>>FILTER_DB<<<.h"
 
-static struct f_entry >>>FILTER_NAME<<<_packet[] = {
+static struct f_entry >>>FILTER_DB<<<_packet[] = {
 	/*ethernet packet example*/
 /*  TAG 			ENTRY TYPE	LENG TH 	FLAGS 	READ FORMAT 	WRITE FORMAT */
 	/*{"dhost", 	ET_DATAFIELD, 	E_LEN(6), 	0, 		ERF_STR, 		EWF_HEX_STR},*/
@@ -23,14 +23,14 @@ static bool validate()
 	return true;
 }
 
-struct filter >>>FILTER_NAME<<<_filter = {
-	.parent_tag = >>>PARENT_BUF_NAME<<<,
-	.packet_tag = ">>>FILTER_NAME<<<",
+struct filter >>>FILTER_DB<<<_filter = {
+	.parent_tag = >>>PARENT_BUF_DB<<<,
+	.packet_tag = ">>>FILTER_DB<<<",
 	.pre_filter = intercept,
 	.post_filter = NULL,
 	.validate = validate,
-	.entries = >>>FILTER_NAME<<<_packet,
-	.n_entries = FILTER_LEN(>>>FILTER_NAME<<<_packet),
+	.entries = >>>FILTER_DB<<<_packet,
+	.n_entries = FILTER_LEN(>>>FILTER_DB<<<_packet),
 };
 	
 
