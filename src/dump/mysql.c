@@ -163,7 +163,8 @@ static status_val build_table(struct ef_tree *root, char *buff)
 
 		switch (wfc_arr[f->entries[i].write_form]) {
 		case EWFC_INT:
-			off += sprintf(buff + off, ", %s BIGINT%s", f->entries[i].tag, mand);
+			off +=
+				sprintf(buff + off, ", %s BIGINT%s", f->entries[i].tag, mand);
 			break;
 		case EWFC_STR:
 			off += sprintf(buff + off, ", %s TEXT%s", f->entries[i].tag, mand);
@@ -227,7 +228,7 @@ status_val dump_mysql_open()
 	char *db_name = db_name_buff;
 	bool exists = false;
 
-	status = get_new_db_name(DUMP_MYSQL_NAME, db_name, &exists);
+	status = get_new_db_name(DUMP_MYSQL_DB, db_name, &exists);
 	if (status) {
 		LOG(L_CRIT, STATUS_DB);
 		goto end;
@@ -235,7 +236,7 @@ status_val dump_mysql_open()
 
 #ifdef DUMP_APPEND
 	if (exists) {
-		sprintf(buff, "USE %s", DUMP_MYSQL_NAME);
+		sprintf(buff, "USE %s", DUMP_MYSQL_DB);
 		if (mysql_query(db, buff)) {
 			LOGF(L_ERR, STATUS_DB, "%s", mysql_error(db));
 			goto end;
@@ -250,19 +251,19 @@ status_val dump_mysql_open()
 
 #ifdef DUMP_OVERRIDE
 	if (exists) {
-		sprintf(buff, "DROP DATABASE %s", DUMP_MYSQL_NAME);
+		sprintf(buff, "DROP DATABASE %s", DUMP_MYSQL_DB);
 		if (mysql_query(db, buff)) {
 			LOGF(L_ERR, STATUS_DB, "%s", mysql_error(db));
 			goto end;
 		}
 	}
 
-	sprintf(buff, "CREATE DATABASE %s", DUMP_MYSQL_NAME);
+	sprintf(buff, "CREATE DATABASE %s", DUMP_MYSQL_DB);
 	if (mysql_query(db, buff)) {
 		LOGF(L_ERR, STATUS_DB, "%s", mysql_error(db));
 		goto end;
 	}
-	sprintf(buff, "USE %s", DUMP_MYSQL_NAME);
+	sprintf(buff, "USE %s", DUMP_MYSQL_DB);
 	if (mysql_query(db, buff)) {
 		LOGF(L_ERR, STATUS_DB, "%s", mysql_error(db));
 		goto end;
@@ -334,7 +335,7 @@ end:
 
 status_val dump_mysql_dump(struct glist *lst)
 {
-	struct p_entry *pe_blob_arr[128] = { 0 };
+	struct p_entry *pe_blob_arr[PEBA_CAP] = { 0 };
 	u_int peba_len = 0;
 	status_val status = STATUS_DB;
 	MYSQL_STMT *stmt = NULL;
@@ -371,8 +372,15 @@ status_val dump_mysql_dump(struct glist *lst)
 							   p->entries[i].conv_data.string);
 				break;
 			case EWFC_BLOB:
+				if (peba_len + 1 == PEBA_CAP) {
+					LOGM(L_ERR, STATUS_BAD_INPUT,
+						 "Too many replaceable parameters(BLOB)");
+					goto end;
+				}
+
 				off += sprintf(buff + off, ", ?");
-				pe_blob_arr[peba_len++] = &p->entries[i];
+				pe_blob_arr[peba_len] = &p->entries[i];
+				peba_len++;
 				break;
 			case EWFC_REAL:
 				off +=

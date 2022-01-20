@@ -49,7 +49,8 @@ int main(int argc, char *argv[])
 	/*pcap_t *handle;*/
 	//	char *dev;
 	//	char *dev = argv[1];
-	char *dev = "eno1";
+	char *dev = "wlp3s0";
+	/*char *dev = "eno1";*/
 	char errbuf[ERRBUF_SIZE] = { 0 };
 	char filter_exp[BUF_SIZE];
 	bpf_u_int32 mask;
@@ -96,6 +97,12 @@ int main(int argc, char *argv[])
 	status = core_init();
 	if (status) {
 		LOG(L_CRIT, status);
+		if (pc.handle) {
+			pcap_freecode(&pc.bpf_prog);
+			pcap_close(pc.handle);
+		}
+
+		free(pc.bpf);
 		goto error;
 	}
 

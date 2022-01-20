@@ -78,8 +78,8 @@ static status_val create_or_sync_prog_context(char *buff)
 		pc.next_pid = 0;
 	} else { //database exists and is identical
 		sqlite3_stmt *stmt;
-		rc = sqlite3_prepare_v2(
-			db, "SELECT pp_hash, next_idx FROM context", -1, &stmt, NULL);
+		rc = sqlite3_prepare_v2(db, "SELECT pp_hash, next_idx FROM context", -1,
+								&stmt, NULL);
 		if (rc != SQLITE_OK) {
 			return STATUS_DB;
 		}
@@ -162,7 +162,7 @@ status_val dump_sqlite3_open()
 	char path[BUF_SIZE] = { 0 };
 	bool exists = false;
 
-	sprintf(path, "%s/%s.db", DUMP_SQLITE3_PATH, DUMP_SQLITE3_NAME);
+	sprintf(path, "%s/%s.db", DUMP_SQLITE3_PATH, DUMP_SQLITE3_DB);
 
 	if (!access(path, F_OK)) {
 		exists = true;
@@ -170,8 +170,8 @@ status_val dump_sqlite3_open()
 
 #ifdef DUMP_APPEND
 	if (exists) {
-		if ((rc = sqlite3_open_v2(path, &db, SQLITE_OPEN_READWRITE,
-								  "unix")) != SQLITE_OK) {
+		if ((rc = sqlite3_open_v2(path, &db, SQLITE_OPEN_READWRITE, "unix")) !=
+			SQLITE_OK) {
 			return STATUS_DB;
 		}
 
@@ -212,7 +212,7 @@ status_val dump_sqlite3_open()
 
 	size_t counter = 1;
 	while (exists) {
-		sprintf(path, "%s/%s_%ld.db", DUMP_SQLITE3_PATH, DUMP_SQLITE3_NAME,
+		sprintf(path, "%s/%s_%ld.db", DUMP_SQLITE3_PATH, DUMP_SQLITE3_DB,
 				counter++);
 
 		if (access(path, F_OK)) {
@@ -253,6 +253,7 @@ status_val dump_sqlite3_build(struct ef_tree *root)
 	}
 
 	if (ident) { //skipping if identical database already exists
+		free(buff);
 		return STATUS_OK;
 	}
 
@@ -276,7 +277,7 @@ end:
 status_val dump_sqlite3_dump(struct glist *lst)
 {
 	int rc;
-	struct p_entry *pe_blob_arr[128] = { 0 };
+	struct p_entry *pe_blob_arr[PEBA_CAP] = { 0 };
 	u_int peba_len = 0;
 	status_val status = STATUS_DB;
 
@@ -306,8 +307,15 @@ status_val dump_sqlite3_dump(struct glist *lst)
 							   p->entries[i].conv_data.string);
 				break;
 			case EWFC_BLOB:
+				if (peba_len + 1 == PEBA_CAP) {
+					LOGM(L_ERR, STATUS_BAD_INPUT,
+						 "Too many replaceable parameters(BLOB)");
+					goto end;
+				}
+
 				off += sprintf(buff + off, ", ?");
-				pe_blob_arr[peba_len++] = &p->entries[i];
+				pe_blob_arr[peba_len] = &p->entries[i];
+				peba_len++;
 				break;
 			case EWFC_REAL:
 				off +=
@@ -325,8 +333,7 @@ status_val dump_sqlite3_dump(struct glist *lst)
 		off += sprintf(buff + off, ");");
 
 		sqlite3_stmt *stmt;
-		if ((rc = sqlite3_prepare_v2(db, buff, -1, &stmt, NULL)) !=
-			SQLITE_OK) {
+		if ((rc = sqlite3_prepare_v2(db, buff, -1, &stmt, NULL)) != SQLITE_OK) {
 			LOGF(L_ERR, STATUS_DB, "%s", sqlite3_errmsg(db));
 			goto end;
 		}

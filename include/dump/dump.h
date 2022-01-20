@@ -3,6 +3,8 @@
 
 #include "../utils.h"
 
+#define PEBA_CAP 128
+
 struct dump_ctx {
 	status_val (*open)();
 	status_val (*build)(struct ef_tree *);

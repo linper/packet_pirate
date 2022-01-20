@@ -54,6 +54,8 @@ ifeq ($(CONFIG_DUMP_TYPE_SQLITE3),y)
    LDFLAGS += -lsqlite3
 else ifeq ($(CONFIG_DUMP_TYPE_MYSQL),y)
    LDFLAGS += -lmysqlclient
+else ifeq ($(CONFIG_DUMP_TYPE_PQ),y)
+   LDFLAGS += -lpq
 endif
 
 ######################
