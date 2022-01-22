@@ -22,12 +22,12 @@ config DEF
 
 	config DEF_FS1_BPF
 	    string "BPF"
-	    default ""
+	    default "tcp"
 	    depends on DEF_FS1_USE_BPF
     
 	config DEF_FS1_DHOST
 	    string "Destination host"
-	    default ""
+	    default "127.0.0.1"
 	    depends on !DEF_FS1_USE_BPF && DEF_FS1
 
 	config DEF_FS1_DNET
@@ -36,11 +36,13 @@ config DEF
 	    depends on !DEF_FS1_USE_BPF && DEF_FS1
     
 	config DEF_FS1_DPORT
-	    int "Destination port"
+	    string "Destination port"
+		default ""
 	    depends on !DEF_FS1_USE_BPF && DEF_FS1
 
 	config DEF_FS1_PROTO
 	    string "Protocol"
+		default "tcp"
 	    depends on !DEF_FS1_USE_BPF && DEF_FS1
     
 	config DEF_FS1_SHOST
@@ -54,7 +56,8 @@ config DEF
 	    depends on !DEF_FS1_USE_BPF && DEF_FS1
     
 	config DEF_FS1_SPORT
-	    int "Source port"
+	    string "Source port"
+		default ""
 	    depends on !DEF_FS1_USE_BPF && DEF_FS1
     
 config DEV
@@ -78,6 +81,11 @@ config LOGGING
 	prompt "Select logging verbosity"
 	depends on LOGGING
 	default VERB_WARN
+	
+    config VERB_QUIET
+	bool "Quiet"
+	help
+	    "No messages"
 
     config VERB_CRIT
 	bool "Critical"
