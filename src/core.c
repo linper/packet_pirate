@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <stddef.h>
+#include <time.h>
 
 #include "../include/glist.h"
 #include "../include/filter.h"
@@ -165,9 +166,11 @@ void core_filter(u_char *args, const struct pcap_pkthdr *header,
 		LOG(L_ERR, STATUS_OMEM);
 	}
 
-	if (glist_count(pc.cap_pkts) >= DUMP_BATCH) {
+	u_long now = time(NULL);
+	if (glist_count(pc.cap_pkts) >= DUMP_BATCH || now - pc.last_dump >= DUMP_INTERVAL) {
 		dctx.dump(pc.cap_pkts);
 		glist_clear(pc.cap_pkts);
+		pc.last_dump = now;
 	}
 
 	pc.next_pid++;

@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include <pcap/pcap.h>
 
 #define BUF_SIZE 512
@@ -48,6 +49,7 @@ typedef enum {
 } verb;
 
 struct prog_ctx { //struct for program context
+	u_long last_dump;
 	size_t next_pid; //id that will be assigned to next packet
 	u_long pp_hash; //hash value of compiled filters
 	pcap_t *handle;
@@ -79,7 +81,7 @@ void log_msg(verb lvl, status_val status, const char *file, int line,
 			 const char *format, ...);
 
 #define PRINT_HEX(str, len)                                                    \
-	for (size_t i = 0; i < (size_t)len; ++i)                                           \
+	for (size_t i = 0; i < (size_t)len; ++i)                                   \
 		printf("0x%02x ", str[i]);                                             \
 	printf("\n")
 
