@@ -1,8 +1,9 @@
 
 /*#include "../include/params.h"*/
 #include "../include/setup.h"
+#include <string.h>
 
-#define NEMPTY_STR(s) s && strcmp(s, "")
+#define NEMPTY_STR(s) s &&strcmp(s, "")
 
 struct prog_ctx pc = { 0 };
 
@@ -94,7 +95,10 @@ static error_t parse_p(int key, char *arg, struct argp_state *state)
 }
 
 /* Our argp parser. */
-static struct argp argp = { options, parse_p, args_doc, doc };
+static struct argp argp = { .options = options,
+							.parser = parse_p,
+							.args_doc = args_doc,
+							.doc = doc };
 
 static void parse_params(int argc, char *argv[], struct prog_args *args)
 {
@@ -113,7 +117,7 @@ static inline void build_port_string(char *dst, const char *src, char *prefix)
 }
 
 //todo study bfp syntax and correct errors if they exist
-status_val build_bpf(struct prog_args *pa)
+static status_val build_bpf(struct prog_args *pa)
 {
 	status_val status = STATUS_ERROR;
 
@@ -124,7 +128,8 @@ status_val build_bpf(struct prog_args *pa)
 	char src_ports[PORT_LEN + 14] = { 0 };
 
 	if (pa->bpf_enabled) {
-		if (NEMPTY_STR(pa->filter.bpf) && strlen(pa->filter.bpf) >= BPF_PR_LEN) {
+		if (NEMPTY_STR(pa->filter.bpf) &&
+			strlen(pa->filter.bpf) >= DEF_BPF_LEN) {
 			status = STATUS_BAD_INPUT;
 			LOGM(L_CRIT, status, "Bpf is too long");
 			goto end;
@@ -195,14 +200,19 @@ status_val build_bpf(struct prog_args *pa)
 		build_port_string(src_ports, pa->filter.sport, "src");
 	}
 
-	if (!(pc.bpf = calloc(sizeof(char), BPF_PR_LEN))) {
+	const char *conj =
+		((src_net[0] && dst_net[0]) || (src_ports[0] && dst_ports[0])) ?
+			" && " :
+			  "";
+
+	if (!(pc.bpf = calloc(sizeof(char), DEF_BPF_LEN))) {
 		status = STATUS_OMEM;
 		LOG(L_CRIT, status);
 		goto end;
 	}
 
-	snprintf(pc.bpf, BPF_PR_LEN - 1, "%s %s%s%s%s", pa->filter.proto, src_net,
-			 src_ports, dst_net, dst_ports);
+	snprintf(pc.bpf, DEF_BPF_LEN - 1, "%s %s%s%s%s%s", pa->filter.proto, src_net,
+			 src_ports, conj, dst_net, dst_ports);
 	status = STATUS_OK;
 
 end:
@@ -213,20 +223,20 @@ end:
 *  DEFAULTS *
 **********************/
 
-void defaults_init(struct prog_args *pa)
+static void defaults_init(struct prog_args *pa)
 {
-#ifdef DEF_FS1_USE_BPF
+#ifdef DEF_USE_BPF
 	pa->bpf_enabled = true;
-	pa->filter.bpf = DEF_FS1_BPF;
+	pa->filter.bpf = DEF_BPF;
 #else
 	pa->bpf_enabled = false;
-	pa->filter.dhost = DEF_FS1_DHOST;
-	pa->filter.dnet = DEF_FS1_DNET;
-	pa->filter.dport = DEF_FS1_DPORT;
-	pa->filter.shost = DEF_FS1_SHOST;
-	pa->filter.snet = DEF_FS1_SNET;
-	pa->filter.sport = DEF_FS1_SPORT;
-	pa->filter.proto = DEF_FS1_PROTO;
+	pa->filter.dhost = DEF_DHOST;
+	pa->filter.dnet = DEF_DNET;
+	pa->filter.dport = DEF_DPORT;
+	pa->filter.shost = DEF_SHOST;
+	pa->filter.snet = DEF_SNET;
+	pa->filter.sport = DEF_SPORT;
+	pa->filter.proto = DEF_PROTO;
 #endif
 
 #ifdef VERB_QUIET
@@ -283,6 +293,8 @@ status_val setup(int argc, char **argv)
 			LOG(L_CRIT, status);
 			return status;
 		}
+	} else {
+		pc.bpf = strdup(pr_args.filter.bpf);
 	}
 
 	return status;

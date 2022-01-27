@@ -6,6 +6,7 @@ static struct f_entry udp4_packet[] = {
 	{"udp4_dport", 	ET_DATAFIELD, 	E_LEN(2), 	0, 		ERF_UINT_LE, 		EWF_UINT},
 	{"udp4_len", 	ET_DATAFIELD, 	E_LEN(2), 	0, 		ERF_UINT_LE, 		EWF_UINT},
 	{"udp4_cksum", 	ET_DATAFIELD, 	E_LEN(2), 	0, 		ERF_UINT_LE, 		EWF_UINT},
+	{"udp4_pld", 	ET_DATAFIELD,	E_PAC_OFF_OF("udp4_sport", "udp4_len"),	EF_PLD,	ERF_BIN, 	EWF_NONE},
 }; 
 
 static void intercept(u_char *args, const struct pcap_pkthdr *header, const u_char *packet) {

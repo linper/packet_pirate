@@ -21,6 +21,7 @@ enum entry_len_tp {
 	ELT_PAC_OFF,
 	ELT_PAC_OFF_TAG,
 	ELT_FLAG,
+	ELT_UNKN,
 };
 
 enum entry_read_format {
@@ -144,6 +145,11 @@ struct entry_len {
 		}																	\
 	},																		\
 		.type = ELT_FLAG                                              \
+	}
+
+#define E_UNKN                                                                 \
+	{                                                                          \
+		.type = ELT_UNKN                                                       \
 	}
 
 struct f_entry { //packet field/entry

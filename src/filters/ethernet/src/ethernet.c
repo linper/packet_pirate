@@ -2,13 +2,11 @@
 
 
 static struct f_entry ethernet_packet[] = {
-/*  TAG 		ENTRY TYPE	LENGTH 		FLAGS 	READ FORMAT 	WRITE FORMAT */
-	{"dhost", 	ET_DATAFIELD, 	E_LEN(6), 	0, 	ERF_STR, 		EWF_HEX_STR},
-	{"shost", 	ET_DATAFIELD,	E_LEN(6), 	0, 	ERF_STR, 		EWF_HEX_STR},
-	{"type", 	ET_DATAFIELD,	E_LEN(2), 	0, 	ERF_UINT_LE, 	EWF_HEX_STR},
-	/*{"dhost",	ET_DATAFIELD, 	E_LEN(6), 	0, 	ERF_STR, 		EWF_STR},*/
-	/*{"shost",	ET_DATAFIELD,	E_LEN(6), 	0, 	ERF_STR, 		EWF_STR},*/
-	/*{"type", 	ET_DATAFIELD,	E_LEN(2), 	0, 	ERF_UINT_LE, 	EWF_UINT},*/
+/*  TAG 			ENTRY TYPE		LENGTH 		FLAGS 	READ FORMAT 	WRITE FORMAT */
+	{"eth_dhost", 	ET_DATAFIELD, 	E_LEN(6), 	0, 		ERF_STR, 		EWF_HEX_STR},
+	{"eth_shost", 	ET_DATAFIELD,	E_LEN(6), 	0, 		ERF_STR, 		EWF_HEX_STR},
+	{"eth_type", 	ET_DATAFIELD,	E_LEN(2), 	0, 		ERF_UINT_LE, 	EWF_HEX_STR},
+	{"eth_pld", 	ET_DATAFIELD,	E_UNKN, 	EF_PLD, ERF_BIN, 		EWF_NONE},
 }; 
 
 static void intercept(u_char *args, const struct pcap_pkthdr *header, const u_char *packet) {

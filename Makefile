@@ -48,13 +48,14 @@ $(foreach conf,$(CONF),$(eval export $(conf)))
 CONF := $(patsubst %=y, %, $(CONF))
 CONF := $(subst =",="\", $(CONF))
 CONF := $(subst " ,\"" , $(CONF))
-DEFS += $(patsubst CONFIG_%, -D%, $(CONF))
+DEFS += $(patsubst CONFIG_DFN_%, -D%, $(filter CONFIG_DFN_%,$(CONF)))
+# TODO add compilation flags from config
 
-ifeq ($(CONFIG_DUMP_TYPE_SQLITE3),y)
+ifeq ($(CONFIG_DFN_DUMP_TYPE_SQLITE3),y)
    LDFLAGS += -lsqlite3
-else ifeq ($(CONFIG_DUMP_TYPE_MYSQL),y)
+else ifeq ($(CONFIG_DFN_DUMP_TYPE_MYSQL),y)
    LDFLAGS += -lmysqlclient
-else ifeq ($(CONFIG_DUMP_TYPE_PQ),y)
+else ifeq ($(CONFIG_DFN_DUMP_TYPE_PQ),y)
    LDFLAGS += -lpq
 endif
 

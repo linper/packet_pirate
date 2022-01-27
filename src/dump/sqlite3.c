@@ -172,12 +172,12 @@ status_val dump_sqlite3_open()
 	if (exists) {
 		if ((rc = sqlite3_open_v2(path, &db, SQLITE_OPEN_READWRITE, "unix")) !=
 			SQLITE_OK) {
+			LOGF(L_CRIT, STATUS_DB, "%s:%d", sqlite3_errmsg(db), rc);
 			return STATUS_DB;
 		}
 
 		if (compare_db()) {
 			dump_sqlite3_close();
-			return STATUS_DB; //TODO do I really need this?
 		} else {
 			return STATUS_OK;
 		}

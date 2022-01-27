@@ -26,15 +26,15 @@ int main(int argc, char *argv[])
 {
 	/*pcap_t *handle;*/
 	status_val status;
-	char *dev = "wlp3s0";
-	/*char *dev = "eno1";*/
+	/*char *dev = "wlp3s0";*/
+	char *dev = "eno1";
 	char errbuf[ERRBUF_SIZE] = { 0 };
-	char filter_exp[BUF_SIZE];
+	/*char filter_exp[BUF_SIZE];*/
 	bpf_u_int32 mask;
 	bpf_u_int32 net;
 	/*struct pcap_pkthdr header;*/
 
-	sprintf(filter_exp, "tcp");
+	/*sprintf(filter_exp, "tcp");*/
 	//	sprintf(filter_exp, "port %s", argv[2]);
 
 	//	if (!(dev = pcap_lookupdev( errbuf))) {
@@ -57,20 +57,20 @@ int main(int argc, char *argv[])
 		mask = 0;
 	}
 
-	if (!(pc.handle = pcap_open_live(dev, BUF_SIZE, 1, 1000, errbuf))) {
+	if (!(pc.handle = pcap_open_live(dev, DEF_SNAPLEN, 1, 1000, errbuf))) {
 		LOGF(L_CRIT, STATUS_ERROR, "Could not open device %s: %s", dev, errbuf);
 		goto error;
 	}
 
-	if (pcap_compile(pc.handle, &pc.bpf_prog, filter_exp, 0, net) == -1) {
-		LOGF(L_CRIT, STATUS_ERROR, "Could not parse filter %s: %s", filter_exp,
+	if (pcap_compile(pc.handle, &pc.bpf_prog, pc.bpf, 0, net) == -1) {
+		LOGF(L_CRIT, STATUS_ERROR, "Could not parse filter %s: %s", pc.bpf,
 			 pcap_geterr(pc.handle));
 		goto error;
 	}
 
 	if (pcap_setfilter(pc.handle, &pc.bpf_prog) == -1) {
-		LOGF(L_CRIT, STATUS_ERROR, "Could not install filter %s: %s",
-			 filter_exp, pcap_geterr(pc.handle));
+		LOGF(L_CRIT, STATUS_ERROR, "Could not install filter %s: %s", pc.bpf,
+			 pcap_geterr(pc.handle));
 		goto error;
 	}
 

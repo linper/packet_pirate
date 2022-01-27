@@ -1,6 +1,7 @@
 #ifndef PACKET_H
 #define PACKET_H
 
+#include <pcap/pcap.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
@@ -14,12 +15,13 @@
  * @param pkt_list generic list that contains already parsed packets from data
  * @param node extended filter tree node to derive packet form
  * @param data captured packet data
- * @param len length of captured packet
+ * @param header capture header/metadata
  * @param read_off pointer pointed to current read position in 'data'
  * @return status wether packet ware split succesfully
  */
 status_val derive_packet(struct glist *pkt_list, struct ef_tree *node,
-						 const u_char *data, unsigned len, unsigned *read_off);
+						 const u_char *data, const struct pcap_pkthdr *header,
+						 unsigned *read_off);
 
 /**
  * @brief Frees packet stuct and all its entries

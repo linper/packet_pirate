@@ -19,7 +19,6 @@ typedef __u_short u_short;
 typedef __u_int u_int;
 typedef __u_long u_long;
 
-#define BPF_PR_LEN 1024
 #define NET_LEN 256
 #define PORT_LEN 12
 
