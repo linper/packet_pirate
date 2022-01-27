@@ -69,8 +69,8 @@ static status_val filter_rec(struct ef_tree *node, const u_char *data,
 
 	if (node->lvl) { //skiping root root node
 		//trying to split data to packet fields
-		status = derive_packet(pc.single_cap_pkt, node, data, header->caplen,
-							   &read_off);
+		status =
+			derive_packet(pc.single_cap_pkt, node, data, header, &read_off);
 		if (status) {
 			read_off = base_read_off; //reverting read offset
 			LOGF(L_DEBUG, STATUS_NOT_FOUND, "Packet dropped for %s\n",
@@ -167,7 +167,8 @@ void core_filter(u_char *args, const struct pcap_pkthdr *header,
 	}
 
 	u_long now = time(NULL);
-	if (glist_count(pc.cap_pkts) >= DUMP_BATCH || now - pc.last_dump >= DUMP_INTERVAL) {
+	if (glist_count(pc.cap_pkts) >= DUMP_BATCH ||
+		now - pc.last_dump >= DUMP_INTERVAL) {
 		dctx.dump(pc.cap_pkts);
 		glist_clear(pc.cap_pkts);
 		pc.last_dump = now;

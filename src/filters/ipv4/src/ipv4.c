@@ -21,6 +21,7 @@ static struct f_entry ipv4_packet[] = {
 	/*{"ipv4_src", 	ET_DATAFIELD,	E_LEN(4), 					0, 		ERF_UINT_LE, 	EWF_HEX_STR},*/
 	{"ipv4_dest", 	ET_DATAFIELD,	E_LEN(4), 					0, 		ERF_UINT_LE, 	EWF_HEX_STR},
 	{"ipv4_opt", 	ET_DATAFIELD,	E_PAC_OFF_OF("ipv4_vhl", "ipv4_ihl"),	EF_OPT,	ERF_UINT_LE, 	EWF_HEX_STR},
+	{"ipv4_pld", 	ET_DATAFIELD,	E_PAC_OFF_OF("ipv4_vhl", "ipv4_len"),	EF_PLD,	ERF_BIN, 	EWF_NONE},
 }; 
 
 static void intercept(u_char *args, const struct pcap_pkthdr *header, const u_char *packet) {

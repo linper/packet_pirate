@@ -4,9 +4,9 @@
 #include <sys/types.h>
 #include <pcap/pcap.h>
 
-#include "../include/params.h"
+/*#include "../include/params.h"*/
 #include "../include/setup.h"
-#include "../include/bpf.h"
+/*#include "../include/bpf.h"*/
 #include "../include/core.h"
 
 static volatile bool in_cap = false;
@@ -24,39 +24,17 @@ void sig_exit(int signo)
 
 int main(int argc, char *argv[])
 {
-	struct prog_args pr_args = { 0 };
-
-	signal(SIGINT, sig_exit);
-	signal(SIGTERM, sig_exit);
-
-	parse_params(argc, argv, &pr_args); //geting command line parameters
-
-	status_val status = setup_prog_ctx(&pr_args); //setting up program context
-	if (status) {
-		LOG(L_CRIT, status);
-		goto error;
-	}
-
-	if (!pr_args.bpf_enabled) {
-		status = build_bpf(&pr_args);
-		if (status) {
-			LOG(L_CRIT, status);
-			goto error;
-		}
-	}
-
 	/*pcap_t *handle;*/
-	//	char *dev;
-	//	char *dev = argv[1];
-	char *dev = "wlp3s0";
-	/*char *dev = "eno1";*/
+	status_val status;
+	/*char *dev = "wlp3s0";*/
+	char *dev = "eno1";
 	char errbuf[ERRBUF_SIZE] = { 0 };
-	char filter_exp[BUF_SIZE];
+	/*char filter_exp[BUF_SIZE];*/
 	bpf_u_int32 mask;
 	bpf_u_int32 net;
 	/*struct pcap_pkthdr header;*/
 
-	sprintf(filter_exp, "tcp");
+	/*sprintf(filter_exp, "tcp");*/
 	//	sprintf(filter_exp, "port %s", argv[2]);
 
 	//	if (!(dev = pcap_lookupdev( errbuf))) {
@@ -64,35 +42,43 @@ int main(int argc, char *argv[])
 	//		goto error;
 	//	}
 
+	signal(SIGINT, sig_exit);
+	signal(SIGTERM, sig_exit);
+
+	status = setup(argc, argv);
+	if (status) {
+		LOGM(L_CRIT, status, "Fatiled to setup program");
+		goto error;
+	}
+
 	if (pcap_lookupnet(dev, &net, &mask, errbuf) == -1) {
-		fprintf(stderr, "Could not get netmask for device: %s/n", dev);
+		LOGF(L_ERR, STATUS_ERROR, "Could not get netmask for device: %s", dev);
 		net = 0;
 		mask = 0;
 	}
 
-	if (!(pc.handle = pcap_open_live(dev, BUF_SIZE, 1, 1000, errbuf))) {
-		fprintf(stderr, "Could not open device %s: %s/n", dev, errbuf);
+	if (!(pc.handle = pcap_open_live(dev, DEF_SNAPLEN, 1, 1000, errbuf))) {
+		LOGF(L_CRIT, STATUS_ERROR, "Could not open device %s: %s", dev, errbuf);
 		goto error;
 	}
 
-	if (pcap_compile(pc.handle, &pc.bpf_prog, filter_exp, 0, net) == -1) {
-		fprintf(stderr, "Could not parse filter %s: %s/n", filter_exp,
-				pcap_geterr(pc.handle));
+	if (pcap_compile(pc.handle, &pc.bpf_prog, pc.bpf, 0, net) == -1) {
+		LOGF(L_CRIT, STATUS_ERROR, "Could not parse filter %s: %s", pc.bpf,
+			 pcap_geterr(pc.handle));
 		goto error;
 	}
 
 	if (pcap_setfilter(pc.handle, &pc.bpf_prog) == -1) {
-		fprintf(stderr, "Could not install filter %s: %s/n", filter_exp,
-				pcap_geterr(pc.handle));
+		LOGF(L_CRIT, STATUS_ERROR, "Could not install filter %s: %s", pc.bpf,
+			 pcap_geterr(pc.handle));
 		goto error;
 	}
 
 	//	if (pcap_datalink(pc.handle) != DLT_EN10MB) {
-	//		fprintf(stderr, "Required ethernet headers for device %s are not supported/n", dev);
+	//		LOGF(L_CRIT, STATUS_ERROR, "Required ethernet headers for device %s are not supported", dev);
 	//		goto error;
 	//	}
 
-	//	packet = pcap_next(pc.handle, &header);
 	status = core_init();
 	if (status) {
 		LOG(L_CRIT, status);

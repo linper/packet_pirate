@@ -21,6 +21,7 @@ static struct f_entry tcp_packet[] = {
 	{"tcp_cksum", 	ET_DATAFIELD, 	E_LEN(2), 				0, 		ERF_UINT_LE, 	EWF_UINT},
 	{"tcp_urgp", 	ET_DATAFIELD, 	E_LEN(2), 				0, 		ERF_UINT_LE, 	EWF_UINT},
 	{"tcp_opt", 	ET_DATAFIELD,	E_PAC_OFF_OF("tcp_sport", "tcp_dt_off"),EF_OPT,	ERF_UINT_LE, EWF_HEX_STR},
+	{"tcp_pld", 	ET_DATAFIELD,	E_PAC_OFF_OF("ipv4_vhl", "ipv4_len"),	EF_PLD,	ERF_BIN, 	EWF_NONE},
 }; 
 
 static void intercept(u_char *args, const struct pcap_pkthdr *header, const u_char *packet) {

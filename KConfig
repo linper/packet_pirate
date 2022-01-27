@@ -3,81 +3,34 @@ mainmenu "Packet pirate configurations"
 
 source "src/filters/KConfig"
 source "src/dump/KConfig"
-
-config DEF
-    bool "Defaults"
-    default y
+source "def_KConfig"
     
-    config DEF_FS1
-	bool "Stage I"
-	default n
-	depends on DEF
-
-    config DEF_FS1_USE_BPF
-	bool "Use BPF"
-	default n
-	depends on DEF_FS1
-	help
-	    Utilize full Berkley packet filter support with query string
-
-	config DEF_FS1_BPF
-	    string "BPF"
-	    default ""
-	    depends on DEF_FS1_USE_BPF
-    
-	config DEF_FS1_DHOST
-	    string "Destination host"
-	    default ""
-	    depends on !DEF_FS1_USE_BPF && DEF_FS1
-
-	config DEF_FS1_DNET
-	    string "Destination network"
-	    default ""
-	    depends on !DEF_FS1_USE_BPF && DEF_FS1
-    
-	config DEF_FS1_DPORT
-	    int "Destination port"
-	    depends on !DEF_FS1_USE_BPF && DEF_FS1
-
-	config DEF_FS1_PROTO
-	    string "Protocol"
-	    depends on !DEF_FS1_USE_BPF && DEF_FS1
-    
-	config DEF_FS1_SHOST
-	    string "Source host"
-	    default ""
-	    depends on !DEF_FS1_USE_BPF && DEF_FS1
-    
-	config DEF_FS1_SNET
-	    string "Source network"
-	    default ""
-	    depends on !DEF_FS1_USE_BPF && DEF_FS1
-    
-	config DEF_FS1_SPORT
-	    int "Source port"
-	    depends on !DEF_FS1_USE_BPF && DEF_FS1
-    
-config DEV
+config DEVEL
     bool "Development"
     default y
     help
 	Framework testing and development configurations
     
-    config DEV_SANITY
+    config DEVEL_SANITY
 	bool "NOT IMPL Sanity checking"
 	default y
-	depends on DEV
+	depends on DEVEL
 
-config LOGGING
-    bool "Logging"
-    default y
-    help
-	Message logging will be enabled. If unchecked - will not be compiled in filal binary. Othervise may decrease performance
+	config DEVEL_COMP
+	string "Compilation flags"
+	default "-Og -ggdb"
+	depends on DEVEL
 
     choice VERBOSITY
-	prompt "Select logging verbosity"
-	depends on LOGGING
+	prompt "Logging"
 	default VERB_WARN
+    help
+	Message logging will be enabled. If unchecked - will not be compiled in filal binary. Othervise may decrease performance
+	
+    config VERB_QUIET
+	bool "Quiet"
+	help
+	    "No messages"
 
     config VERB_CRIT
 	bool "Critical"

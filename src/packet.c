@@ -1,7 +1,9 @@
 
+#include <pcap/pcap.h>
 #include <stddef.h>
 #include <string.h>
 #include <sys/types.h>
+#include <pcap.h>
 
 #include "../include/glist.h"
 #include "../include/filter.h"
@@ -167,16 +169,46 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 
 static status_val derive_entry(struct glist *pkt_list, struct packet *p,
 							   struct f_entry *fe, struct p_entry *e,
-							   const u_char *data, u_int len, u_int *read_off)
+							   const u_char *data,
+							   const struct pcap_pkthdr *header,
+							   u_int *read_off)
 {
 	status_val status;
 	struct p_entry *ref_entry;
 
 	e->tag = fe->tag;
+
+	//If field length is unknown it can not be parsed at this abstraction level
+	if (fe->len.type == ELT_UNKN) {
+		return STATUS_OK;
+	}
+
 	//getting data length of current entry
 	if (get_entry_length(pkt_list, fe, p, e, read_off)) {
 		LOG(L_ERR, STATUS_ERROR);
 		return STATUS_ERROR;
+	}
+
+	// for unwritable payload field
+	if (fe->flags & EF_PLD && fe->write_form == EWF_NONE) {
+		u_int read = *read_off + e->raw_len;
+		if (read > header->caplen) { //captured packet is not long enough
+			if (read <= header->len) {
+				LOGF(
+					L_NOTICE, STATUS_BAD_INPUT,
+					"Faild to split %s %s, packet is longer(%d) than SNAPLEN(%d)\n",
+					p->packet_tag, fe->tag, read, DEF_SNAPLEN);
+				return STATUS_OK;
+			}
+
+			LOGF(
+				L_NOTICE, STATUS_BAD_INPUT,
+				"Faild to split %s %s, too long(%d), then possible(%d) probably bad filter\n",
+				p->packet_tag, fe->tag, read, header->len);
+			return STATUS_BAD_INPUT;
+		}
+
+		return STATUS_OK;
 	}
 
 	switch (fe->type) { //switching by entry data format category
@@ -188,9 +220,21 @@ static status_val derive_entry(struct glist *pkt_list, struct packet *p,
 			return STATUS_OMEM;
 		}
 
-		if (*read_off + e->raw_len > len) { //captured packet is not long enough
-			LOGF(L_NOTICE, STATUS_BAD_INPUT,
-				 "Packet:%d, faild to split as %s\n", p->id, p->packet_tag);
+		u_int read = *read_off + e->raw_len;
+		if (read > header->caplen) { //captured packet is not long enough
+			if (read <= header->len) {
+				LOGF(
+					L_NOTICE, STATUS_BAD_INPUT,
+					"Faild to split %s %s, packet is longer(%d) than SNAPLEN(%d)\n",
+					p->packet_tag, fe->tag, read, DEF_SNAPLEN);
+				free(e->raw_data);
+				return STATUS_OK;
+			}
+
+			LOGF(
+				L_NOTICE, STATUS_BAD_INPUT,
+				"Faild to split %s %s, too long(%d), then possible(%d) probably bad filter\n",
+				p->packet_tag, fe->tag, read, header->len);
 			free(e->raw_data);
 			return STATUS_BAD_INPUT;
 		}
@@ -198,7 +242,11 @@ static status_val derive_entry(struct glist *pkt_list, struct packet *p,
 		//extracting entry data
 		memcpy(e->raw_data, data + (*read_off), e->raw_len);
 		e->glob_bit_off = *read_off * 8;
-		*read_off += e->raw_len; //showing that data was succesfully read
+
+		if (!(fe->flags & EF_PLD)) {
+			*read_off += e->raw_len; //showing that data was succesfully read
+		}
+
 		e->wfc = wfc_arr[fe->write_form];
 		e->rfc = rfc_arr[fe->read_form];
 		break;
@@ -249,7 +297,8 @@ static status_val derive_entry(struct glist *pkt_list, struct packet *p,
 }
 
 status_val derive_packet(struct glist *pkt_list, struct ef_tree *node,
-						 const u_char *data, u_int len, u_int *read_off)
+						 const u_char *data, const struct pcap_pkthdr *header,
+						 u_int *read_off)
 {
 	status_val status;
 	struct filter *nf = node->flt->filter;
@@ -264,6 +313,11 @@ status_val derive_packet(struct glist *pkt_list, struct ef_tree *node,
 	//all parent and children packets will have same pid
 	p->id = pc.next_pid;
 	p->glob_bit_off = *read_off * 8;
+
+	//adding tags to indicate position in hierarchy
+	p->packet_tag = nf->packet_tag;
+	p->parent_tag = nf->parent_tag;
+
 	p->entries = calloc(nf->n_entries, sizeof(struct p_entry));
 	if (!p->entries) {
 		LOG(L_CRIT, STATUS_OMEM);
@@ -271,10 +325,10 @@ status_val derive_packet(struct glist *pkt_list, struct ef_tree *node,
 		return STATUS_OMEM;
 	}
 
-	for (u_int i = 0; i < nf->n_entries; i++) {
+	for (u_int i = 0; i < nf->n_entries && *read_off < header->caplen; i++) {
 		//cutting and parsing entry
 		status = derive_entry(pkt_list, p, &nf->entries[i], &p->entries[i],
-							  data, len, read_off);
+							  data, header, read_off);
 		if (status) {
 			LOGF(L_ERR, status, "Packet:%d failed to split\n", p->id);
 			packet_free(p);
@@ -282,10 +336,6 @@ status_val derive_packet(struct glist *pkt_list, struct ef_tree *node,
 		}
 		p->e_len++;
 	}
-
-	//adding tags to indicate position in hierarchy
-	p->packet_tag = nf->packet_tag;
-	p->parent_tag = nf->parent_tag;
 
 	status = glist_push(pkt_list, p); //appending packet to packet list;
 	if (status) {
