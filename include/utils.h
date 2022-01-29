@@ -65,7 +65,7 @@ extern struct prog_ctx pc; //program context instance
 
 #define ARR_LEN(arr) sizeof arr / sizeof(arr[0])
 
-u_long get_global_hash();
+u_long get_global_hash(); //retruns hash of ext_filter tree 
 
 /**
  * @brief Logs messages

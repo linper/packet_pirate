@@ -38,6 +38,7 @@ status_val glist_push2(struct glist *lst, void *value, size_t len);
 status_val glist_pop(struct glist *lst, void **value_ptr);
 status_val glist_get(struct glist *lst, int index, void **value);
 status_val glist_get_idx(struct glist *lst, void *value, int *index);
+void *glist_last(struct glist *lst);
 void *glist_remove(struct glist *lst, int index);
 //deletes and frees element at index
 status_val glist_delete(struct glist *lst, int index);

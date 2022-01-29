@@ -278,6 +278,15 @@ status_val glist_get_idx(struct glist *lst, void *value, int *index)
 	return STATUS_NOT_FOUND;
 }
 
+void *glist_last(struct glist *lst)
+{
+	if (lst->count) {
+		return lst->array[lst->count - 1];
+	} else {
+		return NULL;
+	}
+}
+
 void *glist_remove(struct glist *lst, int index)
 {
 	int idx = index;

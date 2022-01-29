@@ -9,6 +9,8 @@
 
 #define TAG_LEN 16
 
+#define PENTRY(node, packet, tag) &packet->entries[fe_idx(node->flt->filter, tag)]
+
 enum entry_type {
 	ET_DATAFIELD,
 	ET_BITFIELD,
@@ -57,6 +59,19 @@ enum erf_comp {
 	ERFC_BLOB,
 };
 
+enum entry_flags {
+	EF_NONE = 0,
+	EF_32BITW = 1 << 1,
+	EF_PLD = 1 << 2,
+	EF_OPT = 1 << 3,
+};
+
+typedef enum {
+	VLD_DROP_ALL, //drops all filtered packets in current capture
+	VLD_DROP,
+	VLD_PASS,
+} vld_status;
+
 //compatability matrix between read and write formats
 //lines - write
 //columns - read
@@ -66,13 +81,6 @@ extern u_char rw_comp_mat[_EWF_COUNT][_ERF_COUNT];
 extern enum ewf_comp wfc_arr[_EWF_COUNT];
 //similar to above, but for data "on wire"
 extern enum erf_comp rfc_arr[_ERF_COUNT];
-
-enum entry_flags {
-	EF_NONE = 0,
-	EF_32BITW = 1 << 1,
-	EF_PLD = 1 << 2,
-	EF_OPT = 1 << 3,
-};
 
 struct entry_len {
 	union {
@@ -172,7 +180,7 @@ struct filter {
 		const u_char *); //function to call before filter is applied
 	void (
 		*post_filter)(); //function to call after filter is applied(for filtered packets)
-	bool (
+	vld_status (
 		*validate)(); //packet validation function, can be used for low level filtering
 	struct f_entry *entries; //array of packet field entries
 	u_int n_entries; //length of entries
@@ -205,5 +213,13 @@ struct packet { //struct to store received and filtered packet data
 	struct p_entry *entries; //array of entries
 	long glob_bit_off; //global offset from root packet's begining in bits
 };
+
+/**
+ * @brief Cretes new extended filter with filter
+ * @param f filter to query
+ * @param tag filter entry's tag
+ * @return index of filter entry, -1 otherwise
+ */
+int fe_idx(struct filter *f, const char *tag);
 
 #endif

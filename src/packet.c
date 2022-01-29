@@ -298,7 +298,7 @@ static status_val derive_entry(struct glist *pkt_list, struct packet *p,
 
 status_val derive_packet(struct glist *pkt_list, struct ef_tree *node,
 						 const u_char *data, const struct pcap_pkthdr *header,
-						 u_int *read_off)
+						 u_int *read_off, struct packet **pkt_ptr)
 {
 	status_val status;
 	struct filter *nf = node->flt->filter;
@@ -308,6 +308,8 @@ status_val derive_packet(struct glist *pkt_list, struct ef_tree *node,
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;
 	}
+
+	*pkt_ptr = p;
 
 	//assigning packet its ID, will be used for primary and foreign keys in data dump stage
 	//all parent and children packets will have same pid
@@ -337,11 +339,11 @@ status_val derive_packet(struct glist *pkt_list, struct ef_tree *node,
 		p->e_len++;
 	}
 
-	status = glist_push(pkt_list, p); //appending packet to packet list;
-	if (status) {
-		LOG(L_ERR, status);
-		packet_free(p);
-	}
+	/*status = glist_push(pkt_list, p); //appending packet to packet list;*/
+	/*if (status) {*/
+		/*LOG(L_ERR, status);*/
+		/*packet_free(p);*/
+	/*}*/
 
 	return STATUS_OK;
 }

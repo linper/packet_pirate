@@ -18,9 +18,9 @@ static void intercept(u_char *args, const struct pcap_pkthdr *header, const u_ch
 	return;
 }
 
-static bool validate()
+static vld_status validate()
 {
-	return true;
+	return VLD_PASS;
 }
 
 struct filter >>>FILTER_DB<<<_filter = {
