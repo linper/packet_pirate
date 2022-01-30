@@ -49,6 +49,12 @@ static status_val build_ef_tree()
 					ext_filter_free(ef);
 					goto err;
 				}
+
+				//calling filter initialization hooks for each filter
+				if ((*f)->init_filter) {
+					(*f)->init_filter();
+				}
+
 				found = true;
 			}
 		}
@@ -70,6 +76,12 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 
 	if (node->lvl) { //skiping root root node
 		struct packet *p = NULL;
+
+		//calling capture intercept hook for every filter
+		if (node->flt->filter->itc_capture) {
+			node->flt->filter->itc_capture(args, header, data);
+		}
+
 		//trying to split data to packet fields
 		status =
 			derive_packet(pc.single_cap_pkt, node, data, header, &read_off, &p);
@@ -77,7 +89,10 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 			read_off = base_read_off; //reverting read offset
 			LOGF(L_DEBUG, STATUS_NOT_FOUND, "Packet dropped for %s\n",
 				 node->flt->filter->packet_tag);
-			return VLD_DROP; //if this filter fails, then all children filter must fail
+			vlds = VLD_DROP;
+			//if this filter fails, then all children filter must fail.
+			//But nesesserely siblings
+			goto sibling;
 		}
 
 		if (node->flt->filter->validate) {
@@ -88,7 +103,7 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 					 "Packet for %s failed validation, dropping...\n",
 					 p->packet_tag);
 				packet_free(p);
-				break;
+				goto sibling;
 
 			case VLD_DROP_ALL:
 				LOGF(L_DEBUG, STATUS_OK,
@@ -106,6 +121,7 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 				}
 				break;
 			}
+			//pass throug if validation callbach does not exist
 		} else {
 			status = glist_push(pc.single_cap_pkt, p);
 			if (status) {
@@ -123,6 +139,7 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 		}
 	}
 
+sibling:
 	if (node->next) { // going to sibling filter
 		//persist filtering on failure, unless drop all is returned
 		vlds = filter_rec(node->next, data, args, header, base_read_off);
@@ -215,6 +232,13 @@ void core_filter(u_char *args, const struct pcap_pkthdr *header,
 	u_long now = time(NULL);
 	if (glist_count(pc.cap_pkts) >= DUMP_BATCH ||
 		now - pc.last_dump >= DUMP_INTERVAL) {
+		//calling dunp interception hooks for each filter
+		for (struct filter **f = filter_arr; *f; f++) {
+			if ((*f)->itc_dump) {
+				(*f)->itc_dump();
+			}
+		}
+		
 		dctx.dump(pc.cap_pkts);
 		glist_clear(pc.cap_pkts);
 		pc.last_dump = now;

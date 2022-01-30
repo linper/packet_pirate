@@ -50,6 +50,10 @@ struct ext_filter *ext_filter_new(struct filter *f)
 void ext_filter_free(struct ext_filter *f)
 {
 	if (f) {
+		if (f->filter->exit_filter) {
+			f->filter->exit_filter();
+		}
+
 		fhmap_shallow_free(f->mapped_filter);
 		free(f);
 	}

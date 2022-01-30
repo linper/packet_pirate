@@ -24,15 +24,7 @@ static struct f_entry ipv4_packet[] = {
 	{"ipv4_pld", 	ET_DATAFIELD,	E_PAC_OFF_OF("ipv4_vhl", "ipv4_len"),	EF_PLD,	ERF_BIN, 	EWF_NONE},
 }; 
 
-static void intercept(u_char *args, const struct pcap_pkthdr *header, const u_char *packet) {
-	(void)args;
-	(void)header;
-	(void)packet;
-	return;
-}
-	
-
-static vld_status validate(struct packet *p, struct ef_tree *node)
+static vld_status validate_ipv4(struct packet *p, struct ef_tree *node)
 {
 	struct p_entry *pe;
 
@@ -72,9 +64,7 @@ static vld_status validate(struct packet *p, struct ef_tree *node)
 struct filter ipv4_filter = {
 	.parent_tag = "ethernet",
 	.packet_tag = "ipv4",
-	.pre_filter = intercept,
-	.post_filter = NULL,
-	.validate = validate,
+	.validate = validate_ipv4,
 	.entries = ipv4_packet,
 	.n_entries = FILTER_LEN(ipv4_packet),
 };

@@ -11,6 +11,7 @@
 #include "../include/ext_filter.h"
 #include "../include/ef_tree.h"
 #include "../include/converter.h"
+#include "../include/pkt_list.h"
 #include "../include/packet.h"
 
 static u_int get_off_multiplier(struct f_entry *fe)
@@ -22,32 +23,13 @@ static u_int get_off_multiplier(struct f_entry *fe)
 	}
 }
 
-static struct p_entry *packet_get_entry(struct glist *pkt_list,
-										struct packet *pac, const char *tag)
-{
-	void *e;
-	struct packet *p;
-
-	p = pac;
-	for (unsigned i = 0; i < p->e_len; i++) {
-		if (!strcmp(p->entries[i].tag, tag)) {
-			return &p->entries[i];
-		}
-	}
-
-	//searching in already parsed packets
-	glist_foreach (e, pkt_list) {
-		p = (struct packet *)e;
-		for (unsigned i = 0; i < p->e_len; i++) {
-			if (!strcmp(p->entries[i].tag, tag)) {
-				return &p->entries[i];
-			}
-		}
-	}
-
-	return NULL;
-}
-
+/**
+ * @brief Copies bits from src to packets raw_data field
+ * @param e destination packet struct to copy data to
+ * @param src data source
+ * @param bit_off bit offset to start read from
+ * @param n_bits number of bits to copy
+ */
 static void copy_bits(struct p_entry *e, u_char *src, unsigned bit_off,
 					  unsigned n_bits)
 {
@@ -73,6 +55,14 @@ static void copy_bits(struct p_entry *e, u_char *src, unsigned bit_off,
 	}
 }
 
+/**
+ * @brief Finds length of packet's entry struct
+ * @param pkt_list generic list that contains already parsed packets from data
+ * @param fe filter entry to derive packet's entry form
+ * @param e pointer to packet entry's to return
+ * @param read_off pointer pointed to current read position in 'data'
+ * @return status wether packet entry's length ware parsed succesfully
+ */
 static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 								   struct packet *p, struct p_entry *e,
 								   u_int *read_off)
@@ -85,7 +75,7 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 
 	switch (fe->len.type) { //switching by entry length extraction method
 	case ELT_TAG:
-		if (!(pe = packet_get_entry(pkt_list, p, fe->tag)) ||
+		if (!(pe = get_packet_entry_by_tag2(pkt_list, p, fe->tag)) ||
 			bytes_to_uint(pe->raw_data, pe->raw_len,
 						  (unsigned long *)&e->raw_len) ||
 			pe->rfc != ERFC_INT) {
@@ -103,7 +93,8 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 		len = fe->len.data.e_pac_off.length;
 
 		//getting previous parssed entry with start position info
-		if (!(pe = packet_get_entry(pkt_list, p, fe->len.data.e_pac_off.tag))) {
+		if (!(pe = get_packet_entry_by_tag2(pkt_list, p,
+											fe->len.data.e_pac_off.tag))) {
 			LOG(L_ERR, STATUS_BAD_INPUT);
 			return STATUS_BAD_INPUT;
 		}
@@ -119,8 +110,8 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 
 	case ELT_PAC_OFF_TAG:
 		//getting previous parsed entry with offset info and retreiving its data as uint
-		if (!(pe = packet_get_entry(pkt_list, p,
-									fe->len.data.e_pac_off_tag.offset_tag)) ||
+		if (!(pe = get_packet_entry_by_tag2(
+				  pkt_list, p, fe->len.data.e_pac_off_tag.offset_tag)) ||
 			bytes_to_uint(pe->raw_data, pe->raw_len, &len) ||
 			pe->rfc != ERFC_INT) {
 			LOG(L_ERR, STATUS_BAD_INPUT);
@@ -128,8 +119,8 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 		}
 
 		//getting previous parssed entry with start position info
-		if (!(pe = packet_get_entry(pkt_list, p,
-									fe->len.data.e_pac_off_tag.start_tag))) {
+		if (!(pe = get_packet_entry_by_tag2(
+				  pkt_list, p, fe->len.data.e_pac_off_tag.start_tag))) {
 			LOG(L_ERR, STATUS_BAD_INPUT);
 			return STATUS_BAD_INPUT;
 		}
@@ -167,6 +158,17 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 	return STATUS_OK;
 }
 
+/**
+ * @brief Builds packet entry struct based on filter entry and fills it
+ * with supplied data. 
+ * @param pkt_list generic list that contains already parsed packets from data
+ * @param fe filter entry to derive packet's entry form
+ * @param e pointer to packet entry's to return
+ * @param data captured packet data
+ * @param header capture header/metadata
+ * @param read_off pointer pointed to current read position in 'data'
+ * @return status wether packet entry were parsed succesfully
+ */
 static status_val derive_entry(struct glist *pkt_list, struct packet *p,
 							   struct f_entry *fe, struct p_entry *e,
 							   const u_char *data,
@@ -251,7 +253,8 @@ static status_val derive_entry(struct glist *pkt_list, struct packet *p,
 		e->rfc = rfc_arr[fe->read_form];
 		break;
 	case ET_FLAG:
-		ref_entry = packet_get_entry(pkt_list, p, fe->len.data.e_len_bits.tag);
+		ref_entry =
+			get_packet_entry_by_tag2(pkt_list, p, fe->len.data.e_len_bits.tag);
 		if (!ref_entry) {
 			LOGF(L_CRIT, STATUS_NOT_FOUND,
 				 "Filter entry with tag: \"%s\" not found.",
@@ -341,8 +344,8 @@ status_val derive_packet(struct glist *pkt_list, struct ef_tree *node,
 
 	/*status = glist_push(pkt_list, p); //appending packet to packet list;*/
 	/*if (status) {*/
-		/*LOG(L_ERR, status);*/
-		/*packet_free(p);*/
+	/*LOG(L_ERR, status);*/
+	/*packet_free(p);*/
 	/*}*/
 
 	return STATUS_OK;
