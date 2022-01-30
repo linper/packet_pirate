@@ -24,27 +24,43 @@ static struct f_entry tcp_packet[] = {
 	{"tcp_pld", 	ET_DATAFIELD,	E_PAC_OFF_OF("ipv4_vhl", "ipv4_len"),	EF_PLD,	ERF_BIN, 	EWF_NONE},
 }; 
 
-static void intercept(u_char *args, const struct pcap_pkthdr *header, const u_char *packet) {
-	(void)args;
-	(void)header;
-	(void)packet;
-	return;
-}
-
-static bool validate()
+static vld_status validate_tcp(struct packet *p, struct ef_tree *node)
 {
-	return true;
+	struct p_entry *pe;
+	struct ef_tree *pn = node->par;
+
+	struct packet *pp = get_packet_by_tag(pc.single_cap_pkt, "ipv4");
+	if (!pp) {
+		return VLD_DROP;
+	}
+	
+	//udp protocol is indicated as 6 in ipv4 packet
+	pe = PENTRY(pn, pp, "ipv4_proto");
+	if (pe->conv_data.ulong != 6) {
+		return VLD_DROP;
+	}
+
+	//data offset is always [5; 15]
+	pe = PENTRY(node, p, "tcp_dt_off");
+	if (pe->conv_data.ulong < 5) {
+		return VLD_DROP;
+	}
+
+	//rezerved bits should be 0
+	pe = PENTRY(node, p, "tcp_rez");
+	if (pe->conv_data.ulong) {
+		return VLD_DROP;
+	}
+
+	return VLD_PASS;
 }
 
 struct filter tcp_filter = {
 	.parent_tag = "ipv4",
 	.packet_tag = "tcp",
-	.pre_filter = intercept,
-	.post_filter = NULL,
-	.validate = validate,
+	.validate = validate_tcp,
 	.entries = tcp_packet,
 	.n_entries = FILTER_LEN(tcp_packet),
 };
 	
-
 

@@ -49,6 +49,12 @@ static status_val build_ef_tree()
 					ext_filter_free(ef);
 					goto err;
 				}
+
+				//calling filter initialization hooks for each filter
+				if ((*f)->init_filter) {
+					(*f)->init_filter();
+				}
+
 				found = true;
 			}
 		}
@@ -60,38 +66,89 @@ err:
 	return ret;
 }
 
-static status_val filter_rec(struct ef_tree *node, const u_char *data,
+static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 							 u_char *args, const struct pcap_pkthdr *header,
 							 unsigned read_off)
 {
 	status_val status;
+	vld_status vlds;
 	const unsigned base_read_off = read_off;
 
 	if (node->lvl) { //skiping root root node
+		struct packet *p = NULL;
+
+		//calling capture intercept hook for every filter
+		if (node->flt->filter->itc_capture) {
+			node->flt->filter->itc_capture(args, header, data);
+		}
+
 		//trying to split data to packet fields
 		status =
-			derive_packet(pc.single_cap_pkt, node, data, header, &read_off);
+			derive_packet(pc.single_cap_pkt, node, data, header, &read_off, &p);
 		if (status) {
 			read_off = base_read_off; //reverting read offset
 			LOGF(L_DEBUG, STATUS_NOT_FOUND, "Packet dropped for %s\n",
 				 node->flt->filter->packet_tag);
-			return STATUS_NOT_FOUND; //if this filter fails, then all children filter must fail
+			vlds = VLD_DROP;
+			//if this filter fails, then all children filter must fail.
+			//But nesesserely siblings
+			goto sibling;
 		}
 
-		//TODO call validation callback here
+		if (node->flt->filter->validate) {
+			vlds = node->flt->filter->validate(p, node);
+			switch (vlds) {
+			case VLD_DROP:
+				LOGF(L_DEBUG, STATUS_OK,
+					 "Packet for %s failed validation, dropping...\n",
+					 p->packet_tag);
+				packet_free(p);
+				goto sibling;
+
+			case VLD_DROP_ALL:
+				LOGF(L_DEBUG, STATUS_OK,
+					 "Packet for %s failed validation, dropping all...\n",
+					 p->packet_tag);
+				packet_free(p);
+				return VLD_DROP_ALL;
+
+			case VLD_PASS:
+				//appending packet to packet list
+				status = glist_push(pc.single_cap_pkt, p);
+				if (status) {
+					LOG(L_ERR, status);
+					packet_free(p);
+				}
+				break;
+			}
+			//pass throug if validation callbach does not exist
+		} else {
+			status = glist_push(pc.single_cap_pkt, p);
+			if (status) {
+				LOG(L_ERR, status);
+				packet_free(p);
+			}
+		}
 	}
 
 	if (node->chld) { //desending down into first child filter if it exists
-		//persist filtering on failure
-		filter_rec(node->chld, data, args, header, read_off);
+		//persist filtering on failure, unless drop all is returned
+		vlds = filter_rec(node->chld, data, args, header, read_off);
+		if (vlds == VLD_DROP_ALL) {
+			return VLD_DROP_ALL;
+		}
 	}
 
+sibling:
 	if (node->next) { // going to sibling filter
-		//persist filtering on failure
-		filter_rec(node->next, data, args, header, base_read_off);
+		//persist filtering on failure, unless drop all is returned
+		vlds = filter_rec(node->next, data, args, header, base_read_off);
+		if (vlds == VLD_DROP_ALL) {
+			return VLD_DROP_ALL;
+		}
 	}
 
-	return STATUS_OK;
+	return VLD_PASS;
 }
 
 status_val core_init()
@@ -159,21 +216,35 @@ void core_filter(u_char *args, const struct pcap_pkthdr *header,
 {
 	//clearing old single packet capture list
 	glist_clear_shallow(pc.single_cap_pkt);
-	filter_rec(pc.ef_root, packet, args, header, 0);
 
-	//copying elements ot main captured packet list
-	if (glist_copy_to(pc.single_cap_pkt, pc.cap_pkts)) {
+	vld_status vlds = filter_rec(pc.ef_root, packet, args, header, 0);
+	if (vlds == VLD_DROP_ALL) {
+		//no packets from this capture should be saved
+		glist_clear(pc.single_cap_pkt);
+		goto end;
+
+		//copying elements ot main captured packet list
+	} else if (glist_copy_to(pc.single_cap_pkt, pc.cap_pkts)) {
 		LOG(L_ERR, STATUS_OMEM);
+		goto end;
 	}
 
 	u_long now = time(NULL);
 	if (glist_count(pc.cap_pkts) >= DUMP_BATCH ||
 		now - pc.last_dump >= DUMP_INTERVAL) {
+		//calling dunp interception hooks for each filter
+		for (struct filter **f = filter_arr; *f; f++) {
+			if ((*f)->itc_dump) {
+				(*f)->itc_dump();
+			}
+		}
+		
 		dctx.dump(pc.cap_pkts);
 		glist_clear(pc.cap_pkts);
 		pc.last_dump = now;
 	}
 
+end:
 	pc.next_pid++;
 }
 

@@ -9,6 +9,9 @@
 
 #define TAG_LEN 16
 
+#define PENTRY(node, packet, tag)                                              \
+	&packet->entries[fe_idx(node->flt->filter, tag)]
+
 enum entry_type {
 	ET_DATAFIELD,
 	ET_BITFIELD,
@@ -57,6 +60,19 @@ enum erf_comp {
 	ERFC_BLOB,
 };
 
+enum entry_flags {
+	EF_NONE = 0,
+	EF_32BITW = 1 << 1,
+	EF_PLD = 1 << 2,
+	EF_OPT = 1 << 3,
+};
+
+typedef enum {
+	VLD_DROP_ALL, //drops all filtered packets in current capture
+	VLD_DROP,
+	VLD_PASS,
+} vld_status;
+
 //compatability matrix between read and write formats
 //lines - write
 //columns - read
@@ -66,13 +82,6 @@ extern u_char rw_comp_mat[_EWF_COUNT][_ERF_COUNT];
 extern enum ewf_comp wfc_arr[_EWF_COUNT];
 //similar to above, but for data "on wire"
 extern enum erf_comp rfc_arr[_ERF_COUNT];
-
-enum entry_flags {
-	EF_NONE = 0,
-	EF_32BITW = 1 << 1,
-	EF_PLD = 1 << 2,
-	EF_OPT = 1 << 3,
-};
 
 struct entry_len {
 	union {
@@ -152,7 +161,7 @@ struct entry_len {
 		.type = ELT_UNKN                                                       \
 	}
 
-struct f_entry { //packet field/entry
+struct f_entry { //filter field/entry
 	char tag[TAG_LEN]; //globaly unique entry id
 	enum entry_type type; //entry type
 	struct entry_len len; //struct to define entry length
@@ -165,20 +174,34 @@ struct f_entry { //packet field/entry
 	sizeof arr / sizeof(struct f_entry) //gets defined filter length
 
 struct filter {
-	char parent_tag[TAG_LEN]; //tag for parent(lower level) packet
-	char packet_tag[TAG_LEN]; //tag for current packet
-	void (*pre_filter)(
-		u_char *, const struct pcap_pkthdr *,
-		const u_char *); //function to call before filter is applied
-	void (
-		*post_filter)(); //function to call after filter is applied(for filtered packets)
-	bool (
-		*validate)(); //packet validation function, can be used for low level filtering
-	struct f_entry *entries; //array of packet field entries
-	u_int n_entries; //length of entries
+	//tag for parent(lower level) packet
+	char parent_tag[TAG_LEN];
+	//tag for current packet
+	char packet_tag[TAG_LEN];
+	//function is called when filter tree is built
+	//may be used to create user object or whatever
+	void (*init_filter)();
+	//function is called when progrem ins intermination process
+	//may be used to free user object or whatever
+	void (*exit_filter)();
+	//function is called before filter is applied
+	void (*itc_capture)(u_char *, const struct pcap_pkthdr *, const u_char *);
+	//function to call after filter is applied(for filtered packets)
+	void (*itc_dump)();
+	//packet validation function, can be used for low level filtering
+	vld_status (*validate)();
+	//array of packet field entries
+	struct f_entry *entries;
+	//length of entries
+	u_int n_entries;
+	//pointer to user data/object
+	//if usr has dynamicly allocated conponents, they should not depend
+	//on other filters' usr data as init_filter and exit_filter
+	//calling sequence is undefined
+	void *usr;
 };
 
-struct p_entry { //struct to store individual packet entry data
+struct p_entry { //struct to store individual packet entry's data
 	const char *tag; //tag for parent(lower level) packet
 	long raw_len; //length of received entry
 	u_char *raw_data; //pointer to allocated buffer with entry data
@@ -205,5 +228,13 @@ struct packet { //struct to store received and filtered packet data
 	struct p_entry *entries; //array of entries
 	long glob_bit_off; //global offset from root packet's begining in bits
 };
+
+/**
+ * @brief Cretes new extended filter with filter
+ * @param f filter to query
+ * @param tag filter entry's tag
+ * @return index of filter entry, -1 otherwise
+ */
+int fe_idx(struct filter *f, const char *tag);
 
 #endif

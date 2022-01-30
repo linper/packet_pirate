@@ -9,24 +9,31 @@ static struct f_entry udp4_packet[] = {
 	{"udp4_pld", 	ET_DATAFIELD,	E_PAC_OFF_OF("udp4_sport", "udp4_len"),	EF_PLD,	ERF_BIN, 	EWF_NONE},
 }; 
 
-static void intercept(u_char *args, const struct pcap_pkthdr *header, const u_char *packet) {
-	(void)args;
-	(void)header;
-	(void)packet;
-	return;
-}
-
-static bool validate()
+static vld_status validate_udp4(struct packet *p, struct ef_tree *node)
 {
-	return true;
+	(void)p;
+	
+	struct p_entry *pe;
+	struct ef_tree *pn = node->par;
+
+	struct packet *pp = get_packet_by_tag(pc.single_cap_pkt, "ipv4");
+	if (!pp) {
+		return VLD_DROP;
+	}
+	
+	//udp protocol is indicated as 17 in ipv4 packet
+	pe = PENTRY(pn, pp, "ipv4_proto");
+	if (pe->conv_data.ulong != 17) {
+		return VLD_DROP;
+	}
+
+	return VLD_PASS;
 }
 
 struct filter udp4_filter = {
 	.parent_tag = "ipv4",
 	.packet_tag = "udp4",
-	.pre_filter = intercept,
-	.post_filter = NULL,
-	.validate = validate,
+	.validate = validate_udp4,
 	.entries = udp4_packet,
 	.n_entries = FILTER_LEN(udp4_packet),
 };

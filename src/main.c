@@ -29,13 +29,8 @@ int main(int argc, char *argv[])
 	/*char *dev = "wlp3s0";*/
 	char *dev = "eno1";
 	char errbuf[ERRBUF_SIZE] = { 0 };
-	/*char filter_exp[BUF_SIZE];*/
 	bpf_u_int32 mask;
 	bpf_u_int32 net;
-	/*struct pcap_pkthdr header;*/
-
-	/*sprintf(filter_exp, "tcp");*/
-	//	sprintf(filter_exp, "port %s", argv[2]);
 
 	//	if (!(dev = pcap_lookupdev( errbuf))) {
 	//		fprintf(stderr, "Could not get default device: %s/n", errbuf);

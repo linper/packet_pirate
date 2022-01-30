@@ -1,4 +1,6 @@
 #include <sys/types.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "../include/filter.h"
 
@@ -29,4 +31,16 @@ unsigned char rw_comp_mat[_EWF_COUNT][_ERF_COUNT] = {
 	{1, 1, 1, 1},
 	{0, 0, 0, 0},
 };
+
+int fe_idx(struct filter *f, const char *tag)
+{
+	struct f_entry *fe_arr = f->entries;
+	for (size_t i = 0; i < f->n_entries; i++) {
+		if (!strcmp(fe_arr[i].tag, tag)) {
+			return i;
+		}
+	}
+
+	return -1;
+}
 

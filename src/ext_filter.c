@@ -1,12 +1,12 @@
 
 #include <stddef.h>
+#include <string.h>
 
-
+#include "../include/glist.h"
 #include "../include/filter.h"
 #include "../include/fhmap.h"
 #include "../include/f_reg.h"
 #include "../include/ext_filter.h"
-
 
 struct ext_filter *ext_filter_new(struct filter *f)
 {
@@ -50,6 +50,10 @@ struct ext_filter *ext_filter_new(struct filter *f)
 void ext_filter_free(struct ext_filter *f)
 {
 	if (f) {
+		if (f->filter->exit_filter) {
+			f->filter->exit_filter();
+		}
+
 		fhmap_shallow_free(f->mapped_filter);
 		free(f);
 	}

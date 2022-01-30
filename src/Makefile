@@ -1,5 +1,6 @@
 
 obj-y += converter.o
+obj-y += pkt_list.o
 obj-y += core.o
 obj-y += ef_tree.o
 obj-y += ext_filter.o

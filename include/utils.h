@@ -48,24 +48,24 @@ typedef enum {
 } verb;
 
 struct prog_ctx { //struct for program context
-	u_long last_dump;
+	u_long last_dump; //UTC of last dump timestamp
 	size_t next_pid; //id that will be assigned to next packet
 	u_long pp_hash; //hash value of compiled filters
-	pcap_t *handle;
+	pcap_t *handle; //pcap context
 	verb verbosity; //program verbosity, this is verb enum
 	char *bpf; //built or given bfp filter query
-	struct bpf_program bpf_prog;
-	struct ef_tree *ef_root;
-	struct fhmap *f_entries;
-	struct glist *cap_pkts;
-	struct glist *single_cap_pkt;
+	struct bpf_program bpf_prog; //compiled BPF program
+	struct ef_tree *ef_root; //root of extended filter tree
+	struct fhmap *f_entries; //map of all filter entries
+	struct glist *cap_pkts; //list to store filtered packets between dumps
+	struct glist *single_cap_pkt; //list to store filtered packets in single capture
 };
 
 extern struct prog_ctx pc; //program context instance
 
 #define ARR_LEN(arr) sizeof arr / sizeof(arr[0])
 
-u_long get_global_hash();
+u_long get_global_hash(); //retruns hash of ext_filter tree 
 
 /**
  * @brief Logs messages
