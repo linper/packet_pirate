@@ -9,13 +9,6 @@
 #include "utils.h"
 #include "filter.h"
 
-enum uint_len {
-	L8,
-	L16,
-	L32,
-	L64,
-};
-
 //format for every conferter function
 typedef status_val (*converter)(struct p_entry *);
 

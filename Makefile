@@ -28,9 +28,9 @@ Q = @
 TARGET = pp
 CC = gcc
 LDFLAGS += -lpcap
-CFLAGS += -Wall -Wextra -ggdb
+CFLAGS += -Wall -Wextra -ggdb -std=gnu99
 #CFLAGS += -Wall -Wextra -ggdb -std=c99
-DEFS += -DDEBUG
+DEFS += -D_GNU_SOURCE -DDEBUG
 RUNARGS = eno1
 INC_PATH := -I$(INC_DIR)
 
