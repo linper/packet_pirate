@@ -360,7 +360,7 @@ void packet_free(struct packet *p)
 			//if raw_data and converted data (string/blob) is the same memory addres.
 			//this may be done to save memory.
 			if (pe->raw_data && pe->wfc == EWFC_STR &&
-				pe->raw_data == pe->conv_data.string) {
+				pe->raw_data == (u_char*)pe->conv_data.string) {
 				free(pe->raw_data);
 			} else if (pe->raw_data && pe->wfc == EWFC_BLOB &&
 					   pe->raw_data == pe->conv_data.blob.arr) {

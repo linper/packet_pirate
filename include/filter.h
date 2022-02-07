@@ -32,15 +32,20 @@ enum entry_read_format {
 	ERF_UINT_BE,
 	ERF_STR,
 	ERF_BIN,
+	ERF_B64_STR,
 	_ERF_COUNT,
 };
 
 enum entry_write_format {
 	EWF_NONE,
-	EWF_RAW,
+	EWF_RAW, //exactly like onwire
+	EWF_DECODED, //when type is unknown before decoding
 	EWF_UINT,
 	EWF_STR,
-	EWF_HEX_STR,
+	EWF_HEX_STR, // 0x00 0x01 0x02 ... 0xff
+	EWF_HEXDUMP, // 00 01 02 ... ff
+	EWF_HEX_DT, //  00.01.02 ... .ff i.e. MAC address format
+	EWF_DEC_DT, // 0.1.2. ... .255  i.e. IP address format
 	EWF_B64_STR,
 	_EWF_COUNT,
 };
@@ -209,7 +214,7 @@ struct p_entry { //struct to store individual packet entry's data
 	union {
 		u_long ulong; //integer complient data to write
 		double real; //floating point complient value to write
-		u_char *string; //printable string value to write
+		char *string; //printable string value to write
 		struct {
 			u_char *arr; //binnary data itself
 			u_long len; //length of binnary data
