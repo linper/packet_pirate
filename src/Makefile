@@ -1,4 +1,5 @@
 
+obj-y += report.o
 obj-y += converter.o
 obj-y += pkt_list.o
 obj-y += core.o

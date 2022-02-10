@@ -1,14 +1,13 @@
 #ifndef PACKET_H
 #define PACKET_H
 
-#include "filter.h"
-#include <pcap/pcap.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 #include <pcap.h>
 
 #include "utils.h"
+#include "filter.h"
 
 /**
  * @brief Builds packet struct based on provided extended filter tree node and fills entries

@@ -145,7 +145,8 @@ static status_val to_hex(struct p_entry *e)
 
 	char *ptr = (char *)e->conv_data.string;
 	for (long i = 0; i < e->raw_len; ++i) {
-		ptr += sprintf(ptr, "0x%02x%s", e->raw_data[i], i+1 == e->raw_len ? "" : " ");
+		ptr += sprintf(ptr, "0x%02x%s", e->raw_data[i],
+					   i + 1 == e->raw_len ? "" : " ");
 	}
 
 	return STATUS_OK;
@@ -161,7 +162,8 @@ static status_val to_hexdump(struct p_entry *e)
 
 	char *ptr = (char *)e->conv_data.string;
 	for (long i = 0; i < e->raw_len; ++i) {
-		ptr += sprintf(ptr, "%02x%s", e->raw_data[i], i+1 == e->raw_len ? "" : " ");
+		ptr += sprintf(ptr, "%02x%s", e->raw_data[i],
+					   i + 1 == e->raw_len ? "" : " ");
 	}
 
 	return STATUS_OK;
@@ -177,7 +179,8 @@ static status_val to_dotted_hex(struct p_entry *e)
 
 	char *ptr = (char *)e->conv_data.string;
 	for (long i = 0; i < e->raw_len; ++i) {
-		ptr += sprintf(ptr, "%02x%s", e->raw_data[i], i+1 == e->raw_len ? "" : ".");
+		ptr += sprintf(ptr, "%02x%s", e->raw_data[i],
+					   i + 1 == e->raw_len ? "" : ".");
 	}
 
 	return STATUS_OK;
@@ -193,7 +196,8 @@ static status_val to_dotted_byte(struct p_entry *e)
 
 	char *ptr = (char *)e->conv_data.string;
 	for (long i = 0; i < e->raw_len; ++i) {
-		ptr += sprintf(ptr, "%d%s", e->raw_data[i], i+1 == e->raw_len ? "" : ".");
+		ptr += sprintf(ptr, "%d%s", e->raw_data[i],
+					   i + 1 == e->raw_len ? "" : ".");
 	}
 
 	return STATUS_OK;

@@ -102,7 +102,7 @@ static struct argp argp = { .options = options,
 
 static void parse_params(int argc, char *argv[], struct prog_args *args)
 {
-	args->verbosity = L_INFO; //setting default verbosity
+	args->verbosity = L_WARN; //setting default verbosity
 	argp_parse(&argp, argc, argv, 0, 0, args);
 }
 
