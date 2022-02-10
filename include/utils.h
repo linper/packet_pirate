@@ -58,14 +58,15 @@ struct prog_ctx { //struct for program context
 	struct ef_tree *ef_root; //root of extended filter tree
 	struct fhmap *f_entries; //map of all filter entries
 	struct glist *cap_pkts; //list to store filtered packets between dumps
-	struct glist *single_cap_pkt; //list to store filtered packets in single capture
+	struct glist
+		*single_cap_pkt; //list to store filtered packets in single capture
 };
 
 extern struct prog_ctx pc; //program context instance
 
 #define ARR_LEN(arr) sizeof arr / sizeof(arr[0])
 
-u_long get_global_hash(); //retruns hash of ext_filter tree 
+u_long get_global_hash(); //retruns hash of ext_filter tree
 
 /**
  * @brief Logs messages

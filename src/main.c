@@ -4,9 +4,8 @@
 #include <sys/types.h>
 #include <pcap/pcap.h>
 
-/*#include "../include/params.h"*/
 #include "../include/setup.h"
-/*#include "../include/bpf.h"*/
+#include "../include/report.h"
 #include "../include/core.h"
 
 static volatile bool in_cap = false;
@@ -88,6 +87,10 @@ int main(int argc, char *argv[])
 
 	in_cap = true; //lets say scheduling can not occur right after this
 	pcap_loop(pc.handle, -1, core_filter, NULL);
+
+	if (pc.verbosity > L_QUIET) {
+		report_all();
+	}
 
 	core_destroy();
 

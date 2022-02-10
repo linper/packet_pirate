@@ -145,6 +145,60 @@ status_val ef_tree_get_entry(struct ef_tree *node, const char *tag,
 	return STATUS_NOT_FOUND;
 }
 
+void ef_tree_foreach(struct ef_tree *node, bool skip_first,
+					 void (*func)(struct ef_tree *, void *), void *usr)
+{
+	if (!node) {
+		LOG(L_WARN, STATUS_NOT_FOUND);
+		return;
+	}
+
+	if (!skip_first) {
+		func(node, usr);
+	}
+
+	if (node->chld) {
+		ef_tree_foreach(node->chld, false, func, usr);
+	}
+
+	if (!skip_first && node->next) {
+		ef_tree_foreach(node->next, false, func, usr);
+	}
+}
+
+static void _ef_tree_foreach_continue(struct ef_tree *node,
+									  void (*func)(struct ef_tree *, void *),
+									  void *usr)
+{
+	if (!node) {
+		LOG(L_WARN, STATUS_NOT_FOUND);
+		return;
+	}
+
+	//reached root
+	if (!node->lvl) {
+		return;
+	}
+
+	func(node, usr);
+
+	if (node->next) {
+		ef_tree_foreach(node->next, true, func, usr);
+	}
+
+	/* always has parent if lvl is not 0 
+	going hierarchicly up*/
+	_ef_tree_foreach_continue(node->par, func, usr);
+}
+
+inline void ef_tree_foreach_continue(struct ef_tree *node,
+									 void (*func)(struct ef_tree *, void *),
+									 void *usr)
+{
+	ef_tree_foreach(node, true, func, usr);
+	_ef_tree_foreach_continue(node, func, usr);
+}
+
 void ef_tree_free(struct ef_tree *root)
 {
 	if (!root) {

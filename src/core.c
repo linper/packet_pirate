@@ -66,6 +66,18 @@ err:
 	return ret;
 }
 
+inline static void invalidate(struct ef_tree *node, void *usr)
+{
+	(void)usr;
+	node->flt->rep.invalid++;
+}
+
+inline static void skip(struct ef_tree *node, void *usr)
+{
+	(void)usr;
+	node->flt->rep.skiped++;
+}
+
 static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 							 u_char *args, const struct pcap_pkthdr *header,
 							 unsigned read_off)
@@ -89,6 +101,8 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 			read_off = base_read_off; //reverting read offset
 			LOGF(L_DEBUG, STATUS_NOT_FOUND, "Packet dropped for %s\n",
 				 node->flt->filter->packet_tag);
+			node->flt->rep.unsplit++;
+			ef_tree_foreach(node, true, skip, NULL);
 			vlds = VLD_DROP;
 			//if this filter fails, then all children filter must fail.
 			//But nesesserely siblings
@@ -102,6 +116,7 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 				LOGF(L_DEBUG, STATUS_OK,
 					 "Packet for %s failed validation, dropping...\n",
 					 p->packet_tag);
+				node->flt->rep.invalid++;
 				packet_free(p);
 				goto sibling;
 
@@ -109,6 +124,8 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 				LOGF(L_DEBUG, STATUS_OK,
 					 "Packet for %s failed validation, dropping all...\n",
 					 p->packet_tag);
+				ef_tree_foreach_continue(node, invalidate, NULL);
+				node->flt->rep.invalid++;
 				packet_free(p);
 				return VLD_DROP_ALL;
 
@@ -118,6 +135,8 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 				if (status) {
 					LOG(L_ERR, status);
 					packet_free(p);
+				} else {
+					node->flt->rep.parsed++;
 				}
 				break;
 			}
@@ -127,6 +146,8 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 			if (status) {
 				LOG(L_ERR, status);
 				packet_free(p);
+			} else {
+				node->flt->rep.parsed++;
 			}
 		}
 	}
@@ -238,7 +259,7 @@ void core_filter(u_char *args, const struct pcap_pkthdr *header,
 				(*f)->itc_dump();
 			}
 		}
-		
+
 		dctx.dump(pc.cap_pkts);
 		glist_clear(pc.cap_pkts);
 		pc.last_dump = now;

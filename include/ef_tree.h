@@ -66,6 +66,25 @@ status_val ef_tree_get_entry(struct ef_tree *node, const char *tag,
 							 struct f_entry **e);
 
 /**
+ * @brief Iterates tree herachicly down
+ * @param node Tree node node to start iterating from
+ * @param skip_fist wether to skip first node
+ * @param func user function callback to call at each node
+ * @param usr user pointer to pass to callback function
+ */
+void ef_tree_foreach(struct ef_tree *node, bool skip_first, void (*func)(struct ef_tree *, void *), void *usr);
+
+/**
+ * @brief Iterates tree herachicly. Think of it as iteration with base 
+ * as root node, but iteration starts from give node. I.e. continuing iterating
+ * from specified node
+ * @param node Tree node node to start iterating from
+ * @param func user function callback to call at each node
+ * @param usr user pointer to pass to callback function
+ */
+void ef_tree_foreach_continue(struct ef_tree *node, void (*func)(struct ef_tree *, void *), void *usr);
+
+/**
  * @brief Frees whole tree structure including contained ext_filters
  * @param root Root node of exttended filter tree
  * @return Void

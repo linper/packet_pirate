@@ -161,6 +161,7 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 /**
  * @brief Builds packet entry struct based on filter entry and fills it
  * with supplied data. 
+ * @param node extended filter node associated with current filter
  * @param pkt_list generic list that contains already parsed packets from data
  * @param fe filter entry to derive packet's entry form
  * @param e pointer to packet entry's to return
@@ -169,9 +170,9 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
  * @param read_off pointer pointed to current read position in 'data'
  * @return status wether packet entry were parsed succesfully
  */
-static status_val derive_entry(struct glist *pkt_list, struct packet *p,
-							   struct f_entry *fe, struct p_entry *e,
-							   const u_char *data,
+static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
+							   struct packet *p, struct f_entry *fe,
+							   struct p_entry *e, const u_char *data,
 							   const struct pcap_pkthdr *header,
 							   u_int *read_off)
 {
@@ -197,9 +198,10 @@ static status_val derive_entry(struct glist *pkt_list, struct packet *p,
 		if (read > header->caplen) { //captured packet is not long enough
 			if (read <= header->len) {
 				LOGF(
-					L_NOTICE, STATUS_BAD_INPUT,
+					L_DEBUG, STATUS_BAD_INPUT,
 					"Faild to split %s %s, packet is longer(%d) than SNAPLEN(%d)\n",
 					p->packet_tag, fe->tag, read, DEF_SNAPLEN);
+				node->flt->rep.truncated++;
 				return STATUS_OK;
 			}
 
@@ -226,9 +228,10 @@ static status_val derive_entry(struct glist *pkt_list, struct packet *p,
 		if (read > header->caplen) { //captured packet is not long enough
 			if (read <= header->len) {
 				LOGF(
-					L_NOTICE, STATUS_BAD_INPUT,
+					L_DEBUG, STATUS_BAD_INPUT,
 					"Faild to split %s %s, packet is longer(%d) than SNAPLEN(%d)\n",
 					p->packet_tag, fe->tag, read, DEF_SNAPLEN);
+				node->flt->rep.truncated++;
 				free(e->raw_data);
 				return STATUS_OK;
 			}
@@ -290,6 +293,7 @@ static status_val derive_entry(struct glist *pkt_list, struct packet *p,
 		if (status) {
 			LOGM(L_ERR, status,
 				 "Conversion from read to write format failed\n");
+			node->flt->rep.unconverted++;
 			return status;
 		}
 		LOGF(L_DEBUG, STATUS_OK, "entry:%s", e->tag);
@@ -305,6 +309,8 @@ status_val derive_packet(struct glist *pkt_list, struct ef_tree *node,
 {
 	status_val status;
 	struct filter *nf = node->flt->filter;
+
+	node->flt->rep.received++;
 
 	struct packet *p = calloc(1, sizeof(struct packet));
 	if (!p) {
@@ -332,21 +338,15 @@ status_val derive_packet(struct glist *pkt_list, struct ef_tree *node,
 
 	for (u_int i = 0; i < nf->n_entries && *read_off < header->caplen; i++) {
 		//cutting and parsing entry
-		status = derive_entry(pkt_list, p, &nf->entries[i], &p->entries[i],
-							  data, header, read_off);
+		status = derive_entry(node, pkt_list, p, &nf->entries[i],
+							  &p->entries[i], data, header, read_off);
 		if (status) {
-			LOGF(L_ERR, status, "Packet:%d failed to split\n", p->id);
+			LOGF(L_NOTICE, status, "Packet:%d failed to split\n", p->id);
 			packet_free(p);
 			return status;
 		}
 		p->e_len++;
 	}
-
-	/*status = glist_push(pkt_list, p); //appending packet to packet list;*/
-	/*if (status) {*/
-	/*LOG(L_ERR, status);*/
-	/*packet_free(p);*/
-	/*}*/
 
 	return STATUS_OK;
 }
@@ -360,7 +360,7 @@ void packet_free(struct packet *p)
 			//if raw_data and converted data (string/blob) is the same memory addres.
 			//this may be done to save memory.
 			if (pe->raw_data && pe->wfc == EWFC_STR &&
-				pe->raw_data == (u_char*)pe->conv_data.string) {
+				pe->raw_data == (u_char *)pe->conv_data.string) {
 				free(pe->raw_data);
 			} else if (pe->raw_data && pe->wfc == EWFC_BLOB &&
 					   pe->raw_data == pe->conv_data.blob.arr) {
