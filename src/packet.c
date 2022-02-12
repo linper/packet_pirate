@@ -76,7 +76,7 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 	switch (fe->len.type) { //switching by entry length extraction method
 	case ELT_TAG:
 		if (!(pe = get_packet_entry_by_tag2(pkt_list, p, fe->tag)) ||
-			bytes_to_uint(pe->raw_data, pe->raw_len,
+			bytes_to_uint(pe->raw_data, pe->raw_len, /*TODO may fail*/
 						  (unsigned long *)&e->raw_len) ||
 			pe->rfc != ERFC_INT) {
 			LOG(L_ERR, STATUS_BAD_INPUT);
@@ -112,11 +112,13 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 		//getting previous parsed entry with offset info and retreiving its data as uint
 		if (!(pe = get_packet_entry_by_tag2(
 				  pkt_list, p, fe->len.data.e_pac_off_tag.offset_tag)) ||
-			bytes_to_uint(pe->raw_data, pe->raw_len, &len) ||
+			/*bytes_to_uint(pe->raw_data, pe->raw_len, &len) || [>TODO fails here<]*/
 			pe->rfc != ERFC_INT) {
 			LOG(L_ERR, STATUS_BAD_INPUT);
 			return STATUS_BAD_INPUT;
 		}
+
+		len = pe->conv_data.ulong;
 
 		//getting previous parssed entry with start position info
 		if (!(pe = get_packet_entry_by_tag2(
@@ -193,7 +195,7 @@ static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 	}
 
 	// for unwritable payload field
-	if (fe->flags & EF_PLD && fe->write_form == EWF_NONE) {
+	if (fe->flags & EF_PLD && fe->flags & EF_NOWRT) {
 		u_int read = *read_off + e->raw_len;
 		if (read > header->caplen) { //captured packet is not long enough
 			if (read <= header->len) {
@@ -252,7 +254,12 @@ static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 			*read_off += e->raw_len; //showing that data was succesfully read
 		}
 
-		e->wfc = wfc_arr[fe->write_form];
+		if (fe->flags & EF_NOWRT) {
+			e->wfc = EWFC_NONE;
+		} else {
+			e->wfc = wfc_arr[fe->write_form];
+		}
+
 		e->rfc = rfc_arr[fe->read_form];
 		break;
 	case ET_FLAG:
@@ -275,7 +282,13 @@ static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 				  fe->len.data.e_len_bits.nbits);
 
 		e->glob_bit_off = *read_off * 8 + fe->len.data.e_len_bits.offset;
-		e->wfc = wfc_arr[fe->write_form];
+
+		if (fe->flags & EF_NOWRT) {
+			e->wfc = EWFC_NONE;
+		} else {
+			e->wfc = wfc_arr[fe->write_form];
+		}
+
 		e->rfc = rfc_arr[fe->read_form];
 
 		break;
@@ -297,7 +310,7 @@ static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 			return status;
 		}
 		LOGF(L_DEBUG, STATUS_OK, "entry:%s", e->tag);
-		/*PRINT_HEX(e->raw_data, e->raw_len);*/
+		PRINT_HEX(e->raw_data, e->raw_len);
 	}
 
 	return STATUS_OK;

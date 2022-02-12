@@ -14,6 +14,8 @@ struct filter_args { //struct ot hold all command line parameters
 	const char *snet;
 	const char *dnet;
 	const char *bpf;
+	const char *sample;
+	const char *interface;
 };
 
 struct prog_args {

@@ -26,18 +26,21 @@ int main(int argc, char *argv[])
 	/*pcap_t *handle;*/
 	status_val status;
 	/*char *dev = "wlp3s0";*/
-	char *dev = "eno1";
+	/*char *dev = "eno1";*/
 	char errbuf[ERRBUF_SIZE] = { 0 };
 	bpf_u_int32 mask;
 	bpf_u_int32 net;
 
-	//	if (!(dev = pcap_lookupdev( errbuf))) {
-	//		fprintf(stderr, "Could not get default device: %s/n", errbuf);
-	//		goto error;
-	//	}
-
 	signal(SIGINT, sig_exit);
 	signal(SIGTERM, sig_exit);
+
+	//TODO find default dev
+	/*if (!(dev = pcap_lookupdev( errbuf))) {*/
+	if (!pc.dev) {
+		pc.dev = "eno1"; //for now
+		/*fprintf(stderr, "Could not get default device: %s/n", errbuf);*/
+		/*goto error;*/
+	}
 
 	status = setup(argc, argv);
 	if (status) {
@@ -45,15 +48,26 @@ int main(int argc, char *argv[])
 		goto error;
 	}
 
-	if (pcap_lookupnet(dev, &net, &mask, errbuf) == -1) {
-		LOGF(L_ERR, STATUS_ERROR, "Could not get netmask for device: %s", dev);
-		net = 0;
-		mask = 0;
-	}
+	if (!pc.sample) {
+		if (pcap_lookupnet(pc.dev, &net, &mask, errbuf) == -1) {
+			LOGF(L_ERR, STATUS_ERROR, "Could not get netmask for device: %s",
+				 pc.dev);
+			net = 0;
+			mask = 0;
+		}
 
-	if (!(pc.handle = pcap_open_live(dev, DEF_SNAPLEN, 1, 1000, errbuf))) {
-		LOGF(L_CRIT, STATUS_ERROR, "Could not open device %s: %s", dev, errbuf);
-		goto error;
+		if (!(pc.handle =
+				  pcap_open_live(pc.dev, DEF_SNAPLEN, 1, 1000, errbuf))) {
+			LOGF(L_CRIT, STATUS_ERROR, "Could not open device %s: %s", pc.dev,
+				 errbuf);
+			goto error;
+		}
+	} else {
+		if (!(pc.handle = pcap_open_offline(pc.sample, errbuf))) {
+			LOGF(L_CRIT, STATUS_ERROR, "Could not open sample%s: %s", pc.sample,
+				 errbuf);
+			goto error;
+		}
 	}
 
 	if (pcap_compile(pc.handle, &pc.bpf_prog, pc.bpf, 0, net) == -1) {
@@ -69,7 +83,7 @@ int main(int argc, char *argv[])
 	}
 
 	//	if (pcap_datalink(pc.handle) != DLT_EN10MB) {
-	//		LOGF(L_CRIT, STATUS_ERROR, "Required ethernet headers for device %s are not supported", dev);
+	//		LOGF(L_CRIT, STATUS_ERROR, "Required ethernet headers for device %s are not supported", pc.dev);
 	//		goto error;
 	//	}
 

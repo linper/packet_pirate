@@ -266,6 +266,10 @@ static status_val build_table(struct ef_tree *root, char *buff)
 	for (size_t i = 0; i < f->n_entries; i++) {
 		const char *mand = f->entries[i].flags & EF_OPT ? "" : " NOT NULL";
 
+		if (f->entries[i].flags & EF_NOWRT) {
+			continue;
+		}
+
 		switch (wfc_arr[f->entries[i].write_form]) {
 		case EWFC_INT:
 			off +=

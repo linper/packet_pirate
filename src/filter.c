@@ -5,7 +5,6 @@
 #include "../include/filter.h"
 
 enum ewf_comp wfc_arr[_EWF_COUNT] = {
-	[EWF_NONE] = EWFC_NONE,
 	[EWF_RAW] = EWFC_BLOB,
 	[EWF_DECODED] = EWFC_BLOB,
 	[EWF_UINT] = EWFC_INT,
@@ -29,7 +28,6 @@ enum erf_comp rfc_arr[_ERF_COUNT] = {
 //lines - write
 //columns - read
 unsigned char rw_comp_mat[_EWF_COUNT][_ERF_COUNT] = {
-	{0, 0, 0, 0, 1},
 	{1, 1, 1, 1, 1},
 	{0, 0, 0, 0, 1},
 	{1, 1, 0, 0, 1},
@@ -38,7 +36,7 @@ unsigned char rw_comp_mat[_EWF_COUNT][_ERF_COUNT] = {
 	{1, 1, 1, 1, 1},
 	{1, 1, 1, 1, 1},
 	{1, 1, 1, 1, 1},
-	{0, 0, 0, 0, 0},
+	{1, 1, 1, 1, 1},
 };
 
 int fe_idx(struct filter *f, const char *tag)

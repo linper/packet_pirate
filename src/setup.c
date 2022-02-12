@@ -43,6 +43,8 @@ static struct argp_option options[] = {
 	{ "bpf", 'b', "bpf", 0,
 	  "BPF program, with full support. If given, overrides all filters above",
 	  0 },
+	{ "sample", 's', "sample", 0, "Sample .pcap file for offline analysis", 0 },
+	{ "interface", 'i', "interface", 0, "Interface to sniff", 0 },
 	{ "verbose", 'v', "verbose", 0, "Set verbosity [0-6]", 0 },
 	{ 0 }
 };
@@ -78,6 +80,12 @@ static error_t parse_p(int key, char *arg, struct argp_state *state)
 		break;
 	case 'r':
 		args->filter.proto = arg;
+		break;
+	case 'i':
+		args->filter.interface = arg;
+		break;
+	case 's':
+		args->filter.sample = arg;
 		break;
 	case 'b':
 		args->filter.bpf = arg;
@@ -211,8 +219,8 @@ static status_val build_bpf(struct prog_args *pa)
 		goto end;
 	}
 
-	snprintf(pc.bpf, DEF_BPF_LEN - 1, "%s %s%s%s%s%s", pa->filter.proto, src_net,
-			 src_ports, conj, dst_net, dst_ports);
+	snprintf(pc.bpf, DEF_BPF_LEN - 1, "%s %s%s%s%s%s", pa->filter.proto,
+			 src_net, src_ports, conj, dst_net, dst_ports);
 	status = STATUS_OK;
 
 end:
@@ -270,6 +278,8 @@ static status_val setup_prog_ctx(struct prog_args *pa)
 {
 	pc.next_pid = 0;
 	pc.verbosity = pa->verbosity;
+	pc.sample = pa->filter.sample;
+	pc.dev = pa->filter.interface;
 	return STATUS_OK;
 }
 

@@ -54,6 +54,8 @@ struct prog_ctx { //struct for program context
 	pcap_t *handle; //pcap context
 	verb verbosity; //program verbosity, this is verb enum
 	char *bpf; //built or given bfp filter query
+	const char *sample; //file to read instead of live capture
+	const char *dev; //interface to sniff
 	struct bpf_program bpf_prog; //compiled BPF program
 	struct ef_tree *ef_root; //root of extended filter tree
 	struct fhmap *f_entries; //map of all filter entries

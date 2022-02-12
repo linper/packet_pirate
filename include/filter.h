@@ -37,7 +37,6 @@ enum entry_read_format {
 };
 
 enum entry_write_format {
-	EWF_NONE,
 	EWF_RAW, //exactly like onwire
 	EWF_DECODED, //when type is unknown before decoding
 	EWF_UINT,
@@ -70,6 +69,7 @@ enum entry_flags {
 	EF_32BITW = 1 << 1,
 	EF_PLD = 1 << 2,
 	EF_OPT = 1 << 3,
+	EF_NOWRT = 1 << 4,
 };
 
 typedef enum {
