@@ -12,18 +12,11 @@
 #define PENTRY(node, packet, tag)                                              \
 	&packet->entries[fe_idx(node->flt->filter, tag)]
 
-enum entry_type {
-	ET_DATAFIELD,
-	ET_BITFIELD,
-	ET_FLAG,
-};
-
 enum entry_len_tp {
 	ELT_TAG,
 	ELT_OFF,
 	ELT_PAC_OFF,
 	ELT_PAC_OFF_TAG,
-	ELT_FLAG,
 	ELT_UNKN,
 };
 
@@ -65,11 +58,12 @@ enum erf_comp {
 };
 
 enum entry_flags {
-	EF_NONE = 0,
-	EF_32BITW = 1 << 1,
-	EF_PLD = 1 << 2,
-	EF_OPT = 1 << 3,
-	EF_NOWRT = 1 << 4,
+	EF_NONE = 0, //does not mean anything
+	EF_DUB = 1 << 1, //  doesnt increase global read offset when parsing
+	EF_NOWRT = 1 << 2, // does not dump this field
+	EF_PLD = 1 << 3, //payload field
+	EF_PLD_REG = EF_DUB | EF_NOWRT | EF_PLD, // regular payload field
+	EF_OPT = 1 << 4, //optional field
 };
 
 typedef enum {
@@ -104,11 +98,6 @@ struct entry_len {
 			char start_tag[TAG_LEN];
 			char offset_tag[TAG_LEN];
 		} e_pac_off_tag;
-		struct { //number of bits with offset from entry with given tag
-			char tag[TAG_LEN];
-			u_int offset;
-			u_int nbits;
-		} e_len_bits;
 	} data;
 	enum entry_len_tp type; //used to identify length calculation method
 };
@@ -148,19 +137,6 @@ struct entry_len {
 	.type = ELT_PAC_OFF_TAG                                              \
 	}
 
-//number of bits with offset from entry with given tag
-#define E_BITS(_tag, _offset, _nbits)                                          \
-	{                                                                          \
-		.data = {															\
-		.e_len_bits = {														\
-		.tag = _tag,														\
-		.offset = _offset,													\
-		.nbits = _nbits,													\
-		}																	\
-	},																		\
-		.type = ELT_FLAG                                              \
-	}
-
 #define E_UNKN                                                                 \
 	{                                                                          \
 		.type = ELT_UNKN                                                       \
@@ -168,8 +144,8 @@ struct entry_len {
 
 struct f_entry { //filter field/entry
 	char tag[TAG_LEN]; //globaly unique entry id
-	enum entry_type type; //entry type
 	struct entry_len len; //struct to define entry length
+	u_int len_mul;
 	enum entry_flags flags; //optional flags
 	enum entry_read_format read_form; //data format (on wire)
 	enum entry_write_format write_form; //data dump format

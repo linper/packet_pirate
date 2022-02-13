@@ -14,15 +14,6 @@
 #include "../include/pkt_list.h"
 #include "../include/packet.h"
 
-static u_int get_off_multiplier(struct f_entry *fe)
-{
-	if (fe->flags & EF_32BITW) {
-		return 4;
-	} else {
-		return 1;
-	}
-}
-
 /**
  * @brief Copies bits from src to packets raw_data field
  * @param e destination packet struct to copy data to
@@ -30,10 +21,10 @@ static u_int get_off_multiplier(struct f_entry *fe)
  * @param bit_off bit offset to start read from
  * @param n_bits number of bits to copy
  */
-static void copy_bits(struct p_entry *e, u_char *src, unsigned bit_off,
+static void copy_bits(struct p_entry *e, const u_char *src, unsigned bit_off,
 					  unsigned n_bits)
 {
-	unsigned wb_off = 8 * e->raw_len - n_bits;
+	unsigned wb_off = BYTOBI(BITOBY(e->raw_len)) - n_bits;
 	u_char r_byte, r_bit, w_byte, w_bit, bit_num;
 	u_char dt_bit;
 
@@ -53,6 +44,7 @@ static void copy_bits(struct p_entry *e, u_char *src, unsigned bit_off,
 			e->raw_data[w_byte] |= w_bit;
 		}
 	}
+	//TODO optinization needed
 }
 
 /**
@@ -71,26 +63,24 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 	struct p_entry *pe;
 	struct f_entry *ref_fe;
 	u_long len = 0;
-	u_int mul = 1;
 
 	switch (fe->len.type) { //switching by entry length extraction method
 	case ELT_TAG:
 		if (!(pe = get_packet_entry_by_tag2(pkt_list, p, fe->tag)) ||
-			bytes_to_uint(pe->raw_data, pe->raw_len, /*TODO may fail*/
-						  (unsigned long *)&e->raw_len) ||
-			pe->rfc != ERFC_INT) {
+			pe->wfc != EWFC_INT) {
 			LOG(L_ERR, STATUS_BAD_INPUT);
 			return STATUS_BAD_INPUT;
 		}
 
+		e->raw_len = pe->conv_data.ulong * fe->len_mul;
 		break;
 
 	case ELT_OFF:
-		e->raw_len = fe->len.data.e_len_val.length;
+		e->raw_len = fe->len.data.e_len_val.length * fe->len_mul;
 		break;
 
 	case ELT_PAC_OFF: //TODO never tested
-		len = fe->len.data.e_pac_off.length;
+		len = fe->len.data.e_pac_off.length * fe->len_mul;
 
 		//getting previous parssed entry with start position info
 		if (!(pe = get_packet_entry_by_tag2(pkt_list, p,
@@ -99,12 +89,12 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 			return STATUS_BAD_INPUT;
 		}
 
-		if (*read_off > (long)len + pe->glob_bit_off / 8) {
+		if (*read_off > (long)len + pe->glob_bit_off) {
 			LOGM(L_NOTICE, STATUS_BAD_INPUT, "Packet is longer than expected");
 			return STATUS_BAD_INPUT;
 		}
 
-		e->raw_len = (long)len + pe->glob_bit_off / 8 - *read_off;
+		e->raw_len = (long)len + pe->glob_bit_off - *read_off;
 
 		break;
 
@@ -112,13 +102,12 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 		//getting previous parsed entry with offset info and retreiving its data as uint
 		if (!(pe = get_packet_entry_by_tag2(
 				  pkt_list, p, fe->len.data.e_pac_off_tag.offset_tag)) ||
-			/*bytes_to_uint(pe->raw_data, pe->raw_len, &len) || [>TODO fails here<]*/
-			pe->rfc != ERFC_INT) {
+			pe->wfc != EWFC_INT) {
 			LOG(L_ERR, STATUS_BAD_INPUT);
 			return STATUS_BAD_INPUT;
 		}
 
-		len = pe->conv_data.ulong;
+		len = pe->conv_data.ulong * fe->len_mul;
 
 		//getting previous parssed entry with start position info
 		if (!(pe = get_packet_entry_by_tag2(
@@ -135,19 +124,12 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 			return STATUS_BAD_INPUT;
 		}
 
-		//retreiving length nultiplier from offset filter entry
-		mul = get_off_multiplier(ref_fe);
-
-		if (*read_off > mul * (long)len + pe->glob_bit_off / 8) {
+		if (*read_off > (long)len + pe->glob_bit_off) {
 			LOGM(L_NOTICE, STATUS_BAD_INPUT, "Packet is longer than expected");
 			return STATUS_BAD_INPUT;
 		}
 
-		e->raw_len = mul * (long)len + pe->glob_bit_off / 8 - *read_off;
-		break;
-
-	case ELT_FLAG: //this is basicaly pointless
-		e->raw_len = (fe->len.data.e_len_bits.nbits - 1) / 8 + 1;
+		e->raw_len = (long)len + pe->glob_bit_off - *read_off;
 		break;
 
 	default:
@@ -179,7 +161,6 @@ static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 							   u_int *read_off)
 {
 	status_val status;
-	struct p_entry *ref_entry;
 
 	e->tag = fe->tag;
 
@@ -194,110 +175,73 @@ static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 		return STATUS_ERROR;
 	}
 
-	// for unwritable payload field
-	if (fe->flags & EF_PLD && fe->flags & EF_NOWRT) {
+	// for regular payload field
+	if ((fe->flags & EF_PLD_REG) == EF_PLD_REG) {
 		u_int read = *read_off + e->raw_len;
-		if (read > header->caplen) { //captured packet is not long enough
-			if (read <= header->len) {
+		//captured packet is not long enough
+		if (BITOBY(read) > header->caplen) {
+			if (BITOBY(read) <= header->len) {
 				LOGF(
 					L_DEBUG, STATUS_BAD_INPUT,
-					"Faild to split %s %s, packet is longer(%d) than SNAPLEN(%d)\n",
-					p->packet_tag, fe->tag, read, DEF_SNAPLEN);
+					"Faild to split %s %s, packet is longer - %d (%d bits) than SNAPLEN(%d)\n",
+					p->packet_tag, fe->tag, BITOBY(read), read, DEF_SNAPLEN);
 				node->flt->rep.truncated++;
 				return STATUS_OK;
 			}
 
 			LOGF(
 				L_NOTICE, STATUS_BAD_INPUT,
-				"Faild to split %s %s, too long(%d), then possible(%d) probably bad filter\n",
-				p->packet_tag, fe->tag, read, header->len);
+				"Faild to split %s %s, too long - %d (%d bits), then possible(%d) probably bad filter\n",
+				p->packet_tag, fe->tag, BITOBY(read), read, header->len);
 			return STATUS_BAD_INPUT;
 		}
 
 		return STATUS_OK;
 	}
 
-	switch (fe->type) { //switching by entry data format category
-	case ET_DATAFIELD:
-	case ET_BITFIELD:
-		e->raw_data = calloc(e->raw_len + 1, sizeof(u_char));
-		if (!e->raw_data) {
-			LOG(L_CRIT, STATUS_OMEM);
-			return STATUS_OMEM;
-		}
-
-		u_int read = *read_off + e->raw_len;
-		if (read > header->caplen) { //captured packet is not long enough
-			if (read <= header->len) {
-				LOGF(
-					L_DEBUG, STATUS_BAD_INPUT,
-					"Faild to split %s %s, packet is longer(%d) than SNAPLEN(%d)\n",
-					p->packet_tag, fe->tag, read, DEF_SNAPLEN);
-				node->flt->rep.truncated++;
-				free(e->raw_data);
-				return STATUS_OK;
-			}
-
-			LOGF(
-				L_NOTICE, STATUS_BAD_INPUT,
-				"Faild to split %s %s, too long(%d), then possible(%d) probably bad filter\n",
-				p->packet_tag, fe->tag, read, header->len);
-			free(e->raw_data);
-			return STATUS_BAD_INPUT;
-		}
-
-		//extracting entry data
-		memcpy(e->raw_data, data + (*read_off), e->raw_len);
-		e->glob_bit_off = *read_off * 8;
-
-		if (!(fe->flags & EF_PLD)) {
-			*read_off += e->raw_len; //showing that data was succesfully read
-		}
-
-		if (fe->flags & EF_NOWRT) {
-			e->wfc = EWFC_NONE;
-		} else {
-			e->wfc = wfc_arr[fe->write_form];
-		}
-
-		e->rfc = rfc_arr[fe->read_form];
-		break;
-	case ET_FLAG:
-		ref_entry =
-			get_packet_entry_by_tag2(pkt_list, p, fe->len.data.e_len_bits.tag);
-		if (!ref_entry) {
-			LOGF(L_CRIT, STATUS_NOT_FOUND,
-				 "Filter entry with tag: \"%s\" not found.",
-				 fe->len.data.e_len_bits.tag);
-			return STATUS_NOT_FOUND;
-		}
-
-		e->raw_data = calloc(e->raw_len + 1, sizeof(u_char));
-		if (!e->raw_data) {
-			LOG(L_CRIT, STATUS_OMEM);
-			return STATUS_OMEM;
-		}
-
-		copy_bits(e, ref_entry->raw_data, fe->len.data.e_len_bits.offset,
-				  fe->len.data.e_len_bits.nbits);
-
-		e->glob_bit_off = *read_off * 8 + fe->len.data.e_len_bits.offset;
-
-		if (fe->flags & EF_NOWRT) {
-			e->wfc = EWFC_NONE;
-		} else {
-			e->wfc = wfc_arr[fe->write_form];
-		}
-
-		e->rfc = rfc_arr[fe->read_form];
-
-		break;
-	default:
-		LOGF(L_ERR, STATUS_BAD_INPUT, "Bad type:%d for entry:%s\n", fe->type,
-			 fe->tag);
-		return STATUS_BAD_INPUT;
-		break;
+	e->raw_data = calloc(BITOBY(e->raw_len) + 1, sizeof(u_char));
+	if (!e->raw_data) {
+		LOG(L_CRIT, STATUS_OMEM);
+		return STATUS_OMEM;
 	}
+
+	u_int read = *read_off + e->raw_len;
+	if (BITOBY(read) > header->caplen) { //captured packet is not long enough
+		if (BITOBY(read) <= header->len) {
+			LOGF(
+				L_DEBUG, STATUS_BAD_INPUT,
+				"Faild to split %s %s, packet is longer - %d (%d bits) than SNAPLEN(%d)\n",
+				p->packet_tag, fe->tag, BITOBY(read), read, DEF_SNAPLEN);
+			node->flt->rep.truncated++;
+			free(e->raw_data);
+			return STATUS_OK;
+		}
+
+		LOGF(
+			L_NOTICE, STATUS_BAD_INPUT,
+			"Faild to split %s %s, too long - %d (%d bits), then possible(%d) probably bad filter\n",
+			p->packet_tag, fe->tag, BITOBY(read), read, header->len);
+		free(e->raw_data);
+		return STATUS_BAD_INPUT;
+	}
+
+	//extracting entry data
+	copy_bits(e, ((u_char *)data) + BYWHO(*read_off), BIREM(*read_off),
+			  e->raw_len);
+
+	e->glob_bit_off = *read_off;
+
+	if (!(fe->flags & EF_DUB)) {
+		*read_off += e->raw_len; //showing that data was succesfully read
+	}
+
+	if (fe->flags & EF_NOWRT) {
+		e->wfc = EWFC_NONE;
+	} else {
+		e->wfc = wfc_arr[fe->write_form];
+	}
+
+	e->rfc = rfc_arr[fe->read_form];
 
 	if (rw_comp_mat[fe->write_form][fe->read_form] &&
 		converter_mat[fe->write_form][fe->read_form]) {
@@ -309,8 +253,11 @@ static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 			node->flt->rep.unconverted++;
 			return status;
 		}
+	}
+
+	if (pc.verbosity >= L_DEBUG && !(fe->flags & EF_PLD)) {
 		LOGF(L_DEBUG, STATUS_OK, "entry:%s", e->tag);
-		PRINT_HEX(e->raw_data, e->raw_len);
+		PRINT_HEX(e->raw_data, BITOBY(e->raw_len));
 	}
 
 	return STATUS_OK;
@@ -336,7 +283,7 @@ status_val derive_packet(struct glist *pkt_list, struct ef_tree *node,
 	//assigning packet its ID, will be used for primary and foreign keys in data dump stage
 	//all parent and children packets will have same pid
 	p->id = pc.next_pid;
-	p->glob_bit_off = *read_off * 8;
+	p->glob_bit_off = *read_off;
 
 	//adding tags to indicate position in hierarchy
 	p->packet_tag = nf->packet_tag;
@@ -349,16 +296,29 @@ status_val derive_packet(struct glist *pkt_list, struct ef_tree *node,
 		return STATUS_OMEM;
 	}
 
-	for (u_int i = 0; i < nf->n_entries && *read_off < header->caplen; i++) {
-		//cutting and parsing entry
-		status = derive_entry(node, pkt_list, p, &nf->entries[i],
-							  &p->entries[i], data, header, read_off);
-		if (status) {
-			LOGF(L_NOTICE, status, "Packet:%d failed to split\n", p->id);
-			packet_free(p);
-			return status;
+	for (u_int i = 0; i < nf->n_entries; i++) {
+		if (BITOBY(*read_off) <= header->caplen) {
+			//cutting and parsing entry
+			status = derive_entry(node, pkt_list, p, &nf->entries[i],
+								  &p->entries[i], data, header, read_off);
+			if (status) {
+				LOGF(L_NOTICE, status, "Packet:%s(%d) failed to split\n",
+					 nf->entries[i].tag, p->id);
+				packet_free(p);
+				return status;
+			}
+
+			p->e_len++;
+		} else if (nf->entries[i].flags & EF_OPT) {
+			//faking empty optional entry
+
+			p->e_len++;
+		} else if (!(nf->entries[i].flags & EF_NOWRT)) {
+			//error if we still have required unparsed fields
+			LOGF(L_NOTICE, STATUS_ERROR, "Unparsed required field:%s\n",
+				 nf->entries[i].tag);
+			return STATUS_ERROR;
 		}
-		p->e_len++;
 	}
 
 	return STATUS_OK;

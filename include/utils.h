@@ -22,8 +22,12 @@ typedef __u_long u_long;
 #define NET_LEN 256
 #define PORT_LEN 12
 
-#define BIT(b) 1 << b
+#define BIT(b) (1 << b)
 #define BITS(b) ~(~(0u) << b)
+#define BITOBY(b) (b ? ((b - 1) / 8 + 1) : 0)/*bits to ceiled bytes*/
+#define BYTOBI(b) (8 * b) /*bytes to bits*/
+#define BIREM(b) (b & 7) /*remaining bits*/
+#define BYWHO(b) (b >> 3) /*whole bytes*/
 
 typedef enum {
 	STATUS_OK = 0,

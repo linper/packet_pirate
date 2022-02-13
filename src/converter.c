@@ -39,10 +39,10 @@ status_val bytes_to_uint(u_char *data, u_int u_len, u_long *res)
 static status_val uintle_to_uint(struct p_entry *e)
 {
 	status_val status;
-	if ((status =
-			 bytes_to_uint(e->raw_data, e->raw_len, &e->conv_data.ulong))) {
+	if ((status = bytes_to_uint(e->raw_data, BITOBY(e->raw_len),
+								&e->conv_data.ulong))) {
 		LOGF(L_ERR, status, "Unsupported integer length detected:%ld",
-			 e->raw_len);
+			 BITOBY(e->raw_len));
 	}
 
 	return status;
@@ -50,7 +50,7 @@ static status_val uintle_to_uint(struct p_entry *e)
 
 static status_val uintbe_to_uint(struct p_entry *e)
 {
-	switch (e->raw_len) {
+	switch (BITOBY(e->raw_len)) {
 	case 1:
 		e->conv_data.ulong = *e->raw_data;
 		break;
@@ -69,7 +69,7 @@ static status_val uintbe_to_uint(struct p_entry *e)
 
 	default:
 		LOGF(L_ERR, STATUS_BAD_INPUT, "Unsupported integer length detected:%ld",
-			 e->raw_len);
+			 BITOBY(e->raw_len));
 		return STATUS_BAD_INPUT;
 	}
 
@@ -78,7 +78,7 @@ static status_val uintbe_to_uint(struct p_entry *e)
 
 static status_val uintbe_to_string(struct p_entry *e)
 {
-	switch (e->raw_len) {
+	switch (BITOBY(e->raw_len)) {
 	case 1:
 		asprintf(&e->conv_data.string, "%u", *e->raw_data);
 		break;
@@ -97,7 +97,7 @@ static status_val uintbe_to_string(struct p_entry *e)
 
 	default:
 		LOGF(L_ERR, STATUS_BAD_INPUT, "Unsupported integer length detected:%ld",
-			 e->raw_len);
+			 BITOBY(e->raw_len));
 		return STATUS_BAD_INPUT;
 	}
 
@@ -106,7 +106,7 @@ static status_val uintbe_to_string(struct p_entry *e)
 
 static status_val uintle_to_string(struct p_entry *e)
 {
-	switch (e->raw_len) {
+	switch (BITOBY(e->raw_len)) {
 	case 1:
 		asprintf(&e->conv_data.string, "%u", *e->raw_data);
 		break;
@@ -128,7 +128,7 @@ static status_val uintle_to_string(struct p_entry *e)
 
 	default:
 		LOGF(L_ERR, STATUS_BAD_INPUT, "Unsupported integer length detected:%ld",
-			 e->raw_len);
+			 BITOBY(e->raw_len));
 		return STATUS_BAD_INPUT;
 	}
 
@@ -137,16 +137,16 @@ static status_val uintle_to_string(struct p_entry *e)
 
 static status_val to_hex(struct p_entry *e)
 {
-	e->conv_data.string = calloc(5 * e->raw_len + 8, sizeof(char));
+	e->conv_data.string = calloc(5 * BITOBY(e->raw_len) + 8, sizeof(char));
 	if (!e->conv_data.string) {
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;
 	}
 
 	char *ptr = (char *)e->conv_data.string;
-	for (long i = 0; i < e->raw_len; ++i) {
+	for (long i = 0; i < BITOBY(e->raw_len); ++i) {
 		ptr += sprintf(ptr, "0x%02x%s", e->raw_data[i],
-					   i + 1 == e->raw_len ? "" : " ");
+					   i + 1 == BITOBY(e->raw_len) ? "" : " ");
 	}
 
 	return STATUS_OK;
@@ -154,16 +154,16 @@ static status_val to_hex(struct p_entry *e)
 
 static status_val to_hexdump(struct p_entry *e)
 {
-	e->conv_data.string = calloc(5 * e->raw_len + 8, sizeof(char));
+	e->conv_data.string = calloc(5 * BITOBY(e->raw_len) + 8, sizeof(char));
 	if (!e->conv_data.string) {
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;
 	}
 
 	char *ptr = (char *)e->conv_data.string;
-	for (long i = 0; i < e->raw_len; ++i) {
+	for (long i = 0; i < BITOBY(e->raw_len); ++i) {
 		ptr += sprintf(ptr, "%02x%s", e->raw_data[i],
-					   i + 1 == e->raw_len ? "" : " ");
+					   i + 1 == BITOBY(e->raw_len) ? "" : " ");
 	}
 
 	return STATUS_OK;
@@ -171,16 +171,16 @@ static status_val to_hexdump(struct p_entry *e)
 
 static status_val to_dotted_hex(struct p_entry *e)
 {
-	e->conv_data.string = calloc(5 * e->raw_len + 8, sizeof(char));
+	e->conv_data.string = calloc(5 * BITOBY(e->raw_len) + 8, sizeof(char));
 	if (!e->conv_data.string) {
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;
 	}
 
 	char *ptr = (char *)e->conv_data.string;
-	for (long i = 0; i < e->raw_len; ++i) {
+	for (long i = 0; i < BITOBY(e->raw_len); ++i) {
 		ptr += sprintf(ptr, "%02x%s", e->raw_data[i],
-					   i + 1 == e->raw_len ? "" : ".");
+					   i + 1 == BITOBY(e->raw_len) ? "" : ".");
 	}
 
 	return STATUS_OK;
@@ -188,16 +188,16 @@ static status_val to_dotted_hex(struct p_entry *e)
 
 static status_val to_dotted_byte(struct p_entry *e)
 {
-	e->conv_data.string = calloc(5 * e->raw_len + 8, sizeof(char));
+	e->conv_data.string = calloc(5 * BITOBY(e->raw_len) + 8, sizeof(char));
 	if (!e->conv_data.string) {
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;
 	}
 
 	char *ptr = (char *)e->conv_data.string;
-	for (long i = 0; i < e->raw_len; ++i) {
+	for (long i = 0; i < BITOBY(e->raw_len); ++i) {
 		ptr += sprintf(ptr, "%d%s", e->raw_data[i],
-					   i + 1 == e->raw_len ? "" : ".");
+					   i + 1 == BITOBY(e->raw_len) ? "" : ".");
 	}
 
 	return STATUS_OK;
@@ -207,25 +207,25 @@ static status_val to_raw(struct p_entry *e)
 {
 	//not allocating memory to save time and memory
 	e->conv_data.blob.arr = e->raw_data;
-	e->conv_data.blob.len = e->raw_len;
+	e->conv_data.blob.len = BITOBY(e->raw_len);
 
 	return STATUS_OK;
 }
 
 static status_val str_to_str(struct p_entry *e)
 {
-	for (int i = 0; i < e->raw_len; i++) {
+	for (int i = 0; i < BITOBY(e->raw_len); i++) {
 		if (!isprint((int)e->raw_data[i])) {
 			return STATUS_BAD_INPUT;
 		}
 	}
 
-	e->conv_data.string = calloc(e->raw_len + 1, sizeof(char));
+	e->conv_data.string = calloc(BITOBY(e->raw_len) + 1, sizeof(char));
 	if (!e->conv_data.string) {
 		return STATUS_OMEM;
 	}
 
-	snprintf(e->conv_data.string, e->raw_len, "%s", e->raw_data);
+	snprintf(e->conv_data.string, BITOBY(e->raw_len), "%s", e->raw_data);
 
 	return STATUS_OK;
 }
@@ -257,8 +257,9 @@ static char b64_dec_t[] = {
 
 static status_val to_b64(struct p_entry *e)
 {
+	long byte_raw_len = BITOBY(e->raw_len);
 	static int mod_t[] = { 0, 2, 1 };
-	size_t out_len = 4 * ((e->raw_len + 2) / 3);
+	size_t out_len = 4 * ((byte_raw_len + 2) / 3);
 
 	char *res = malloc(out_len);
 	if (!res) {
@@ -267,10 +268,10 @@ static status_val to_b64(struct p_entry *e)
 
 	e->conv_data.string = res;
 
-	for (int i = 0, j = 0; i < e->raw_len;) {
-		u_int b1 = i < e->raw_len ? e->raw_data[i++] : 0;
-		u_int b2 = i < e->raw_len ? e->raw_data[i++] : 0;
-		u_int b3 = i < e->raw_len ? e->raw_data[i++] : 0;
+	for (int i = 0, j = 0; i < byte_raw_len;) {
+		u_int b1 = i < byte_raw_len ? e->raw_data[i++] : 0;
+		u_int b2 = i < byte_raw_len ? e->raw_data[i++] : 0;
+		u_int b3 = i < byte_raw_len ? e->raw_data[i++] : 0;
 
 		u_int b123 = (b1 << 16) + (b2 << 8) + b3;
 
@@ -280,8 +281,8 @@ static status_val to_b64(struct p_entry *e)
 		res[j++] = b64_enc_t[(b123)&0x3F];
 	}
 
-	for (int i = 0; i < mod_t[e->raw_len % 3]; i++) {
-		res[e->raw_len - 1 - i] = '=';
+	for (int i = 0; i < mod_t[byte_raw_len % 3]; i++) {
+		res[byte_raw_len - 1 - i] = '=';
 	}
 
 	return STATUS_OK;
@@ -289,17 +290,19 @@ static status_val to_b64(struct p_entry *e)
 
 static status_val b64_to_bin(struct p_entry *e)
 {
-	if (e->raw_len % 4) {
+	long byte_raw_len = BITOBY(e->raw_len);
+
+	if (byte_raw_len % 4) {
 		return STATUS_BAD_INPUT;
 	}
 
-	int out_len = e->raw_len / 4 * 3;
+	int out_len = byte_raw_len / 4 * 3;
 
-	if (e->raw_data[e->raw_len - 1] == '=') {
+	if (e->raw_data[byte_raw_len - 1] == '=') {
 		out_len--;
 	}
 
-	if (e->raw_data[e->raw_len - 2] == '=') {
+	if (e->raw_data[byte_raw_len - 2] == '=') {
 		out_len--;
 	}
 
@@ -311,7 +314,7 @@ static status_val b64_to_bin(struct p_entry *e)
 	e->conv_data.blob.arr = res;
 	e->conv_data.blob.len = out_len;
 
-	for (int i = 0, j = 0; i < e->raw_len;) {
+	for (int i = 0, j = 0; i < byte_raw_len;) {
 		u_int s1 =
 			e->raw_data[i] == '=' ? 0 & i++ : b64_dec_t[e->raw_data[i++]];
 		u_int s2 =

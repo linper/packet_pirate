@@ -1,27 +1,22 @@
 #include "../include/ipv4.h"
 
 static struct f_entry ipv4_packet[] = {
-/*  TAG 			ENTRY TYPE		LENGTH 						FLAGS 		READ FORMAT 	WRITE FORMAT */
-	{"ipv4_vhl", 	ET_BITFIELD, 	E_LEN(1), 					EF_NOWRT, 	ERF_BIN, 		EWF_RAW},
-	{"ipv4_ver", 	ET_FLAG,		E_BITS("ipv4_vhl", 0, 4), 	0, 			ERF_UINT_LE, 	EWF_UINT},
-	{"ipv4_ihl", 	ET_FLAG,		E_BITS("ipv4_vhl", 4, 4), 	EF_32BITW, 	ERF_UINT_LE, 	EWF_UINT},
-	{"ipv4_tos", 	ET_BITFIELD, 	E_LEN(1), 					EF_NOWRT, 	ERF_BIN, 		EWF_RAW},
-	{"ipv4_dscp", 	ET_FLAG,		E_BITS("ipv4_tos", 0, 6), 	0, 			ERF_UINT_LE, 	EWF_HEX_STR},
-	{"ipv4_ecn", 	ET_FLAG,		E_BITS("ipv4_tos", 6, 2), 	0, 			ERF_UINT_LE, 	EWF_HEX_STR},
-	{"ipv4_len", 	ET_DATAFIELD,	E_LEN(2), 					0, 			ERF_UINT_LE, 	EWF_UINT},
-	{"ipv4_id", 	ET_DATAFIELD,	E_LEN(2), 					0, 			ERF_UINT_LE, 	EWF_UINT},
-	/*{"ipv4_fl_off", ET_BITFIELD, 	E_LEN(2), 					0, 			ERF_BIN, 		EWF_RAW},*/
-	{"ipv4_fl_off", ET_BITFIELD, 	E_LEN(2), 					EF_NOWRT, 	ERF_BIN, 		EWF_RAW},
-	{"ipv4_flags", 	ET_FLAG,		E_BITS("ipv4_fl_off", 0, 2),0, 			ERF_UINT_LE, 	EWF_HEX_STR},
-	{"ipv4_frag_off",	ET_FLAG, 	E_BITS("ipv4_fl_off", 2, 14),0, 		ERF_UINT_LE, 	EWF_HEX_STR},
-	{"ipv4_ttl", 	ET_DATAFIELD,	E_LEN(1), 					0, 			ERF_UINT_LE, 	EWF_UINT},
-	{"ipv4_proto", 	ET_DATAFIELD,	E_LEN(1), 					0, 			ERF_UINT_LE, 	EWF_UINT},
-	{"ipv4_cksum", 	ET_DATAFIELD,	E_LEN(2), 					0, 			ERF_UINT_LE, 	EWF_UINT},
-	/*{"ipv4_src", 	ET_DATAFIELD,	E_LEN(4), 					0, 			ERF_BIN, 		EWF_RAW},*/
-	{"ipv4_src", 	ET_DATAFIELD,	E_LEN(4), 					0, 			ERF_UINT_LE, 	EWF_DEC_DT},
-	{"ipv4_dest", 	ET_DATAFIELD,	E_LEN(4), 					0, 			ERF_UINT_LE, 	EWF_DEC_DT},
-	{"ipv4_opt", 	ET_DATAFIELD,	E_PAC_OFF_OF("ipv4_vhl", "ipv4_ihl"),EF_OPT,ERF_UINT_LE,EWF_HEX_STR},
-	{"ipv4_pld", 	ET_DATAFIELD,	E_PAC_OFF_OF("ipv4_vhl", "ipv4_len"),EF_PLD | EF_NOWRT, ERF_BIN, EWF_RAW},
+/*  TAG 			LENGTH 			MUL	FLAGS 		READ FORMAT 	WRITE FORMAT */
+	{"ipv4_ver", 	E_LEN(4), 		1,	0, 			ERF_UINT_LE, 	EWF_UINT},
+	{"ipv4_ihl", 	E_LEN(4), 		1,	0, 			ERF_UINT_LE, 	EWF_UINT},
+	{"ipv4_dscp", 	E_LEN(6), 		1,	0, 			ERF_UINT_LE, 	EWF_HEX_STR},
+	{"ipv4_ecn", 	E_LEN(2), 		1,	0, 			ERF_UINT_LE, 	EWF_HEX_STR},
+	{"ipv4_len", 	E_LEN(2), 		8,	0, 			ERF_UINT_LE, 	EWF_UINT},
+	{"ipv4_id", 	E_LEN(2), 		8,	0, 			ERF_UINT_LE, 	EWF_UINT},
+	{"ipv4_flags", 	E_LEN(2), 		1, 	0, 			ERF_UINT_LE, 	EWF_HEX_STR},
+	{"ipv4_frag_off",E_LEN(14), 	1, 	0, 			ERF_UINT_LE, 	EWF_HEX_STR},
+	{"ipv4_ttl", 	E_LEN(1), 		8,	0, 			ERF_UINT_LE, 	EWF_UINT},
+	{"ipv4_proto", 	E_LEN(1), 		8,	0, 			ERF_UINT_LE, 	EWF_UINT},
+	{"ipv4_cksum", 	E_LEN(2), 		8,	0, 			ERF_UINT_LE, 	EWF_UINT},
+	{"ipv4_src", 	E_LEN(4), 		8,	0, 			ERF_UINT_LE, 	EWF_DEC_DT},
+	{"ipv4_dest", 	E_LEN(4), 		8,	0, 			ERF_UINT_LE, 	EWF_DEC_DT},
+	{"ipv4_opt", 	E_PAC_OFF_OF("ipv4_ver", "ipv4_ihl"), 32, EF_OPT, ERF_UINT_LE, EWF_HEX_STR},
+	{"ipv4_pld", 	E_PAC_OFF_OF("ipv4_ver", "ipv4_len"), 8, EF_PLD_REG, ERF_BIN, EWF_RAW},
 }; 
 
 static vld_status validate_ipv4(struct packet *p, struct ef_tree *node)

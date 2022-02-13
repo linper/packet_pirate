@@ -82,6 +82,7 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 							 u_char *args, const struct pcap_pkthdr *header,
 							 unsigned read_off)
 {
+	//TODO Need some sort of hintig next filter feature
 	status_val status;
 	vld_status vlds;
 	const unsigned base_read_off = read_off;
