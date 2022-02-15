@@ -1,0 +1,4 @@
+config FILTER_ICMPV4    
+    bool "icmpv4 filter"
+	default n
+	select FILTER_IPV4

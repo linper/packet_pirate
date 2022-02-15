@@ -1,6 +1,10 @@
 
+obj-$(CONFIG_FILTER_ARP) += arp/
+inc-$(CONFIG_FILTER_ARP) += arp/
 obj-$(CONFIG_FILTER_ETHERNET) += ethernet/
 inc-$(CONFIG_FILTER_ETHERNET) += ethernet/
+obj-$(CONFIG_FILTER_ICMPV4) += icmpv4/
+inc-$(CONFIG_FILTER_ICMPV4) += icmpv4/
 obj-$(CONFIG_FILTER_IPV4) += ipv4/
 inc-$(CONFIG_FILTER_IPV4) += ipv4/
 obj-$(CONFIG_FILTER_TCP) += tcp/

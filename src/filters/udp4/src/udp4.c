@@ -2,11 +2,11 @@
 
 static struct f_entry udp4_packet[] = {
 /*  TAG 			LENGTH 		MUL 	FLAGS 	READ FORMAT 	WRITE FORMAT */
-	{"udp4_sport", 	E_LEN(2), 	8, 		0, 		ERF_UINT_LE, 		EWF_UINT},
-	{"udp4_dport", 	E_LEN(2), 	8, 		0, 		ERF_UINT_LE, 		EWF_UINT},
-	{"udp4_len", 	E_LEN(2), 	8, 		0, 		ERF_UINT_LE, 		EWF_UINT},
-	{"udp4_cksum", 	E_LEN(2), 	8, 		0, 		ERF_UINT_LE, 		EWF_UINT},
-	{"udp4_pld", 	E_PAC_OFF_OF("udp4_sport", "udp4_len"), 8, EF_PLD | EF_NOWRT, ERF_BIN, EWF_RAW},
+	{"udp4_sport", 	E_LEN(2), 	8, 		0, 		ERF_UINT_BE, 		EWF_UINT},
+	{"udp4_dport", 	E_LEN(2), 	8, 		0, 		ERF_UINT_BE, 		EWF_UINT},
+	{"udp4_len", 	E_LEN(2), 	8, 		0, 		ERF_UINT_BE, 		EWF_UINT},
+	{"udp4_cksum", 	E_LEN(2), 	8, 		0, 		ERF_UINT_BE, 		EWF_UINT},
+	{"udp4_pld", 	E_PAC_OFF_OF("udp4_sport", "udp4_len"), 8, EF_PLD_REG, ERF_BIN, EWF_RAW},
 }; 
 
 static vld_status validate_udp4(struct packet *p, struct ef_tree *node)

@@ -12,6 +12,8 @@
 #define PENTRY(node, packet, tag)                                              \
 	&packet->entries[fe_idx(node->flt->filter, tag)]
 
+#define HINT(_node, _hint) _node->flt->hint = _hint
+
 enum entry_len_tp {
 	ELT_TAG,
 	ELT_OFF,

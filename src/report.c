@@ -25,6 +25,7 @@ static void report_one(struct ef_tree *node, void *usr)
 
 void report_all()
 {
+	//TODO add some sort of tree structure visuolization
 	ef_tree_foreach(pc.ef_root, true, report_one, NULL);
 
 	//mabe add agregated report TODO

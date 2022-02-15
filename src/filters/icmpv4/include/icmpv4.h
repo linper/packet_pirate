@@ -1,5 +1,5 @@
-#ifndef FILTER_>>>FILTER_UNAME<<<_H
-#define FILTER_>>>FILTER_UNAME<<<_H
+#ifndef FILTER_ICMPV4_H
+#define FILTER_ICMPV4_H
 
 #include <stdlib.h>
 
@@ -9,6 +9,6 @@
 #include "../../../../include/ext_filter.h"
 #include "../../../../include/filter.h"
 
-extern struct filter >>>FILTER_NAME<<<_filter;
+extern struct filter icmpv4_filter;
 
 #endif

@@ -1,0 +1,4 @@
+config FILTER_ARP    
+    bool "arp filter"
+	default n
+	select FILTER_ETHERNET

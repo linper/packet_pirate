@@ -72,6 +72,12 @@ inline static void invalidate(struct ef_tree *node, void *usr)
 	node->flt->rep.invalid++;
 }
 
+inline static void clear_hint(struct ef_tree *node, void *usr)
+{
+	(void)usr;
+	node->flt->hint = NULL;
+}
+
 inline static void skip(struct ef_tree *node, void *usr)
 {
 	(void)usr;
@@ -82,12 +88,17 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 							 u_char *args, const struct pcap_pkthdr *header,
 							 unsigned read_off)
 {
-	//TODO Need some sort of hintig next filter feature
 	status_val status;
 	vld_status vlds;
 	const unsigned base_read_off = read_off;
 
 	if (node->lvl) { //skiping root root node
+		if (node->par->flt && node->par->flt->hint &&
+			strcmp(node->par->flt->hint, node->flt->filter->packet_tag)) {
+			//this is not hinted filter
+			goto sibling;
+		}
+
 		struct packet *p = NULL;
 
 		//calling capture intercept hook for every filter
@@ -268,6 +279,7 @@ void core_filter(u_char *args, const struct pcap_pkthdr *header,
 
 end:
 	pc.next_pid++;
+	ef_tree_foreach(pc.ef_root, true, clear_hint, NULL);
 }
 
 void core_destroy()

@@ -2,20 +2,20 @@
 
 static struct f_entry ipv4_packet[] = {
 /*  TAG 			LENGTH 			MUL	FLAGS 		READ FORMAT 	WRITE FORMAT */
-	{"ipv4_ver", 	E_LEN(4), 		1,	0, 			ERF_UINT_LE, 	EWF_UINT},
-	{"ipv4_ihl", 	E_LEN(4), 		1,	0, 			ERF_UINT_LE, 	EWF_UINT},
-	{"ipv4_dscp", 	E_LEN(6), 		1,	0, 			ERF_UINT_LE, 	EWF_HEX_STR},
-	{"ipv4_ecn", 	E_LEN(2), 		1,	0, 			ERF_UINT_LE, 	EWF_HEX_STR},
-	{"ipv4_len", 	E_LEN(2), 		8,	0, 			ERF_UINT_LE, 	EWF_UINT},
-	{"ipv4_id", 	E_LEN(2), 		8,	0, 			ERF_UINT_LE, 	EWF_UINT},
-	{"ipv4_flags", 	E_LEN(2), 		1, 	0, 			ERF_UINT_LE, 	EWF_HEX_STR},
-	{"ipv4_frag_off",E_LEN(14), 	1, 	0, 			ERF_UINT_LE, 	EWF_HEX_STR},
-	{"ipv4_ttl", 	E_LEN(1), 		8,	0, 			ERF_UINT_LE, 	EWF_UINT},
-	{"ipv4_proto", 	E_LEN(1), 		8,	0, 			ERF_UINT_LE, 	EWF_UINT},
-	{"ipv4_cksum", 	E_LEN(2), 		8,	0, 			ERF_UINT_LE, 	EWF_UINT},
-	{"ipv4_src", 	E_LEN(4), 		8,	0, 			ERF_UINT_LE, 	EWF_DEC_DT},
-	{"ipv4_dest", 	E_LEN(4), 		8,	0, 			ERF_UINT_LE, 	EWF_DEC_DT},
-	{"ipv4_opt", 	E_PAC_OFF_OF("ipv4_ver", "ipv4_ihl"), 32, EF_OPT, ERF_UINT_LE, EWF_HEX_STR},
+	{"ipv4_ver", 	E_LEN(4), 		1,	0, 			ERF_UINT_BE, 	EWF_UINT},
+	{"ipv4_ihl", 	E_LEN(4), 		1,	0, 			ERF_UINT_BE, 	EWF_UINT},
+	{"ipv4_dscp", 	E_LEN(6), 		1,	0, 			ERF_UINT_BE, 	EWF_HEX_STR},
+	{"ipv4_ecn", 	E_LEN(2), 		1,	0, 			ERF_UINT_BE, 	EWF_HEX_STR},
+	{"ipv4_len", 	E_LEN(2), 		8,	0, 			ERF_UINT_BE, 	EWF_UINT},
+	{"ipv4_id", 	E_LEN(2), 		8,	0, 			ERF_UINT_BE, 	EWF_UINT},
+	{"ipv4_flags", 	E_LEN(2), 		1, 	0, 			ERF_UINT_BE, 	EWF_HEX_STR},
+	{"ipv4_frag_off", E_LEN(14), 	1, 	0, 			ERF_UINT_BE, 	EWF_HEX_STR},
+	{"ipv4_ttl", 	E_LEN(1), 		8,	0, 			ERF_UINT_BE, 	EWF_UINT},
+	{"ipv4_proto", 	E_LEN(1), 		8,	0, 			ERF_UINT_BE, 	EWF_UINT},
+	{"ipv4_cksum", 	E_LEN(2), 		8,	0, 			ERF_UINT_BE, 	EWF_UINT},
+	{"ipv4_src", 	E_LEN(4), 		8,	0, 			ERF_UINT_BE, 	EWF_DEC_DT},
+	{"ipv4_dest", 	E_LEN(4), 		8,	0, 			ERF_UINT_BE, 	EWF_DEC_DT},
+	{"ipv4_opt", 	E_PAC_OFF_OF("ipv4_ver", "ipv4_ihl"), 32, EF_OPT, ERF_UINT_BE, EWF_HEX_STR},
 	{"ipv4_pld", 	E_PAC_OFF_OF("ipv4_ver", "ipv4_len"), 8, EF_PLD_REG, ERF_BIN, EWF_RAW},
 }; 
 
@@ -51,6 +51,20 @@ static vld_status validate_ipv4(struct packet *p, struct ef_tree *node)
 	pe = PENTRY(node, p, "ipv4_flags");
 	if (pe->conv_data.ulong & 0x4) {
 		return VLD_DROP;
+	}
+
+	//hinting optimizes filtering
+	pe = PENTRY(node, p, "ipv4_proto");
+	switch (pe->conv_data.ulong) {
+	case 1:
+		HINT(node, "icmpv4");
+		break;
+	case 6:
+		HINT(node, "tcp");
+		break;
+	case 17:
+		HINT(node, "udp4");
+		break;
 	}
 
 	return VLD_PASS;

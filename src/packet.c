@@ -24,6 +24,21 @@
 static void copy_bits(struct p_entry *e, const u_char *src, unsigned bit_off,
 					  unsigned n_bits)
 {
+	//begining unalligned, end - alligned
+	if (BIREM(bit_off) && !BIREM((bit_off + n_bits))) {
+		u_char first_mask = BITS((7 - BIREM(bit_off)));
+		e->raw_data[0] |= (*(src + BYWHO(bit_off)) & first_mask);
+		memcpy(e->raw_data + 1, src + BYWHO(bit_off) + 1, BYWHO(n_bits));
+		return;
+	}
+
+	//begining and end is alligned
+	if (!BIREM(bit_off) && !BIREM(n_bits)) {
+		memcpy(e->raw_data, src + BYWHO(bit_off), BYWHO(n_bits));
+		return;
+	}
+
+	//TODO this part can be optimized, but it's unlikely to be executed anyway
 	unsigned wb_off = BYTOBI(BITOBY(e->raw_len)) - n_bits;
 	u_char r_byte, r_bit, w_byte, w_bit, bit_num;
 	u_char dt_bit;
@@ -44,7 +59,6 @@ static void copy_bits(struct p_entry *e, const u_char *src, unsigned bit_off,
 			e->raw_data[w_byte] |= w_bit;
 		}
 	}
-	//TODO optinization needed
 }
 
 /**
@@ -66,7 +80,7 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 
 	switch (fe->len.type) { //switching by entry length extraction method
 	case ELT_TAG:
-		if (!(pe = get_packet_entry_by_tag2(pkt_list, p, fe->tag)) ||
+		if (!(pe = get_packet_entry_by_tag2(pkt_list, p, fe->len.data.e_len_tag.tag)) ||
 			pe->wfc != EWFC_INT) {
 			LOG(L_ERR, STATUS_BAD_INPUT);
 			return STATUS_BAD_INPUT;
@@ -199,12 +213,6 @@ static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 		return STATUS_OK;
 	}
 
-	e->raw_data = calloc(BITOBY(e->raw_len) + 1, sizeof(u_char));
-	if (!e->raw_data) {
-		LOG(L_CRIT, STATUS_OMEM);
-		return STATUS_OMEM;
-	}
-
 	u_int read = *read_off + e->raw_len;
 	if (BITOBY(read) > header->caplen) { //captured packet is not long enough
 		if (BITOBY(read) <= header->len) {
@@ -223,6 +231,12 @@ static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 			p->packet_tag, fe->tag, BITOBY(read), read, header->len);
 		free(e->raw_data);
 		return STATUS_BAD_INPUT;
+	}
+
+	e->raw_data = calloc(BITOBY(e->raw_len) + 1, sizeof(u_char));
+	if (!e->raw_data) {
+		LOG(L_CRIT, STATUS_OMEM);
+		return STATUS_OMEM;
 	}
 
 	//extracting entry data

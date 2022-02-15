@@ -8,30 +8,17 @@
 
 #include "../include/converter.h"
 
+//TODO add support for integer lengths from 1 to 8 bytes with different endianess
+
 status_val bytes_to_uint(u_char *data, u_int u_len, u_long *res)
 {
-	switch (u_len) { //TODO: this may break on big endian machines
-	case 1:
-		*res = *data;
-		break;
-
-	case 2:
-		*res = __bswap_16(*(u_short *)data);
-		break;
-
-	case 4:
-		*res = __bswap_32(*(u_short *)data);
-		break;
-
-	case 8:
-		*res = __bswap_64(*(u_short *)data);
-		break;
-
-	default:
-		LOGF(L_ERR, STATUS_BAD_INPUT, "Unsupported integer length detected:%ld",
-			 u_len);
+	if (u_len > sizeof(u_long)) {
+		LOGF(L_ERR, STATUS_BAD_INPUT, "Too long integer:%ld", u_len);
 		return STATUS_BAD_INPUT;
 	}
+
+	*res = 0;
+	memcpy(res, data, u_len);
 
 	return STATUS_OK;
 }
@@ -41,8 +28,7 @@ static status_val uintle_to_uint(struct p_entry *e)
 	status_val status;
 	if ((status = bytes_to_uint(e->raw_data, BITOBY(e->raw_len),
 								&e->conv_data.ulong))) {
-		LOGF(L_ERR, status, "Unsupported integer length detected:%ld",
-			 BITOBY(e->raw_len));
+		LOG(L_ERR, status);
 	}
 
 	return status;
@@ -50,27 +36,16 @@ static status_val uintle_to_uint(struct p_entry *e)
 
 static status_val uintbe_to_uint(struct p_entry *e)
 {
-	switch (BITOBY(e->raw_len)) {
-	case 1:
-		e->conv_data.ulong = *e->raw_data;
-		break;
+	u_long u_len = (u_long)(BITOBY(e->raw_len));
+	if (u_len > sizeof(u_long)) {
+		LOGF(L_ERR, STATUS_BAD_INPUT, "Too long integer:%ld", u_len);
+		return 1;
+	}
+	u_char *resb = (u_char *)&e->conv_data.ulong;
+	e->conv_data.ulong = 0;
 
-	case 2:
-		e->conv_data.ulong = *(u_short *)e->raw_data;
-		break;
-
-	case 4:
-		e->conv_data.ulong = *(u_int *)e->raw_data;
-		break;
-
-	case 8:
-		e->conv_data.ulong = *(u_long *)e->raw_data;
-		break;
-
-	default:
-		LOGF(L_ERR, STATUS_BAD_INPUT, "Unsupported integer length detected:%ld",
-			 BITOBY(e->raw_len));
-		return STATUS_BAD_INPUT;
+	for (u_int i = 0; i < u_len; i++) {
+		resb[u_len - (i + 1)] = e->raw_data[i];
 	}
 
 	return STATUS_OK;

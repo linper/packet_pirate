@@ -9,6 +9,7 @@ struct ext_filter {
 	struct filter *filter; //user defined filter
 	struct fhmap *mapped_filter; //tag=>entry mapped user defined filter
 	struct report rep; //for session capture statistics
+	const char *hint; //hinting next filter, must be cleared before each capaure
 };
 
 /**
