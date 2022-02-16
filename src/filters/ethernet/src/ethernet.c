@@ -31,3 +31,5 @@ struct filter ethernet_filter = {
 	.n_entries = FILTER_LEN(ethernet_packet),
 };
 	
+INIT_FILTER(ethernet_filter)
+

@@ -5,7 +5,8 @@
 #include <sys/types.h>
 
 #include "../include/utils.h"
-#include "../include/f_reg.h"
+#include "../include/glist.h"
+#include "../include/filter.h"
 
 const char *prog_verb_str[] = {
 	[L_CRIT] = "CRITICAL", [L_ERR] = "ERROR", [L_WARN] = "WARNING",
@@ -45,11 +46,14 @@ static void hash(u_char *data, size_t len, u_long *hash)
 u_long get_global_hash()
 {
 	u_long g_hash = 5381;
-	for (struct filter **f = filter_arr; *f; f++) {
-		hash((u_char *)(*f)->packet_tag, TAG_LEN, &g_hash);
-		hash((u_char *)(*f)->parent_tag, TAG_LEN, &g_hash);
+	struct filter *f;
+	glist_foreach (void *e, pc.f_reg) {
+		f = (struct filter *)e;
+		hash((u_char *)f->packet_tag, TAG_LEN, &g_hash);
+		hash((u_char *)f->parent_tag, TAG_LEN, &g_hash);
 
-		hash((u_char *)(*f)->entries, (*f)->n_entries * sizeof(struct f_entry), &g_hash);
+		hash((u_char *)f->entries, f->n_entries * sizeof(struct f_entry),
+			 &g_hash);
 	}
 
 	return g_hash;

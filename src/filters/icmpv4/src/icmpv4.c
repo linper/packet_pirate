@@ -37,3 +37,5 @@ struct filter icmpv4_filter = {
 	.n_entries = FILTER_LEN(icmpv4_packet),
 };
 
+INIT_FILTER(icmpv4_filter)
+

@@ -38,5 +38,5 @@ struct filter udp4_filter = {
 	.n_entries = FILTER_LEN(udp4_packet),
 };
 	
-
+INIT_FILTER(udp4_filter)
 

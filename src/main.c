@@ -7,6 +7,8 @@
 #include "../include/setup.h"
 #include "../include/report.h"
 #include "../include/core.h"
+#include "../include/glist.h"
+
 
 static volatile bool in_cap = false;
 
@@ -112,3 +114,10 @@ int main(int argc, char *argv[])
 error:
 	return 1;
 }
+
+void __attribute__((constructor)) init()
+{
+	pc.f_reg = glist_new(16, 0);
+}
+
+

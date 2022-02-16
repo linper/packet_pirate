@@ -5,7 +5,6 @@
 #include "../include/glist.h"
 #include "../include/filter.h"
 #include "../include/fhmap.h"
-#include "../include/f_reg.h"
 #include "../include/ext_filter.h"
 #include "../include/packet.h"
 #include "../include/ef_tree.h"
@@ -26,18 +25,19 @@ static status_val build_ef_tree()
 	bool found = true;
 	while (found) { //till all filters reachable from root are added
 		found = false;
-
-		for (struct filter **f = filter_arr; *f; f++) {
+		struct filter *f;
+		glist_foreach (void *e, pc.f_reg) {
+			f = (struct filter *)e;
 			//checking if parent filter is in the tree and curent is not
 			if (ef_tree_contains_by_tag(
-					pc.ef_root, (*f)->packet_tag) && /*does not contain filter*/
-				(!*(*f)->parent_tag || /*is link layer filter*/
+					pc.ef_root, f->packet_tag) && /*does not contain filter*/
+				(!*f->parent_tag || /*is link layer filter*/
 				 !ef_tree_contains_by_tag(
 					 pc.ef_root,
-					 (*f)->parent_tag))) { /*contains parent filter*/
+					 f->parent_tag))) { /*contains parent filter*/
 				//now we know that current filter can be added to tree
 				//createing new extended filter
-				if (!(ef = ext_filter_new(*f))) {
+				if (!(ef = ext_filter_new(f))) {
 					ret = STATUS_OMEM;
 					LOG(L_CRIT, ret);
 					goto err;
@@ -51,8 +51,8 @@ static status_val build_ef_tree()
 				}
 
 				//calling filter initialization hooks for each filter
-				if ((*f)->init_filter) {
-					(*f)->init_filter();
+				if (f->init_filter) {
+					f->init_filter();
 				}
 
 				found = true;
@@ -266,9 +266,9 @@ void core_filter(u_char *args, const struct pcap_pkthdr *header,
 	if (glist_count(pc.cap_pkts) >= DUMP_BATCH ||
 		now - pc.last_dump >= DUMP_INTERVAL) {
 		//calling dunp interception hooks for each filter
-		for (struct filter **f = filter_arr; *f; f++) {
-			if ((*f)->itc_dump) {
-				(*f)->itc_dump();
+		glist_foreach (void *e, pc.f_reg) {
+			if (((struct filter *)e)->itc_dump) {
+				((struct filter *)e)->itc_dump();
 			}
 		}
 
@@ -296,6 +296,7 @@ void core_destroy()
 	glist_free(pc.cap_pkts);
 	ef_tree_free(pc.ef_root);
 	fhmap_shallow_free(pc.f_entries);
+	glist_free_shallow(pc.f_reg);
 	free(pc.bpf);
 }
 

@@ -61,3 +61,5 @@ struct filter >>>FILTER_NAME<<<_filter = {
 	.usr = &mystruct,
 };
 
+INIT_FILTER(>>>FILTER_NAME<<<)
+

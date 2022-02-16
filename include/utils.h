@@ -24,10 +24,16 @@ typedef __u_long u_long;
 
 #define BIT(b) (1 << b)
 #define BITS(b) ~(~(0u) << b)
-#define BITOBY(b) (b ? ((b - 1) / 8 + 1) : 0)/*bits to ceiled bytes*/
+#define BITOBY(b) (b ? ((b - 1) / 8 + 1) : 0) /*bits to ceiled bytes*/
 #define BYTOBI(b) (8 * b) /*bytes to bits*/
 #define BIREM(b) (b & 7) /*remaining bits*/
 #define BYWHO(b) (b >> 3) /*whole bytes*/
+
+#define INIT_FILTER(filter)                                                    \
+	void __attribute__((constructor)) init_##filter()                          \
+	{                                                                          \
+		glist_push(pc.f_reg, &filter);                                         \
+	}
 
 typedef enum {
 	STATUS_OK = 0,
@@ -64,8 +70,8 @@ struct prog_ctx { //struct for program context
 	struct ef_tree *ef_root; //root of extended filter tree
 	struct fhmap *f_entries; //map of all filter entries
 	struct glist *cap_pkts; //list to store filtered packets between dumps
-	struct glist
-		*single_cap_pkt; //list to store filtered packets in single capture
+	struct glist *single_cap_pkt; //list of filtered packets in single capture
+	struct glist *f_reg; //list of registered filters
 };
 
 extern struct prog_ctx pc; //program context instance

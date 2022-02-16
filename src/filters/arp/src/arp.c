@@ -43,3 +43,5 @@ struct filter arp_filter = {
 	.n_entries = FILTER_LEN(arp_packet),
 };
 
+INIT_FILTER(arp_filter)
+

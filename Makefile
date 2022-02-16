@@ -85,7 +85,6 @@ collect_obj:
 
 menuconfig:
 	kconfig-mconf KConfig
-	$(SCR_DIR)/generate_registry.sh
 
 run: build
 	$(Q)$(EVAL) ./$(TARGET) $(RUNARGS)

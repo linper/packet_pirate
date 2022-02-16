@@ -64,4 +64,5 @@ struct filter tcp_filter = {
 	.n_entries = FILTER_LEN(tcp_packet),
 };
 	
+INIT_FILTER(tcp_filter)
 

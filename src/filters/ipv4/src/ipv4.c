@@ -78,5 +78,5 @@ struct filter ipv4_filter = {
 	.n_entries = FILTER_LEN(ipv4_packet),
 };
 	
-
+INIT_FILTER(ipv4_filter)
 

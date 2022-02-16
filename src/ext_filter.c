@@ -5,7 +5,6 @@
 #include "../include/glist.h"
 #include "../include/filter.h"
 #include "../include/fhmap.h"
-#include "../include/f_reg.h"
 #include "../include/ext_filter.h"
 
 struct ext_filter *ext_filter_new(struct filter *f)
