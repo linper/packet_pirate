@@ -13,7 +13,7 @@
 status_val bytes_to_uint(u_char *data, u_int u_len, u_long *res)
 {
 	if (u_len > sizeof(u_long)) {
-		LOGF(L_ERR, STATUS_BAD_INPUT, "Too long integer:%ld", u_len);
+		LOGF(L_DEBUG, STATUS_BAD_INPUT, "Too long integer:%ld", u_len);
 		return STATUS_BAD_INPUT;
 	}
 
@@ -28,7 +28,7 @@ static status_val uintle_to_uint(struct p_entry *e)
 	status_val status;
 	if ((status = bytes_to_uint(e->raw_data, BITOBY(e->raw_len),
 								&e->conv_data.ulong))) {
-		LOG(L_ERR, status);
+		LOG(L_DEBUG, status);
 	}
 
 	return status;
@@ -38,7 +38,7 @@ static status_val uintbe_to_uint(struct p_entry *e)
 {
 	u_long u_len = (u_long)(BITOBY(e->raw_len));
 	if (u_len > sizeof(u_long)) {
-		LOGF(L_ERR, STATUS_BAD_INPUT, "Too long integer:%ld", u_len);
+		LOGF(L_DEBUG, STATUS_BAD_INPUT, "Too long integer:%ld", u_len);
 		return 1;
 	}
 	u_char *resb = (u_char *)&e->conv_data.ulong;
@@ -51,6 +51,8 @@ static status_val uintbe_to_uint(struct p_entry *e)
 	return STATUS_OK;
 }
 
+
+//TODO fix rest of integer cconversions
 static status_val uintbe_to_string(struct p_entry *e)
 {
 	switch (BITOBY(e->raw_len)) {
@@ -71,7 +73,7 @@ static status_val uintbe_to_string(struct p_entry *e)
 		break;
 
 	default:
-		LOGF(L_ERR, STATUS_BAD_INPUT, "Unsupported integer length detected:%ld",
+		LOGF(L_DEBUG, STATUS_BAD_INPUT, "Unsupported integer length detected:%ld",
 			 BITOBY(e->raw_len));
 		return STATUS_BAD_INPUT;
 	}
@@ -102,7 +104,7 @@ static status_val uintle_to_string(struct p_entry *e)
 		break;
 
 	default:
-		LOGF(L_ERR, STATUS_BAD_INPUT, "Unsupported integer length detected:%ld",
+		LOGF(L_DEBUG, STATUS_BAD_INPUT, "Unsupported integer length detected:%ld",
 			 BITOBY(e->raw_len));
 		return STATUS_BAD_INPUT;
 	}
@@ -191,12 +193,14 @@ static status_val str_to_str(struct p_entry *e)
 {
 	for (int i = 0; i < BITOBY(e->raw_len); i++) {
 		if (!isprint((int)e->raw_data[i])) {
+			LOGM(L_DEBUG, STATUS_BAD_INPUT, "Unprintable characters");
 			return STATUS_BAD_INPUT;
 		}
 	}
 
 	e->conv_data.string = calloc(BITOBY(e->raw_len) + 1, sizeof(char));
 	if (!e->conv_data.string) {
+		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;
 	}
 

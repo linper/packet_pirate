@@ -185,7 +185,7 @@ static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 
 	//getting data length of current entry
 	if (get_entry_length(pkt_list, fe, p, e, read_off)) {
-		LOG(L_ERR, STATUS_ERROR);
+		LOG(L_DEBUG, STATUS_ERROR);
 		return STATUS_ERROR;
 	}
 
@@ -262,7 +262,7 @@ static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 		//converting to write format
 		status = converter_mat[fe->write_form][fe->read_form](e);
 		if (status) {
-			LOGM(L_ERR, status,
+			LOGM(L_DEBUG, status,
 				 "Conversion from read to write format failed\n");
 			node->flt->rep.unconverted++;
 			return status;

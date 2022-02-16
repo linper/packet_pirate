@@ -60,7 +60,7 @@ status_val ef_tree_put(struct ef_tree *root, struct ext_filter *e)
 
 	struct ef_tree *cur = root;
 
-	while (cur) { //iterating over siblings
+	while (cur->next) { //iterating over siblings
 		if (!(ret = ef_tree_put(cur->next, e))) {
 			return ret; //returning back to beginning
 		}
@@ -143,6 +143,29 @@ status_val ef_tree_get_entry(struct ef_tree *node, const char *tag,
 	}
 
 	return STATUS_NOT_FOUND;
+}
+
+status_val ef_tree_root_to_leaf_foreach(struct ef_tree *root,
+										struct ef_tree *node,
+										void (*func)(struct ef_tree *, void *),
+										void *usr)
+{
+	if (!node) {
+		LOG(L_WARN, STATUS_NOT_FOUND);
+		return STATUS_NOT_FOUND;
+	}
+
+	status_val status = STATUS_OK;
+
+	if ((node->par && node->par != root &&
+		 ef_tree_root_to_leaf_foreach(root, node->par, func, usr)) ||
+		(!node->par && node->par != root)) {
+		return STATUS_NOT_FOUND;
+	}
+
+	func(node, usr);
+
+	return status;
 }
 
 void ef_tree_foreach(struct ef_tree *node, bool skip_first,
