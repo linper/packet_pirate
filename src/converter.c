@@ -10,7 +10,7 @@
 
 //TODO add support for integer lengths from 1 to 8 bytes with different endianess
 
-status_val bytes_to_uint(u_char *data, u_int u_len, u_long *res)
+status_val ule_to_uint(u_char *data, u_int u_len, u_long *res)
 {
 	if (u_len > sizeof(u_long)) {
 		LOGF(L_DEBUG, STATUS_BAD_INPUT, "Too long integer:%ld", u_len);
@@ -23,11 +23,28 @@ status_val bytes_to_uint(u_char *data, u_int u_len, u_long *res)
 	return STATUS_OK;
 }
 
+status_val ube_to_uint(u_char *data, u_int u_len, u_long *res)
+{
+	if (u_len > sizeof(u_long)) {
+		LOGF(L_DEBUG, STATUS_BAD_INPUT, "Too long integer:%ld", u_len);
+		return 1;
+	}
+
+	u_char *resb = (u_char *)res;
+	*res = 0;
+
+	for (u_int i = 0; i < u_len; i++) {
+		resb[u_len - (i + 1)] = data[i];
+	}
+
+	return STATUS_OK;
+}
+
 static status_val uintle_to_uint(struct p_entry *e)
 {
 	status_val status;
-	if ((status = bytes_to_uint(e->raw_data, BITOBY(e->raw_len),
-								&e->conv_data.ulong))) {
+	if ((status = ule_to_uint(e->raw_data, BITOBY(e->raw_len),
+							  &e->conv_data.ulong))) {
 		LOG(L_DEBUG, status);
 	}
 
@@ -36,78 +53,39 @@ static status_val uintle_to_uint(struct p_entry *e)
 
 static status_val uintbe_to_uint(struct p_entry *e)
 {
-	u_long u_len = (u_long)(BITOBY(e->raw_len));
-	if (u_len > sizeof(u_long)) {
-		LOGF(L_DEBUG, STATUS_BAD_INPUT, "Too long integer:%ld", u_len);
-		return 1;
-	}
-	u_char *resb = (u_char *)&e->conv_data.ulong;
-	e->conv_data.ulong = 0;
-
-	for (u_int i = 0; i < u_len; i++) {
-		resb[u_len - (i + 1)] = e->raw_data[i];
+	status_val status;
+	if ((status = ube_to_uint(e->raw_data, BITOBY(e->raw_len),
+							  &e->conv_data.ulong))) {
+		LOG(L_DEBUG, status);
 	}
 
-	return STATUS_OK;
+	return status;
 }
 
-
-//TODO fix rest of integer cconversions
 static status_val uintbe_to_string(struct p_entry *e)
 {
-	switch (BITOBY(e->raw_len)) {
-	case 1:
-		asprintf(&e->conv_data.string, "%u", *e->raw_data);
-		break;
-
-	case 2:
-		asprintf(&e->conv_data.string, "%u", *(u_short *)e->raw_data);
-		break;
-
-	case 4:
-		asprintf(&e->conv_data.string, "%u", *(u_int *)e->raw_data);
-		break;
-
-	case 8:
-		asprintf(&e->conv_data.string, "%lu", *(u_long *)e->raw_data);
-		break;
-
-	default:
-		LOGF(L_DEBUG, STATUS_BAD_INPUT, "Unsupported integer length detected:%ld",
-			 BITOBY(e->raw_len));
-		return STATUS_BAD_INPUT;
+	status_val status;
+	u_long res = 0;
+	if ((status = ube_to_uint(e->raw_data, BITOBY(e->raw_len), &res))) {
+		LOG(L_DEBUG, status);
+		return status;
 	}
+
+	asprintf(&e->conv_data.string, "%lu", res);
 
 	return STATUS_OK;
 }
 
 static status_val uintle_to_string(struct p_entry *e)
 {
-	switch (BITOBY(e->raw_len)) {
-	case 1:
-		asprintf(&e->conv_data.string, "%u", *e->raw_data);
-		break;
-
-	case 2:
-		asprintf(&e->conv_data.string, "%u",
-				 __bswap_16(*(u_short *)e->raw_data));
-		break;
-
-	case 4:
-		asprintf(&e->conv_data.string, "%u",
-				 __bswap_32(*(u_short *)e->raw_data));
-		break;
-
-	case 8:
-		asprintf(&e->conv_data.string, "%lu",
-				 __bswap_64(*(u_short *)e->raw_data));
-		break;
-
-	default:
-		LOGF(L_DEBUG, STATUS_BAD_INPUT, "Unsupported integer length detected:%ld",
-			 BITOBY(e->raw_len));
-		return STATUS_BAD_INPUT;
+	status_val status;
+	u_long res = 0;
+	if ((status = ule_to_uint(e->raw_data, BITOBY(e->raw_len), &res))) {
+		LOG(L_DEBUG, status);
+		return status;
 	}
+
+	asprintf(&e->conv_data.string, "%lu", res);
 
 	return STATUS_OK;
 }
