@@ -12,7 +12,8 @@
 //format for every conferter function
 typedef status_val (*converter)(struct p_entry *);
 
-status_val bytes_to_uint(u_char *data, unsigned u_len, unsigned long *res);
+status_val ule_to_uint(u_char *data, unsigned u_len, unsigned long *res);
+status_val ube_to_uint(u_char *data, unsigned u_len, unsigned long *res);
 
 //Converter matrix between types
 //Entry positions must match rw_comp_mat from filter.c
