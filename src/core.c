@@ -9,6 +9,7 @@
 #include "../include/packet.h"
 #include "../include/ef_tree.h"
 #include "../include/dump/dump.h"
+#include "../include/sanity.h"
 #include "../include/core.h"
 
 #define FH_GLOB_INIT_CAP 256
@@ -228,6 +229,14 @@ status_val core_init()
 		LOG(L_CRIT, status);
 		goto dump_build_err;
 	}
+
+#ifdef DEVEL_SANITY
+	status = check_sanity();
+	if (status) {
+		LOG(L_CRIT, status);
+		goto dump_build_err;
+	}
+#endif
 
 	return status;
 

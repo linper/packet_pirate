@@ -315,6 +315,7 @@ converter converter_mat[_EWF_COUNT][_ERF_COUNT] = {
 	[EWF_STR][ERF_UINT_LE] = uintle_to_string,
 	[EWF_STR][ERF_UINT_BE] = uintbe_to_string,
 	[EWF_STR][ERF_STR] = str_to_str,
+	[EWF_STR][ERF_B64_STR] = str_to_str,
 	[EWF_RAW][ERF_UINT_LE] = to_raw,
 	[EWF_RAW][ERF_UINT_BE] = to_raw,
 	[EWF_RAW][ERF_STR] = to_raw,

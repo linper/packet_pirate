@@ -3,74 +3,49 @@ mainmenu "Packet pirate configurations"
 
 source "src/filters/KConfig"
 source "src/dump/KConfig"
-source "def_KConfig"
+source "scripts/def_KConfig"
+source "scripts/devel_KConfig"
+source "scripts/tests_KConfig"
     
-config DEVEL
-    bool "Development"
-    default y
-    help
-	Framework testing and development configurations
-    
-    config DEVEL_SANITY
-	bool "NOT IMPL Sanity checking"
-	default y
-	depends on DEVEL
+choice VERBOSITY
+prompt "Logging"
+default VERB_WARN
+help
+Message logging will be enabled. If unchecked - will not be compiled in filal binary. Othervise may decrease performance
 
-	config DEVEL_COMP
-	string "Compilation flags"
-	default "-Og -ggdb"
-	depends on DEVEL
+config VERB_QUIET
+bool "Quiet"
+help
+	"No messages"
 
-    choice VERBOSITY
-	prompt "Logging"
-	default VERB_WARN
-    help
-	Message logging will be enabled. If unchecked - will not be compiled in filal binary. Othervise may decrease performance
-	
-    config VERB_QUIET
-	bool "Quiet"
-	help
-	    "No messages"
+config VERB_CRIT
+bool "Critical"
+help
+	"Logs only critical messages"
 
-    config VERB_CRIT
-	bool "Critical"
-	help
-	    "Logs only critical messages"
+config VERB_ERR
+bool "Error"
+help
+	"Logs error and highier priority messages"
 
-    config VERB_ERR
-	bool "Error"
-	help
-	    "Logs error and highier priority messages"
+config VERB_WARN
+bool "Warning"
+help
+	"Logs warning and highier priority messages"
 
-    config VERB_WARN
-	bool "Warning"
-	help
-	    "Logs warning and highier priority messages"
+config VERB_NOTICE
+bool "Notice"
+help
+	"Logs notice and highier priority messages"
 
-    config VERB_NOTICE
-	bool "Notice"
-	help
-	    "Logs notice and highier priority messages"
+config VERB_INFO
+bool "Info"
+help
+	"Logs informational and highier priority messages"
 
-    config VERB_INFO
-	bool "Info"
-	help
-	    "Logs informational and highier priority messages"
-
-    config VERB_DEBUG
-	bool "Debug"
-	help
-	    "Logs debug and highier priority messages"
-    endchoice
-    
-config TESTS
-    bool "Testing"
-    default n
-    help
-	Plugin testing configuration
-    
-    config PLUGIN_TEST_SIMPLE
-	bool "NOT IMPL simple test, just example"
-	depends on TESTS
-
+config VERB_DEBUG
+bool "Debug"
+help
+	"Logs debug and highier priority messages"
+endchoice
 

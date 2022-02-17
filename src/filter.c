@@ -30,7 +30,7 @@ enum erf_comp rfc_arr[_ERF_COUNT] = {
 unsigned char rw_comp_mat[_EWF_COUNT][_ERF_COUNT] = {
 	{1, 1, 1, 1, 1},
 	{0, 0, 0, 0, 1},
-	{1, 1, 0, 0, 1},
+	{1, 1, 0, 0, 0},
 	{1, 1, 1, 0, 1},
 	{1, 1, 1, 1, 1},
 	{1, 1, 1, 1, 1},

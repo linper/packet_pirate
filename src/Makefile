@@ -10,6 +10,7 @@ obj-y += glist.o
 obj-y += setup.o
 obj-y += utils.o
 obj-y += packet.o
+obj-y += sanity.o
 obj-y += core.o
 obj-y += main.o
 

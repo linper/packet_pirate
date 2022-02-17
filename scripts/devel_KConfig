@@ -1,0 +1,12 @@
+
+menu "Development"
+
+config DFN_DEVEL_SANITY
+bool "Sanity checks"
+default y
+
+config DEVEL_COMP
+string "Compilation flags"
+default "-Og -ggdb"
+
+endmenu

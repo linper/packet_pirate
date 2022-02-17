@@ -1,0 +1,6 @@
+menu "Tests"
+
+config PLUGIN_TEST_SIMPLE
+bool "NOT IMPL simple test, just example"
+
+endmenu
