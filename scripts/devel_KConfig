@@ -1,12 +1,42 @@
 
 menu "Development"
 
-config DFN_DEVEL_SANITY
-bool "Sanity checks"
-default y
+config DFN_DEVEL_BPF_LEN
+int "BPF length"
+default 1024
+help
+	Maximum raw or built BPF length
+
+config DFN_DEVEL_BUF_SIZE
+int "Buff size"
+default 512
+help
+	Most common internal buffer size
 
 config DEVEL_COMP
 string "Compilation flags"
 default "-Og -ggdb"
+
+config DFN_DEVEL_NET_LEN
+int "Net length"
+default 256
+help
+	Default net buffer size
+
+config DFN_DEVEL_PORT_LEN
+int "Port length"
+default 12
+help
+	Default port buffer size
+
+config DFN_DEVEL_SANITY
+bool "Sanity checks"
+default y
+
+config DFN_DEVEL_TAG_LEN
+int "Tag length"
+default 16
+help
+	Default tag buffer size
 
 endmenu

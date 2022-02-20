@@ -1,3 +1,10 @@
+/**
+ * @file utils.c
+ * @brief Implementations of various utilities. It is also intended 
+ * to be used by end user
+ * @author Linas Perkauskas
+ * @date 2022-02-20
+ */
 
 #include <stdarg.h>
 #include <stddef.h>
@@ -8,15 +15,17 @@
 #include "../include/glist.h"
 #include "../include/filter.h"
 
+/** @brief Internal loging level to type string map */
 const char *prog_verb_str[] = {
 	[L_CRIT] = "CRITICAL", [L_ERR] = "ERROR", [L_WARN] = "WARNING",
 	[L_NOTICE] = "NOTICE", [L_INFO] = "INFO", [L_DEBUG] = "DEBUG",
 };
 
-static struct { //structure to describe messages
-	bool err; //is this an error
-	const char *desc; //message type description
-	const char *msg; //default message
+/** @brief Internal map for default logging messages */
+static struct { ///< 		Structure to describe messages
+	bool err; ///< 			Is this an error
+	const char *desc; ///< 	Message type description
+	const char *msg; ///< 	Default message
 } msg_map[] = {
 	[STATUS_OK] = { .err = false, .desc = "OK", .msg = NULL },
 	[STATUS_ERROR] = { .err = true, .desc = "ERROR", .msg = "Error occured" },
@@ -31,7 +40,7 @@ static struct { //structure to describe messages
 						   .msg = "Invalid input value" },
 };
 
-// djb2 hashing
+/** @brief Djb2 hashing once again */
 static void hash(u_char *data, size_t len, u_long *hash)
 {
 	u_char c;
@@ -49,8 +58,8 @@ u_long get_global_hash()
 	struct filter *f;
 	glist_foreach (void *e, pc.f_reg) {
 		f = (struct filter *)e;
-		hash((u_char *)f->packet_tag, TAG_LEN, &g_hash);
-		hash((u_char *)f->parent_tag, TAG_LEN, &g_hash);
+		hash((u_char *)f->packet_tag, DEVEL_TAG_LEN, &g_hash);
+		hash((u_char *)f->parent_tag, DEVEL_TAG_LEN, &g_hash);
 
 		hash((u_char *)f->entries, f->n_entries * sizeof(struct f_entry),
 			 &g_hash);

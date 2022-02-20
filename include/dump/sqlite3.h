@@ -1,3 +1,10 @@
+/**
+ * @file sqlite3.h
+ * @brief Description of sqlite3 implementation of dump interface
+ * @author Linas Perkauskas
+ * @date 2022-02-20
+ */
+
 #ifndef H_DUMP_SQLITE3
 #define H_DUMP_SQLITE3
 

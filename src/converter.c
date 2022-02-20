@@ -1,3 +1,9 @@
+/**
+ * @file converter.c
+ * @brief Implementation of interface of converter between read and write formats
+ * @author Linas Perkauskas
+ * @date 2022-02-20
+ */
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -8,8 +14,13 @@
 
 #include "../include/converter.h"
 
-//TODO add support for integer lengths from 1 to 8 bytes with different endianess
-
+/**
+ * @brief Conversion fron unsigned little enian int to unsigned int
+ * @param[in] *data		Pointer to data to convert
+ * @param[in] u_len		Length of data
+ * @param[out] *res		Pointer to result buffer
+ * @return STATUS_OK if successful
+ */
 status_val ule_to_uint(u_char *data, u_int u_len, u_long *res)
 {
 	if (u_len > sizeof(u_long)) {
@@ -23,6 +34,13 @@ status_val ule_to_uint(u_char *data, u_int u_len, u_long *res)
 	return STATUS_OK;
 }
 
+/**
+ * @brief Conversion fron unsigned big enian int to unsigned int
+ * @param[in] *data		Pointer to data to convert
+ * @param[in] u_len		Length of data
+ * @param[out] *res		Pointer to result buffer
+ * @return STATUS_OK if successful
+ */
 status_val ube_to_uint(u_char *data, u_int u_len, u_long *res)
 {
 	if (u_len > sizeof(u_long)) {

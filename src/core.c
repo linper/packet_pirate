@@ -1,3 +1,10 @@
+/**
+ * @file core.c
+ * @brief Implementation of core "Packet Pirate's" interface.
+ * @author Linas Perkauskas
+ * @date 2022-02-20
+ */
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <time.h>
@@ -14,6 +21,10 @@
 
 #define FH_GLOB_INIT_CAP 256
 
+/**
+* @brief Builds whole extended filter tree
+* @return Status whethet buldidn was successfull
+ */
 static status_val build_ef_tree()
 {
 	status_val ret = STATUS_BAD_INPUT;
@@ -34,8 +45,7 @@ static status_val build_ef_tree()
 					pc.ef_root, f->packet_tag) && /*does not contain filter*/
 				(!*f->parent_tag || /*is link layer filter*/
 				 !ef_tree_contains_by_tag(
-					 pc.ef_root,
-					 f->parent_tag))) { /*contains parent filter*/
+					 pc.ef_root, f->parent_tag))) { /*contains parent filter*/
 				//now we know that current filter can be added to tree
 				//createing new extended filter
 				if (!(ef = ext_filter_new(f))) {
@@ -67,24 +77,42 @@ err:
 	return ret;
 }
 
+/**
+ * @brief Callback to modify invalid packets' statistics
+ */
 inline static void invalidate(struct ef_tree *node, void *usr)
 {
 	(void)usr;
 	node->flt->rep.invalid++;
 }
 
+/**
+ * @brief Callback to clear hint
+ */
 inline static void clear_hint(struct ef_tree *node, void *usr)
 {
 	(void)usr;
 	node->flt->hint = NULL;
 }
 
+/**
+ * @brief Callback to skip filter
+ */
 inline static void skip(struct ef_tree *node, void *usr)
 {
 	(void)usr;
 	node->flt->rep.skiped++;
 }
 
+/**
+ * @brief Function to each filter to work with captured data
+ * @param[in] *node 	Extended filter tree node to derive packet form
+ * @param[in] *data 	Captured packet data
+ * @param[in] *args 	Arguments supplied to pcap's capture callback
+ * @param[in] *header 	Timestamp, packet length and captured packet length
+ * @param[in] read_off 	Current read position in `data`
+ * @return Status whether packet entry were parsed succesfully
+ */
 static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 							 u_char *args, const struct pcap_pkthdr *header,
 							 unsigned read_off)
@@ -189,7 +217,7 @@ status_val core_init()
 {
 	status_val status;
 
-	pc.cap_pkts = glist_new(2 * DUMP_BATCH, GLIST_NO_SHRINK);
+	pc.cap_pkts = glist_new(2 * DUMP_BATCH);
 	if (!pc.cap_pkts) {
 		LOG(L_CRIT, STATUS_OMEM);
 		status = STATUS_OMEM;
@@ -198,7 +226,7 @@ status_val core_init()
 
 	glist_set_free_cb(pc.cap_pkts, (void (*)(void *))packet_free);
 
-	pc.single_cap_pkt = glist_new(64, GLIST_ST_DEFAULT);
+	pc.single_cap_pkt = glist_new(64);
 	if (!pc.single_cap_pkt) {
 		LOG(L_CRIT, STATUS_OMEM);
 		status = STATUS_OMEM;
@@ -305,7 +333,7 @@ void core_destroy()
 	glist_free(pc.cap_pkts);
 	ef_tree_free(pc.ef_root);
 	fhmap_shallow_free(pc.f_entries);
-	glist_free_shallow(pc.f_reg);
 	free(pc.bpf);
+	free(pc.dev);
 }
 

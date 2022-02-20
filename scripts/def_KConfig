@@ -1,5 +1,4 @@
 menu "Defaults"
-
 config DFN_DEF_USE_BPF
 bool "Use BPF"
 default n
@@ -46,16 +45,41 @@ string "Source port"
 default ""
 depends on !DFN_DEF_USE_BPF
 
-config DFN_DEF_BPF_LEN
-int "BPF length"
-default 1024
-help
-	Maximum raw or built BPF length	
-
 config DFN_DEF_SNAPLEN
 int "Snaplength"
 default 1600
 help
 	Maximum capturable length of packet	
 
+config DFN_DEF_AUTO_IF
+bool "Auto interface selection"
+default y
+help
+	Automaticly select which interface to sniff
+
+config DFN_DEF_IF_LO
+default y
+bool "Allow loopback"
+depends on DFN_DEF_AUTO_IF
+
+config DFN_DEF_IF_WI
+default y
+bool "Allow wireless"
+depends on DFN_DEF_AUTO_IF
+
+config DFN_DEF_IF_OUP
+default n
+bool "Only UP"
+depends on DFN_DEF_AUTO_IF
+
+config DFN_DEF_IF_ORN
+default n
+bool "Only RUNNING"
+depends on DFN_DEF_AUTO_IF
+
+config DFN_DEF_IF
+string "Target interface"
+default "eth0"
+depends on !DFN_DEF_AUTO_IF
+	
 endmenu

@@ -1,3 +1,9 @@
+/**
+ * @file ext_filter.c
+ * @brief Implementation of extended filter interface
+ * @author Linas Perkauskas
+ * @date 2022-02-20
+ */
 
 #include <stddef.h>
 #include <string.h>

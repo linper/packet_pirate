@@ -1,26 +1,36 @@
+/**
+ * @file setup.c
+ * @brief Interface implementation to set up program and simmilar things
+ * @author Linas Perkauskas
+ * @date 2022-02-20
+ */
 
-/*#include "../include/params.h"*/
 #include "../include/setup.h"
 #include <string.h>
 
+/** @brief Corresponding struct all command line arrguments */
 #define NEMPTY_STR(s) s &&strcmp(s, "")
 
+/** @brief Global program context definition */
 struct prog_ctx pc = { 0 };
 
 /**********************
 *  CMD LINE PARAMS  *
 **********************/
 
-const char *argp_program_version = "packet pirate 1.0";
+/** @brief Program name to be desplayed in help message */
+const char *argp_program_version = "Packet Pirate 1.0";
+
+/** @brief Contacts to be desplayed in help message */
 const char *argp_program_bug_address = "<none@none.none>";
 
-/* Program documentation. */
+/** @brief Program documentation to be desplayed in help message */
 static char doc[] = "Yet another packet sniffer";
 
-/* A description of the arguments we accept. */
+/** @brief A description of the arguments we accept to be desplayed in help message */
 static char args_doc[] = "ARG1 ARG2";
 
-/* The options we understand. */
+/** @brief The options we understand  to be desplayed in help message */
 static struct argp_option options[] = {
 	{ "proto", 'r', "proto", 0,
 	  "Protocol to capture packets of. Can be one of ether, fddi, tr, wlan, ip, ip6, arp, rarp, decnet, tcp and udp",
@@ -49,9 +59,9 @@ static struct argp_option options[] = {
 	{ 0 }
 };
 
-/* Used by main to communicate with parse_opt. */
-
-/* Parse a single option. */
+/**
+ * @brief Parse a single option
+ */
 static error_t parse_p(int key, char *arg, struct argp_state *state)
 {
 	struct prog_args *args = state->input;
@@ -102,12 +112,19 @@ static error_t parse_p(int key, char *arg, struct argp_state *state)
 	return 0;
 }
 
-/* Our argp parser. */
+/** @brief Our argp parser */
 static struct argp argp = { .options = options,
 							.parser = parse_p,
 							.args_doc = args_doc,
 							.doc = doc };
 
+/**
+ * @brief Parses command line parameters
+ * @params[in] argc 		Number of arguments
+ * @params[in] *argv[] 		List of arguments
+ * @params[out] *args 		Program arguments struct to return results
+ * @return Void
+ */
 static void parse_params(int argc, char *argv[], struct prog_args *args)
 {
 	args->verbosity = L_WARN; //setting default verbosity
@@ -118,26 +135,38 @@ static void parse_params(int argc, char *argv[], struct prog_args *args)
 *  BPF  *
 **********************/
 
+/**
+ * @brief Builds BPF port string
+ * @params[out] *dst 	Pointer to destination buffer
+ * @params[out] *src 	Pointer to source string
+ * @params[in] *prefix 	"src" or "dst"
+ * @return Void
+ */
 static inline void build_port_string(char *dst, const char *src, char *prefix)
 {
 	sprintf(dst, "%s %s %s ", prefix, strstr(src, "-") ? "portrange" : "port",
 			src);
 }
 
-//todo study bfp syntax and correct errors if they exist
+//TODO study bfp syntax and correct errors if they exist
+/**
+ * @brief Builds BPF compatable string
+ * @params[in, out] *pa Program argument struct to work with
+ * @return Status whether succeded
+ */
 static status_val build_bpf(struct prog_args *pa)
 {
 	status_val status = STATUS_ERROR;
 
 	//+<some value> is for aditional "src/dst host/net" and similar
-	char dst_net[NET_LEN + 9] = { 0 };
-	char src_net[NET_LEN + 9] = { 0 };
-	char dst_ports[PORT_LEN + 14] = { 0 };
-	char src_ports[PORT_LEN + 14] = { 0 };
+	char dst_net[DEVEL_NET_LEN + 9] = { 0 };
+	char src_net[DEVEL_NET_LEN + 9] = { 0 };
+	char dst_ports[DEVEL_PORT_LEN + 14] = { 0 };
+	char src_ports[DEVEL_PORT_LEN + 14] = { 0 };
 
 	if (pa->bpf_enabled) {
 		if (NEMPTY_STR(pa->filter.bpf) &&
-			strlen(pa->filter.bpf) >= DEF_BPF_LEN) {
+			strlen(pa->filter.bpf) >= DEVEL_BPF_LEN) {
 			status = STATUS_BAD_INPUT;
 			LOGM(L_CRIT, status, "Bpf is too long");
 			goto end;
@@ -155,14 +184,14 @@ static status_val build_bpf(struct prog_args *pa)
 		LOGM(L_CRIT, status, "Dhost and dnet can't exist in unison");
 		goto end;
 	} else if (NEMPTY_STR(pa->filter.dhost)) {
-		if (strlen(pa->filter.dhost) >= NET_LEN) {
+		if (strlen(pa->filter.dhost) >= DEVEL_NET_LEN) {
 			status = STATUS_BAD_INPUT;
 			LOGM(L_CRIT, status, "Dhost is too long");
 			goto end;
 		}
 		sprintf(dst_net, "dst host %s ", pa->filter.dhost);
 	} else if (NEMPTY_STR(pa->filter.dnet)) {
-		if (strlen(pa->filter.dnet) >= NET_LEN) {
+		if (strlen(pa->filter.dnet) >= DEVEL_NET_LEN) {
 			status = STATUS_BAD_INPUT;
 			LOGM(L_CRIT, status, "Dnet is too long");
 			goto end;
@@ -175,14 +204,14 @@ static status_val build_bpf(struct prog_args *pa)
 		LOGM(L_CRIT, status, "Shost and snet can't exist in unison");
 		goto end;
 	} else if (NEMPTY_STR(pa->filter.shost)) {
-		if (strlen(pa->filter.dnet) >= NET_LEN) {
+		if (strlen(pa->filter.dnet) >= DEVEL_NET_LEN) {
 			status = STATUS_BAD_INPUT;
 			LOGM(L_CRIT, status, "Shost is too long");
 			goto end;
 		}
 		sprintf(src_net, "src host %s ", pa->filter.shost);
 	} else if (NEMPTY_STR(pa->filter.snet)) {
-		if (strlen(pa->filter.snet) >= NET_LEN) {
+		if (strlen(pa->filter.snet) >= DEVEL_NET_LEN) {
 			status = STATUS_BAD_INPUT;
 			LOGM(L_CRIT, status, "Snet is too long");
 			goto end;
@@ -191,7 +220,7 @@ static status_val build_bpf(struct prog_args *pa)
 	}
 
 	if (NEMPTY_STR(pa->filter.dport)) {
-		if (strlen(pa->filter.dport) >= PORT_LEN) {
+		if (strlen(pa->filter.dport) >= DEVEL_PORT_LEN) {
 			status = STATUS_BAD_INPUT;
 			LOGM(L_CRIT, status, "Dport is too long");
 			goto end;
@@ -200,7 +229,7 @@ static status_val build_bpf(struct prog_args *pa)
 	}
 
 	if (NEMPTY_STR(pa->filter.sport)) {
-		if (strlen(pa->filter.sport) >= PORT_LEN) {
+		if (strlen(pa->filter.sport) >= DEVEL_PORT_LEN) {
 			status = STATUS_BAD_INPUT;
 			LOGM(L_CRIT, status, "Sport is too long");
 			goto end;
@@ -213,13 +242,13 @@ static status_val build_bpf(struct prog_args *pa)
 			" && " :
 			  "";
 
-	if (!(pc.bpf = calloc(sizeof(char), DEF_BPF_LEN))) {
+	if (!(pc.bpf = calloc(sizeof(char), DEVEL_BPF_LEN))) {
 		status = STATUS_OMEM;
 		LOG(L_CRIT, status);
 		goto end;
 	}
 
-	snprintf(pc.bpf, DEF_BPF_LEN - 1, "%s %s%s%s%s%s", pa->filter.proto,
+	snprintf(pc.bpf, DEVEL_BPF_LEN - 1, "%s %s%s%s%s%s", pa->filter.proto,
 			 src_net, src_ports, conj, dst_net, dst_ports);
 	status = STATUS_OK;
 
@@ -231,6 +260,11 @@ end:
 *  DEFAULTS *
 **********************/
 
+/**
+ * @brief Initializes default program argument struct from defines passed by compiler
+ * @params[out] *pa Program argument struct to fill up
+ * @return Void
+ */
 static void defaults_init(struct prog_args *pa)
 {
 #ifdef DEF_USE_BPF
@@ -268,18 +302,30 @@ static void defaults_init(struct prog_args *pa)
 #ifdef VERB_DEBUG
 	pa->verbosity = 6;
 #endif
+
+#ifndef DEF_AUTO_IF
+	pa->filter.interface = DEF_IF;
+#endif
 }
 
 /**********************
 *  SETUP  *
 **********************/
 
+/**
+ * @brief Sets up program context from program argument struct
+ * @params[in] *pa Program argument struct to work with
+ * @return Status whether succeded
+ */
 static status_val setup_prog_ctx(struct prog_args *pa)
 {
 	pc.next_pid = 0;
 	pc.verbosity = pa->verbosity;
 	pc.sample = pa->filter.sample;
-	pc.dev = pa->filter.interface;
+	if (pa->filter.interface) {
+		pc.dev = strdup(pa->filter.interface);
+	}
+
 	return STATUS_OK;
 }
 

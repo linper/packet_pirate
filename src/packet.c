@@ -1,3 +1,9 @@
+/**
+ * @file packet.c
+ * @brief Implementation of packet parsing interface
+ * @author Linas Perkauskas
+ * @date 2022-02-20
+ */
 
 #include <pcap/pcap.h>
 #include <stddef.h>
@@ -16,10 +22,11 @@
 
 /**
  * @brief Copies bits from src to packets raw_data field
- * @param e destination packet struct to copy data to
- * @param src data source
- * @param bit_off bit offset to start read from
- * @param n_bits number of bits to copy
+ * @param[in, out] *e 	Destination packet struct to copy data to
+ * @param[in] *src 		Data source
+ * @param[in] bit_off 	Bit offset to start read from
+ * @param[in] n_bits 	Number of bits to copy
+ * @return Void
  */
 static void copy_bits(struct p_entry *e, const u_char *src, unsigned bit_off,
 					  unsigned n_bits)
@@ -63,11 +70,12 @@ static void copy_bits(struct p_entry *e, const u_char *src, unsigned bit_off,
 
 /**
  * @brief Finds length of packet's entry struct
- * @param pkt_list generic list that contains already parsed packets from data
- * @param fe filter entry to derive packet's entry form
- * @param e pointer to packet entry's to return
- * @param read_off pointer pointed to current read position in 'data'
- * @return status wether packet entry's length ware parsed succesfully
+ * @param[in] *pkt_list 		Generic list that contains already parsed packets from `data``
+ * @param[in] *fe 				Filter entry to derive packet's entry form
+ * @param[in, out] *p 			Pointer to return packet
+ * @param[in, out] *e 			Pointer to packet entry to return
+ * @param[in, out] *read_off 	Pointer to current read position in `data`
+ * @return Status whether packet entry's length ware parsed succesfully
  */
 static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 								   struct packet *p, struct p_entry *e,
@@ -80,7 +88,8 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 
 	switch (fe->len.type) { //switching by entry length extraction method
 	case ELT_TAG:
-		if (!(pe = get_packet_entry_by_tag2(pkt_list, p, fe->len.data.e_len_tag.tag)) ||
+		if (!(pe = get_packet_entry_by_tag2(pkt_list, p,
+											fe->len.data.e_len_tag.tag)) ||
 			pe->wfc != EWFC_INT) {
 			LOG(L_ERR, STATUS_BAD_INPUT);
 			return STATUS_BAD_INPUT;
@@ -159,14 +168,15 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 /**
  * @brief Builds packet entry struct based on filter entry and fills it
  * with supplied data. 
- * @param node extended filter node associated with current filter
- * @param pkt_list generic list that contains already parsed packets from data
- * @param fe filter entry to derive packet's entry form
- * @param e pointer to packet entry's to return
- * @param data captured packet data
- * @param header capture header/metadata
- * @param read_off pointer pointed to current read position in 'data'
- * @return status wether packet entry were parsed succesfully
+ * @param[in] *node 			Extended filter tree node to derive packet form
+ * @param[in] *pkt_list 		Generic list that contains already parsed packets from `data``
+ * @param[in, out] *p 			Pointer to return packet
+ * @param[in] *fe 				Filter entry to derive packet's entry form
+ * @param[in, out] *e 			Pointer to packet entry to return
+ * @param[in] *data 			Captured packet data
+ * @param[in] *header 			Capture header/metadata
+ * @param[in, out] *read_off 	Pointer to current read position in `data`
+ * @return Status whether packet entry were parsed succesfully
  */
 static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 							   struct packet *p, struct f_entry *fe,
@@ -254,8 +264,6 @@ static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 	} else {
 		e->wfc = wfc_arr[fe->write_form];
 	}
-
-	e->rfc = rfc_arr[fe->read_form];
 
 	if (rw_comp_mat[fe->write_form][fe->read_form] &&
 		converter_mat[fe->write_form][fe->read_form]) {

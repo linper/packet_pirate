@@ -1,3 +1,9 @@
+/**
+ * @file ef_tree.c
+ * @brief Implementation of extended filter tree data structure interface
+ * @author Linas Perkauskas
+ * @date 2022-02-20
+ */
 
 #include "../include/filter.h"
 #include "../include/fhmap.h"
@@ -189,6 +195,15 @@ void ef_tree_foreach(struct ef_tree *node, bool skip_first,
 	}
 }
 
+/**
+ * @brief Internal function. Iterates tree herachicly. Think of it as iteration with base 
+ * as root node, but iteration starts from give node. I.e. continuing iterating
+ * from specified node
+ * @param[in] *node 	Tree node node to start iterating from
+ * @param[in] *func 	User function callback to call at each node
+ * @param[in] *usr 		User pointer to pass to callback function
+ * @return Void
+ */
 static void _ef_tree_foreach_continue(struct ef_tree *node,
 									  void (*func)(struct ef_tree *, void *),
 									  void *usr)

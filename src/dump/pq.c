@@ -1,3 +1,9 @@
+/**
+ * @file pq.c
+ * @brief Implementation of postgresql of dump interface
+ * @author Linas Perkauskas
+ * @date 2022-02-20
+ */
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -87,7 +93,7 @@ static void sync_db_context()
 		return;
 	}
 
-	char buff[BUF_SIZE];
+	char buff[DEVEL_BUF_SIZE];
 	sprintf(buff, "UPDATE context SET pp_hash = %ld, next_idx = %ld;",
 			pc.pp_hash, pc.next_pid);
 
@@ -157,7 +163,7 @@ end:
 status_val dump_pq_open()
 {
 	status_val status = STATUS_DB;
-	char buff[BUF_SIZE] = { 0 };
+	char buff[DEVEL_BUF_SIZE] = { 0 };
 	PGresult *res = NULL;
 
 	sprintf(buff, "%d", DUMP_PQ_PORT);
@@ -170,7 +176,7 @@ status_val dump_pq_open()
 		goto end;
 	}
 
-	char db_name_buff[BUF_SIZE] = { 0 };
+	char db_name_buff[DEVEL_BUF_SIZE] = { 0 };
 	char *db_name = db_name_buff;
 	bool exists = false;
 
@@ -328,7 +334,7 @@ status_val dump_pq_build(struct ef_tree *root)
 		ident = true;
 	}
 
-	char *buff = malloc(8 * BUF_SIZE);
+	char *buff = malloc(8 * DEVEL_BUF_SIZE);
 	if (!buff) {
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;
@@ -370,7 +376,7 @@ status_val dump_pq_dump(struct glist *lst)
 	int pe_form_arr[PEBA_CAP] = { 0 };
 	u_int peba_len = 0;
 
-	char *buff = malloc(8 * BUF_SIZE);
+	char *buff = malloc(8 * DEVEL_BUF_SIZE);
 	if (!buff) {
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;

@@ -1,3 +1,9 @@
+/**
+ * @file report.c
+ * @brief Implementation of capture statgistics interface
+ * @author Linas Perkauskas
+ * @date 2022-02-20
+ */
 
 #include <stdio.h>
 #include <string.h>
@@ -6,6 +12,12 @@
 #include "../include/ext_filter.h"
 #include "../include/ef_tree.h"
 
+/**
+ * @brief Creates indentation prefix
+ * @node[in] *node		Exended filter tree node to make report from
+ * @node[in, out] *usr	Pointer to buffer to modify
+ * @return Void
+ */
 static void build_prefix(struct ef_tree *node, void *usr)
 {
 	if (!node->par) {
@@ -17,6 +29,11 @@ static void build_prefix(struct ef_tree *node, void *usr)
 	sprintf(wrt_ptr, "%s", node->next ? "│ " : "  ");
 }
 
+/**
+ * @brief Prints statistics for one node
+ * @node[in] *node	Exended filter tree node to make report from
+ * @return Void
+ */
 static void report_one(struct ef_tree *node, void *usr)
 {
 	(void)usr;
@@ -37,7 +54,7 @@ static void report_one(struct ef_tree *node, void *usr)
 	printf("%s%s%sskiped: %ld\n", dent, next_br, chld_br, r->skiped);
 	printf("%s%s%sunconverted: %ld\n", dent, next_br, chld_br, r->unconverted);
 	printf("%s%s%sunsplit: %ld\n", dent, next_br, chld_br, r->unsplit);
-	printf("%s%s%snvadidated: %ld\n", dent, next_br, chld_br, r->invalid);
+	printf("%s%s%sinvadidated: %ld\n", dent, next_br, chld_br, r->invalid);
 	printf("%s%s%struncated: %ld\n", dent, next_br, chld_br, r->truncated);
 	printf("%s%s%sparsed: %ld\n", dent, next_br, chld_br, r->parsed);
 	printf("%s%s%s\n", dent, next_br, chld_br);

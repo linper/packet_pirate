@@ -1,3 +1,9 @@
+/**
+ * @file sqlite3.c
+ * @brief Implementation of sqlite3 of dump interface
+ * @author Linas Perkauskas
+ * @date 2022-02-20
+ */
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -46,7 +52,7 @@ static status_val compare_db()
 
 static void sync_db_context()
 {
-	char buff[BUF_SIZE];
+	char buff[DEVEL_BUF_SIZE];
 	sprintf(buff, "UPDATE context SET pp_hash = %ld, next_idx = %ld;",
 			pc.pp_hash, pc.next_pid);
 	if (sqlite3_exec(db, buff, 0, 0, NULL) != SQLITE_OK) {
@@ -163,7 +169,7 @@ end:
 status_val dump_sqlite3_open()
 {
 	int rc;
-	char path[BUF_SIZE] = { 0 };
+	char path[DEVEL_BUF_SIZE] = { 0 };
 	bool exists = false;
 
 	sprintf(path, "%s/%s.db", DUMP_SQLITE3_PATH, DUMP_SQLITE3_DB);
@@ -244,7 +250,7 @@ status_val dump_sqlite3_build(struct ef_tree *root)
 		ident = true;
 	}
 
-	char *buff = malloc(8 * BUF_SIZE);
+	char *buff = malloc(8 * DEVEL_BUF_SIZE);
 	if (!buff) {
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;
@@ -285,7 +291,7 @@ status_val dump_sqlite3_dump(struct glist *lst)
 	u_int peba_len = 0;
 	status_val status = STATUS_DB;
 
-	char *buff = malloc(8 * BUF_SIZE);
+	char *buff = malloc(8 * DEVEL_BUF_SIZE);
 	if (!buff) {
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;

@@ -1,3 +1,10 @@
+/**
+ * @file glist.h
+ * @brief Description of generic list data structure interface
+ * @author Linas Perkauskas
+ * @date 2022-02-20
+ */
+
 #ifndef GLIST_H
 #define GLIST_H
 
@@ -9,53 +16,110 @@
 
 #include "utils.h"
 
-#define GLIST_NO_SHRINK -1.0
-#define GLIST_ST_DEFAULT 0.25
-
+/**
+ * @brief Implementation of generic list data structure
+ */
 struct glist {
+	/**Internal array to store data pointers*/
 	void **array;
+	/**Number of data entries currently stored*/
 	size_t count;
+	/**Maximum capacity of internal array*/
 	size_t cap;
-	size_t min_cap;
-	float shrink_threshold;
+	/**Callback function to be called for each entry when freeing or clearing*/
 	void (*free_cb)(void *);
-	void (*clone_cb)(void **, void *);
 };
 
-struct glist *glist_new(int cap, float shrink_thr);
-//creates shallow clone unless clone_cb is set
-struct glist *glist_clone(struct glist *lst);
-void glist_clear(struct glist *lst);
-//just sets count to 0
-void glist_clear_shallow(struct glist *lst);
-void glist_free(struct glist *lst);
-void glist_free_shallow(struct glist *lst);
-//appends value at the end of list
-status_val glist_push(struct glist *lst, void *value);
-//copies len bytes from value and appends it at the end of list
-status_val glist_push2(struct glist *lst, void *value, size_t len);
-//inserts value at specified index
-status_val glist_pop(struct glist *lst, void **value_ptr);
-status_val glist_get(struct glist *lst, int index, void **value);
-status_val glist_get_idx(struct glist *lst, void *value, int *index);
-void *glist_last(struct glist *lst);
-void *glist_remove(struct glist *lst, int index);
-//deletes and frees element at index
-status_val glist_delete(struct glist *lst, int index);
-//same as glist_delete but does not free element at index
-//same as glist_remove but does not return element at index
-status_val glist_forget(struct glist *lst, int index);
-status_val glist_copy_to(struct glist *src, struct glist *dst);
-size_t glist_count(struct glist *lst);
-void **glist_get_array(struct glist *lst);
-void glist_set_free_cb(struct glist *lst, void (*cb)(void *));
-//sets callback for every element for glist_clone
-//cb(void **<pointer to clone data pointer>, void *<source data pointer>)
-void glist_set_clone_cb(struct glist *lst, void (*cb)(void **, void *));
+/**
+ * @brief Creates glist struct with specified initial capacity
+ * @param[in] cap 	Initial capacity. It must be power of 2 
+ * and highier than 0, if not defaults to 16
+ * @return Pointer to created glist struct if successful, NULL otherwise  
+ */
+struct glist *glist_new(int cap);
 
-#define glist_foreach(item, list)											  \
+/**
+ * @brief Cleares glist struct and and frees its entries by issuing
+ * free() for each of them or free callback function instead.
+ * If it was registered to list instance
+ * @param[in, out] *lst	Pointer to list to clear
+ * @return Void
+ */
+void glist_clear(struct glist *lst);
+
+/**
+ * @brief Cleares glist struct by seting its item count to 0.
+ * Does not free its entries
+ * @param[in, out] *lst Pointer to list to clear
+ * @return Void
+ */
+void glist_clear_shallow(struct glist *lst);
+
+/**
+ * @brief Frees glist struct and its entries by issuing
+ * free() for each of them or free callback function instead.
+ * If it was registered to list instance
+ * @param[in] *lst 	Pointer to list to free
+ * @return Void
+ */
+void glist_free(struct glist *lst);
+
+/**
+ * @brief Frees glist struct but leaves its entries intact
+ * @param[in] *lst 	Pointer to list to free
+ * @return Void
+ */
+void glist_free_shallow(struct glist *lst);
+
+/**
+ * @brief Appends item  at the end of list
+ * @param[in] *lst 		List pointer to append item to
+ * @param[in] *value 	Item poiinter to append to list
+ * @return STATUS_OK if successful
+ */
+status_val glist_push(struct glist *lst, void *value);
+
+/**
+ * @brief Gets item from list at specific index
+ * @param[in] *lst 		List pointer to retrieve item from
+ * @param[in] index 	Index to get item at
+ * @param[out] **value 	Double pointer to return item
+ * @return STATUS_OK if successful
+ */
+status_val glist_get(struct glist *lst, int index, void **value);
+
+/**
+ * @brief Function copies entriies from one list to another
+ * @param[in] *src 			Pointer to list to copy entries from 
+ * @param[in, out] *dst 	Pointer to list to copy entries to
+ * @return STATUS_OK on successful
+ */
+status_val glist_copy_to(struct glist *src, struct glist *dst);
+
+/**
+ * @brief Gets nubmer of items stored in glist
+ * @param[in] *lst 	List pointer to get entry count from
+ * @return Number of entries currently stored
+ */
+size_t glist_count(struct glist *lst);
+
+/**
+ * @brief Sets callback function for list to be called instead
+ * of free() for every data entry when freeing list (or similar)
+ * @param[in] *lst 	List pointer to add callback to
+ * @param[in] *cb 	Callback function, free() replacement.
+ * @return Void
+ */
+void glist_set_free_cb(struct glist *lst, void (*cb)(void *));
+
+/**
+ * @brief Iterator for glist struct
+ * @param[out] *item Entry pointer of current iteration
+ * @param[in] *list Pointer to list to iterate
+ */
+#define glist_foreach(item, list)                                              \
 	for (int keep = 1, count = 0, size = list->count; keep && count != size;   \
-		 keep = !keep, count++)												\
+		 keep = !keep, count++)                                                \
 		for (item = *(list->array + count); keep; keep = !keep)
 
 #endif

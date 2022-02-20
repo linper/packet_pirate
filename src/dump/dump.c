@@ -1,3 +1,9 @@
+/**
+ * @file dump.c
+ * @brief Implementation of dump interface
+ * @author Linas Perkauskas
+ * @date 2022-02-20
+ */
 
 #include <stdlib.h>
 #include <stdio.h>

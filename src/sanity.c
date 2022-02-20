@@ -1,3 +1,9 @@
+/**
+ * @file sanity.c
+ * @brief Implementation of sanity checking interface
+ * @author Linas Perkauskas
+ * @date 2022-02-20
+ */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -10,14 +16,20 @@
 #include "../include/glist.h"
 #include "../include/sanity.h"
 
+/**
+* @brief Execcutes sanity checks
+ * @param[in] *f 	Pointer to filter to check
+ * @param[in] *fe 	Pointer to filter entry to check
+ * @return Status whether sanity checks for filter entry passed
+ */
 static status_val check_filter_entry(struct filter *f, struct f_entry *fe)
 {
 	status_val status = STATUS_OK;
 
-	if (fe->tag[TAG_LEN - 1]) {
+	if (fe->tag[DEVEL_TAG_LEN - 1]) {
 		LOGF(L_CRIT, STATUS_ERROR,
 			 "Filter has entry with tag:%s that is too long. Max:%d", fe->tag,
-			 TAG_LEN - 1);
+			 DEVEL_TAG_LEN - 1);
 		status = STATUS_ERROR;
 	}
 
@@ -95,6 +107,10 @@ static status_val check_filter_entry(struct filter *f, struct f_entry *fe)
 	return status;
 }
 
+/**
+* @brief Execcutes sanity checks for filters
+ * @return Status whether sanity checks for filters passed
+ */
 static status_val check_filter()
 {
 	status_val status = STATUS_OK;
@@ -109,10 +125,10 @@ static status_val check_filter()
 			status = STATUS_ERROR;
 		}
 
-		if (f->packet_tag[TAG_LEN - 1]) {
+		if (f->packet_tag[DEVEL_TAG_LEN - 1]) {
 			LOGF(L_CRIT, STATUS_ERROR,
 				 "Filter's packet_tag: %s is too long. Max:%d", f->packet_tag,
-				 TAG_LEN - 1);
+				 DEVEL_TAG_LEN - 1);
 			status = STATUS_ERROR;
 		}
 
@@ -130,9 +146,9 @@ static status_val check_filter()
 			status = STATUS_ERROR;
 		}
 
-		if (f->parent_tag[TAG_LEN - 1]) {
+		if (f->parent_tag[DEVEL_TAG_LEN - 1]) {
 			LOGF(L_CRIT, STATUS_ERROR,
-				 "Filter's parent_tag is too long. Max:%d", TAG_LEN - 1);
+				 "Filter's parent_tag is too long. Max:%d", DEVEL_TAG_LEN - 1);
 			status = STATUS_ERROR;
 		}
 
@@ -156,6 +172,10 @@ static status_val check_filter()
 	return status;
 }
 
+/**
+* @brief Execcutes sanity checks for converters
+ * @return Status whether sanity checks for converters passed
+ */
 static status_val check_converters()
 {
 	status_val status = STATUS_OK;

@@ -1,3 +1,9 @@
+/**
+ * @file fhmap.c
+ * @brief Hash map with linear probing containing filter entries implementation
+ * @author Linas Perkauskas
+ * @date 2022-02-20
+ */
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -6,7 +12,11 @@
 #include "../include/filter.h"
 #include "../include/fhmap.h"
 
-// djb2 hashing
+/**
+ * @brief Hashing algorithm: djb2
+ * @param *str string to hash
+ * @return Hash value
+ */
 static unsigned long hash_val(const char *str)
 {
 	unsigned long hash = 5381;

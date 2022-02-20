@@ -1,3 +1,11 @@
+/**
+ * @file filter.c
+ * @brief Some implementations and definitions of variables and functions 
+ * declared in file for end user to use.
+ * @author Linas Perkauskas
+ * @date 2022-02-20
+ */
+
 #include <sys/types.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,14 +22,6 @@ enum ewf_comp wfc_arr[_EWF_COUNT] = {
 	[EWF_HEX_DT] = EWFC_STR,
 	[EWF_DEC_DT] = EWFC_STR,
 	[EWF_B64_STR] = EWFC_STR,
-};
-
-enum erf_comp rfc_arr[_ERF_COUNT] = {
-	[ERF_UINT_LE] = ERFC_INT,
-	[ERF_UINT_BE] = ERFC_INT,
-	[ERF_STR] = ERFC_STR,
-	[ERF_BIN] = ERFC_BLOB,
-	[ERF_B64_STR] = ERFC_STR,
 };
 
 //compatability matrix between read and write formats

@@ -1,3 +1,10 @@
+/**
+ * @file mysql.h
+ * @brief Description of mysql implementation of dump interface
+ * @author Linas Perkauskas
+ * @date 2022-02-20
+ */
+
 #ifndef H_DUMP_MYSQL
 #define H_DUMP_MYSQL
 

@@ -1,3 +1,9 @@
+/**
+ * @file mysql.c
+ * @brief Implementation of mysql of dump interface
+ * @author Linas Perkauskas
+ * @date 2022-02-20
+ */
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -86,7 +92,7 @@ static status_val get_new_db_name(char *comp_name, char *res_name, bool *exists)
 
 static void sync_db_context()
 {
-	char buff[BUF_SIZE];
+	char buff[DEVEL_BUF_SIZE];
 	sprintf(buff, "UPDATE context SET pp_hash = %ld, next_idx = %ld;",
 			pc.pp_hash, pc.next_pid);
 	if (mysql_query(db, buff)) {
@@ -212,7 +218,7 @@ end:
 status_val dump_mysql_open()
 {
 	status_val status = STATUS_DB;
-	char buff[BUF_SIZE] = { 0 };
+	char buff[DEVEL_BUF_SIZE] = { 0 };
 
 	db = mysql_init(NULL);
 
@@ -228,7 +234,7 @@ status_val dump_mysql_open()
 		goto end;
 	}
 
-	char db_name_buff[BUF_SIZE] = { 0 };
+	char db_name_buff[DEVEL_BUF_SIZE] = { 0 };
 	char *db_name = db_name_buff;
 	bool exists = false;
 
@@ -303,7 +309,7 @@ status_val dump_mysql_build(struct ef_tree *root)
 		ident = true;
 	}
 
-	char *buff = malloc(8 * BUF_SIZE);
+	char *buff = malloc(8 * DEVEL_BUF_SIZE);
 	if (!buff) {
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;
@@ -344,7 +350,7 @@ status_val dump_mysql_dump(struct glist *lst)
 	status_val status = STATUS_DB;
 	MYSQL_STMT *stmt = NULL;
 
-	char *buff = malloc(8 * BUF_SIZE);
+	char *buff = malloc(8 * DEVEL_BUF_SIZE);
 	if (!buff) {
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;

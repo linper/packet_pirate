@@ -1,3 +1,9 @@
+/**
+ * @file pkt_list.c
+ * @brief Implementation of the interface to get packets from generic list
+ * @author Linas Perkauskas
+ * @date 2022-02-20
+ */
 
 #include <string.h>
 
@@ -31,11 +37,6 @@ struct p_entry *get_packet_entry_by_tag2(struct glist *pkt_list,
 	}
 
 	return NULL;
-}
-
-struct p_entry *get_packet_entry_by_tag(struct glist *pkt_list, const char *tag)
-{
-	return get_packet_entry_by_tag2(pkt_list, NULL, tag);
 }
 
 struct packet *get_packet_by_tag(struct glist *pkt_list, const char *tag)
