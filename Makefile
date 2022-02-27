@@ -4,6 +4,7 @@
 ######################
 export ROOT_DIR = $(abspath ./)
 export SRC_DIR = $(ROOT_DIR)/src
+export TST_DIR = $(ROOT_DIR)/tests
 export SCR_DIR = $(ROOT_DIR)/scripts
 export INC_DIR = $(ROOT_DIR)/include
 export TMP_DIR = $(ROOT_DIR)/tmp
@@ -26,13 +27,12 @@ Q = @
 #  COMPILE ARGS  #
 ######################
 TARGET = pp
-CC = gcc
-LDFLAGS += -lpcap
-CFLAGS += -Wall -Wextra -ggdb -std=gnu99
-#CFLAGS += -Wall -Wextra -ggdb -std=c99
-DEFS += -D_GNU_SOURCE -DDEBUG
+export CC = gcc
+export LDFLAGS += -lpcap
+export CFLAGS += -Wall -Wextra -ggdb -std=gnu99
+export DEFS += -D_GNU_SOURCE -DDEBUG
 RUNARGS = eno1
-INC_PATH := -I$(INC_DIR)
+export INC_PATH := -I$(INC_DIR)
 
 ######################
 #  COMMAND MACROS  #
@@ -62,9 +62,9 @@ endif
 ######################
 #  BUILD  #
 ######################
-all: build
+all: clean compile test
 
-build: clean_tmp collect
+compile: clean_tmp collect
 	OBJ=$$(cat $(BLD_TMP_DIR)/$(OBJ-Y) | xargs); \
 	INC=$$(cat $(BLD_TMP_DIR)/$(INC-Y) | xargs); \
 	SRC=$$(echo $${OBJ} | sed 's/\.o/\.c/g'); \
@@ -81,17 +81,29 @@ collect_inc:
 collect_obj:
 	$(Q)$(MAKE) -C $(SRC_DIR) dir=$(SRC_DIR) obj=$(OBJ-Y)
 
+test:
+	$(Q)$(MAKE) -C $(TST_DIR)
+
 .PHONY: clean run menuconfig help
 
 menuconfig:
 	kconfig-mconf KConfig
 
 run: build
-	$(Q)$(EVAL) ./$(TARGET) $(RUNARGS)
+	$(Q)$(EVAL) $(BIN_DIR)/$(TARGET) $(RUNARGS)
 
 clean:
 	$(Q)$(RM) $$(cat $(BLD_TMP_DIR)/$(OBJ-Y) | xargs) $(BIN_DIR)/$(TARGET) $(TMP_DIR)/*
 
 help:
-	$(Q)echo "help message not implemented yet"
+	$(Q)echo -e "Usage : make [options]\n\
+	Options:\n\
+	    [none] | all   Cleans, builds, and tests project\n\
+	    clean          Cleans compiled binaries and temporary data\n\
+	    compile        Builds project\n\
+	    help           Displays this message\n\
+	    menuconfig     Opens 'mconf' based configuration tui\n\
+	    run            Runs built project(for development purposes)\n\
+	    test           Runs auto tests\
+	"
 

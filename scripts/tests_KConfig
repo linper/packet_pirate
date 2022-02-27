@@ -1,6 +1,9 @@
 menu "Tests"
 
-config PLUGIN_TEST_SIMPLE
-bool "NOT IMPL simple test, just example"
+config TEST_CMOCKA
+bool "Cmocka unit tests"
+default y
+help
+	Run unit tests written using Cmocka library
 
 endmenu
