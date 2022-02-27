@@ -187,7 +187,9 @@ static status_val to_raw(struct p_entry *e)
 
 static status_val str_to_str(struct p_entry *e)
 {
-	for (int i = 0; i < BITOBY(e->raw_len); i++) {
+	u_char is_str = e->wfc == EWFC_STR ? 1 : 0;
+
+	for (int i = 0; i < BITOBY(e->raw_len) - is_str; i++) {
 		if (!isprint((int)e->raw_data[i])) {
 			LOGM(L_DEBUG, STATUS_BAD_INPUT, "Unprintable characters");
 			return STATUS_BAD_INPUT;
@@ -205,15 +207,15 @@ static status_val str_to_str(struct p_entry *e)
 	return STATUS_OK;
 }
 
-static char b64_enc_t[] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-							'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-							'u', 'v', 'w', 'x', 'y', 'z', 'a', 'b', 'c', 'd',
+static char b64_enc_t[] = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+							'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+							'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',
 							'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
 							'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
 							'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
 							'8', '9', '+', '/' };
 
-static char b64_dec_t[] = {
+static u_char b64_dec_t[] = {
 	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,
 	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,
 	0,	0,	0,	0,	0,	62, 0,	0,	0,	63, 52, 53, 54, 55, 56, 57, 58, 59, 60,
@@ -232,87 +234,98 @@ static char b64_dec_t[] = {
 
 static status_val to_b64(struct p_entry *e)
 {
-	long byte_raw_len = BITOBY(e->raw_len);
-	static int mod_t[] = { 0, 2, 1 };
-	size_t out_len = 4 * ((byte_raw_len + 2) / 3);
+	char *out;
+	u_char *in = e->raw_data;
+	size_t i, j, v, olen, len = BITOBY(e->raw_len);
 
-	char *res = malloc(out_len);
-	if (!res) {
+	if (!in || !BITOBY(len)) {
+		return STATUS_ERROR;
+	}
+
+	olen = len;
+	if (len & 0b11) {
+		olen += 3 - (len % 3);
+	}
+
+	olen = olen / 3 * 4;
+
+	out = malloc(olen + 1);
+	if (!out) {
 		return STATUS_OMEM;
 	}
 
-	e->conv_data.string = res;
+	out[olen] = '\0';
 
-	for (int i = 0, j = 0; i < byte_raw_len;) {
-		u_int b1 = i < byte_raw_len ? e->raw_data[i++] : 0;
-		u_int b2 = i < byte_raw_len ? e->raw_data[i++] : 0;
-		u_int b3 = i < byte_raw_len ? e->raw_data[i++] : 0;
+	for (i = 0, j = 0; i < len; i += 3, j += 4) {
+		v = in[i];
+		v = i + 1 < len ? v << 8 | in[i + 1] : v << 8;
+		v = i + 2 < len ? v << 8 | in[i + 2] : v << 8;
 
-		u_int b123 = (b1 << 16) + (b2 << 8) + b3;
-
-		res[j++] = b64_enc_t[(b123 >> 18) & 0x3F];
-		res[j++] = b64_enc_t[(b123 >> 12) & 0x3F];
-		res[j++] = b64_enc_t[(b123 >> 6) & 0x3F];
-		res[j++] = b64_enc_t[(b123)&0x3F];
+		out[j] = b64_enc_t[(v >> 18) & 0x3f];
+		out[j + 1] = b64_enc_t[(v >> 12) & 0x3f];
+		if (i + 1 < len) {
+			out[j + 2] = b64_enc_t[(v >> 6) & 0x3f];
+		} else {
+			out[j + 2] = '=';
+		}
+		if (i + 2 < len) {
+			out[j + 3] = b64_enc_t[v & 0x3f];
+		} else {
+			out[j + 3] = '=';
+		}
 	}
 
-	for (int i = 0; i < mod_t[byte_raw_len % 3]; i++) {
-		res[byte_raw_len - 1 - i] = '=';
-	}
-
+	e->conv_data.string = out;
 	return STATUS_OK;
 }
 
 static status_val b64_to_bin(struct p_entry *e)
 {
-	long byte_raw_len = BITOBY(e->raw_len);
+	size_t i, j, v;
+	u_char *in = e->raw_data;
+	size_t len = strlen((char*)in);
 
-	if (byte_raw_len % 4) {
+	if (in == NULL || (len & 0b11)) {
 		return STATUS_BAD_INPUT;
 	}
+	
+	size_t outlen = len / 4 * 3;
 
-	int out_len = byte_raw_len / 4 * 3;
-
-	if (e->raw_data[byte_raw_len - 1] == '=') {
-		out_len--;
+	for (i = len; i-- > 0;) {
+		if (in[i] == '=') {
+			outlen--;
+		} else {
+			break;
+		}
 	}
 
-	if (e->raw_data[byte_raw_len - 2] == '=') {
-		out_len--;
-	}
+	u_char *out = malloc(outlen + 1);
 
-	u_char *res = malloc(out_len);
-	if (!res) {
+	if (!out) {
 		return STATUS_OMEM;
 	}
 
-	e->conv_data.blob.arr = res;
-	e->conv_data.blob.len = out_len;
-
-	for (int i = 0, j = 0; i < byte_raw_len;) {
-		u_int s1 =
-			e->raw_data[i] == '=' ? 0 & i++ : b64_dec_t[e->raw_data[i++]];
-		u_int s2 =
-			e->raw_data[i] == '=' ? 0 & i++ : b64_dec_t[e->raw_data[i++]];
-		u_int s3 =
-			e->raw_data[i] == '=' ? 0 & i++ : b64_dec_t[e->raw_data[i++]];
-		u_int s4 =
-			e->raw_data[i] == '=' ? 0 & i++ : b64_dec_t[e->raw_data[i++]];
-
-		u_int s1234 = (s1 << 18) + (s2 << 12) + (s3 << 6) + s4;
-
-		if (j < out_len) {
-			res[j++] = (s1234 >> 2 * 8) & 0xFF;
-		}
-
-		if (j < out_len) {
-			res[j++] = (s1234 >> 1 * 8) & 0xFF;
-		}
-
-		if (j < out_len) {
-			res[j++] = (s1234 >> 0 * 8) & 0xFF;
+	for (i = 0; i < len; i++) {
+		if (!b64_dec_t[in[i]] && in[i] != 'A' && in[i] != '=') {
+			return STATUS_BAD_INPUT;
 		}
 	}
+
+	for (i = 0, j = 0; i < len; i += 4, j += 3) {
+		v = b64_dec_t[in[i]];
+		v = (v << 6) | b64_dec_t[in[i + 1]];
+		v = in[i + 2] == '=' ? v << 6 : (v << 6) | b64_dec_t[in[i + 2]];
+		v = in[i + 3] == '=' ? v << 6 : (v << 6) | b64_dec_t[in[i + 3]];
+
+		out[j] = (v >> 16) & 0xff;
+		if (in[i + 2] != '=')
+			out[j + 1] = (v >> 8) & 0xff;
+		if (in[i + 3] != '=')
+			out[j + 2] = v & 0xff;
+	}
+
+	e->conv_data.blob.arr = out;
+	e->conv_data.blob.len = outlen;
 
 	return STATUS_OK;
 }
