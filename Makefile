@@ -62,7 +62,7 @@ endif
 ######################
 #  BUILD  #
 ######################
-all: clean compile test
+all: clean compile
 
 compile: clean_tmp collect
 	OBJ=$$(cat $(BLD_TMP_DIR)/$(OBJ-Y) | xargs); \
@@ -81,13 +81,14 @@ collect_inc:
 collect_obj:
 	$(Q)$(MAKE) -C $(SRC_DIR) dir=$(SRC_DIR) obj=$(OBJ-Y)
 
-test:
-	$(Q)$(MAKE) -C $(TST_DIR)
 
-.PHONY: clean run menuconfig help
+.PHONY: clean run menuconfig help test
 
 menuconfig:
 	kconfig-mconf KConfig
+
+test:
+	$(Q)$(MAKE) -C $(TST_DIR)
 
 run: build
 	$(Q)$(EVAL) $(BIN_DIR)/$(TARGET) $(RUNARGS)
