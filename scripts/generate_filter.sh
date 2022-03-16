@@ -25,7 +25,7 @@ function gen_filter() {
 	fi
 
 	cp -r ${TMP_DIR}/${f_name_l} ${FIL_DIR}/${f_name_l}
-	rm -r ${TMP_DIR}/${f_name_l}
+	rm -r "${TMP_DIR}/${f_name_l}"
 }
 
 f_name_u=
@@ -64,9 +64,22 @@ while [ $# -gt 0 ]; do
 	esac
 done
 
-if [ -z $f_name_u ];then
+if [ -z "$f_name_l" ];then
 	echo "Missing filter name"
 	usage
+	exit 1
+fi
+
+if [[ "${f_name_l}" =~ [^a-zA-Z_] ]];then
+	echo "Bad name format"
+	usage
+	exit 1
+fi
+
+if [ -z "{f_parent_l}" ] || [[ "${f_parent_l}" =~ [^a-zA-Z_] ]];then
+	echo "Bad parent name format"
+	usage
+	exit 1
 fi
 
 if [ -d "${FIL_DIR}/${f_name_l}" ]; then

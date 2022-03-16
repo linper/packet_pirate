@@ -57,6 +57,12 @@ if [ -z "${flt}" ];then
 	usage
 fi
 
+if [[ "${flt}" =~ [^a-zA-Z_] ]];then
+	echo "Bad name format"
+	usage
+	exit 1
+fi
+
 if [ ! -d "${FIL_DIR}/${flt}" ]; then
 	echo "No such filter, quiting..."
 	exit 1
