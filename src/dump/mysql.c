@@ -157,6 +157,10 @@ static status_val build_table(struct ef_tree *root, char *buff)
 {
 	status_val status = STATUS_DB;
 
+	if (!root->flt || !root->flt->active) {
+		goto sibling;
+	}
+
 	int off = sprintf(buff, "CREATE TABLE IF NOT EXISTS %s(",
 					  root->flt->filter->packet_tag);
 	struct filter *f = root->flt->filter;
@@ -205,6 +209,7 @@ static status_val build_table(struct ef_tree *root, char *buff)
 		goto end;
 	}
 
+sibling:
 	// going to sibling filter
 	if (root->next && (status = build_table(root->next, buff))) {
 		goto end;
@@ -328,11 +333,6 @@ status_val dump_mysql_build(struct ef_tree *root)
 
 	//desending down into first child filter if it exists
 	if (root->chld && (status = build_table(root->chld, buff))) {
-		goto end;
-	}
-
-	// going to sibling filter
-	if (root->next && (status = build_table(root->next, buff))) {
 		goto end;
 	}
 

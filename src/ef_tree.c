@@ -73,7 +73,7 @@ status_val ef_tree_put(struct ef_tree *root, struct ext_filter *e)
 		cur = cur->next;
 	}
 
-	LOG(L_WARN, STATUS_NOT_FOUND);
+	LOG(L_INFO, STATUS_NOT_FOUND);
 	return STATUS_NOT_FOUND;
 }
 
@@ -81,29 +81,63 @@ status_val ef_tree_get(struct ef_tree *root, const char *tag,
 					   struct ext_filter **e)
 {
 	status_val ret;
+	if (!root) {
+		return STATUS_NOT_FOUND;
+	}
 
 	//checking if current node is correct one
-	if (!root->flt && !strcmp(tag, root->flt->filter->packet_tag)) {
+	if (root->flt && root->flt->filter &&
+		!strcmp(tag, root->flt->filter->packet_tag)) {
 		*e = root->flt;
 		return STATUS_OK;
 	}
 
-	if (root->chld) {
-		if (!(ret = ef_tree_get(root->chld, tag, e))) {
-			return ret; //returning back to beginning
-		}
+	if (root->chld && !(ret = ef_tree_get(root->chld, tag, e))) {
+		return ret; //returning back to beginning
 	}
 
 	struct ef_tree *cur = root;
 
 	while (cur) {
-		if (!(ret = ef_tree_get(cur->next, tag, e))) {
+		if (root->next && !(ret = ef_tree_get(cur->next, tag, e))) {
 			return ret; //returning back to beginning
 		}
 		cur = cur->next;
 	}
 
 	LOG(L_WARN, STATUS_NOT_FOUND);
+	return STATUS_NOT_FOUND;
+}
+
+status_val ef_tree_get_node(struct ef_tree *root, const char *tag,
+							struct ef_tree **node)
+{
+	status_val ret;
+	if (!root) {
+		return STATUS_NOT_FOUND;
+	}
+
+	//checking if current node is correct one
+	if (root->flt && root->flt->filter &&
+		!strcmp(tag, root->flt->filter->packet_tag)) {
+		*node = root;
+		return STATUS_OK;
+	}
+
+	if (root->chld && !(ret = ef_tree_get_node(root->chld, tag, node))) {
+		return ret; //returning back to beginning
+	}
+
+	struct ef_tree *cur = root;
+
+	while (cur) {
+		if (root->next && !(ret = ef_tree_get_node(cur->next, tag, node))) {
+			return ret; //returning back to beginning
+		}
+		cur = cur->next;
+	}
+
+	LOG(L_INFO, STATUS_NOT_FOUND);
 	return STATUS_NOT_FOUND;
 }
 
@@ -174,6 +208,25 @@ status_val ef_tree_root_to_leaf_foreach(struct ef_tree *root,
 	return status;
 }
 
+static void _ef_tree_foreach(struct ef_tree *node,
+							 void (*func)(struct ef_tree *, void *), void *usr)
+{
+	if (!node) {
+		LOG(L_WARN, STATUS_NOT_FOUND);
+		return;
+	}
+
+	func(node, usr);
+
+	if (node->chld) {
+		_ef_tree_foreach(node->chld, func, usr);
+	}
+
+	if (node->next) {
+		_ef_tree_foreach(node->next, func, usr);
+	}
+}
+
 void ef_tree_foreach(struct ef_tree *node, bool skip_first,
 					 void (*func)(struct ef_tree *, void *), void *usr)
 {
@@ -187,11 +240,7 @@ void ef_tree_foreach(struct ef_tree *node, bool skip_first,
 	}
 
 	if (node->chld) {
-		ef_tree_foreach(node->chld, false, func, usr);
-	}
-
-	if (!skip_first && node->next) {
-		ef_tree_foreach(node->next, false, func, usr);
+		_ef_tree_foreach(node->chld, func, usr);
 	}
 }
 

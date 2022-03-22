@@ -5,7 +5,7 @@ resources="$(ls ./resources | grep ".pcap")"
 if [ -f ../../.config ]; then
 	cp ../../.config ./.config.bkp
 else 
-	cp test+config ./.config.bkp
+	cp test_config ./.config.bkp
 fi
 
 cp test_config ../../.config
@@ -16,6 +16,7 @@ make clean compile > /dev/null
 
 [ $? -ne 0 ] && {
 	echo "Failed to buiild project. Quiting..."
+	cp ./.config.bkp ../../.config
 	exit 1
 }
 
@@ -51,8 +52,9 @@ for res in $resources; do
 	else
 		echo " OK"
 	fi
-
 done
+
+cp ./.config.bkp ../../.config
 
 exit 0
 

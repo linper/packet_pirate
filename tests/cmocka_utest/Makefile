@@ -1,7 +1,8 @@
 
 BIN = test
 DEPS = $(wildcard *.h)
-SRC = $(wildcard *.c) $(SRC_DIR)/converter.c $(SRC_DIR)/filter.c $(SRC_DIR)/utils.c $(SRC_DIR)/setup.c
+SRC = $(wildcard *.c) $(SRC_DIR)/converter.c $(SRC_DIR)/filter.c $(SRC_DIR)/utils.c $(SRC_DIR)/setup.c $(SRC_DIR)/glist.c
+
 
 LDFLAGS += -lcmocka
     

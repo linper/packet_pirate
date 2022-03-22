@@ -16,7 +16,9 @@
 #include "../include/packet.h"
 #include "../include/ef_tree.h"
 #include "../include/dump/dump.h"
+#ifdef DEVEL_SANITY
 #include "../include/sanity.h"
+#endif
 #include "../include/core.h"
 
 #define FH_GLOB_INIT_CAP 256
@@ -105,6 +107,58 @@ inline static void skip(struct ef_tree *node, void *usr)
 }
 
 /**
+ * @brief Callback to enable filter
+ */
+inline static void enable_filter(struct ef_tree *node, void *usr)
+{
+	(void)usr;
+	if (node && node->flt) {
+		node->flt->active = true;
+	}
+}
+
+/**
+ * @brief Callback to disable filter
+ */
+inline static void disable_filter(struct ef_tree *node, void *usr)
+{
+	(void)usr;
+	if (node && node->flt) {
+		node->flt->active = false;
+	}
+}
+
+/**
+ * @brief Function to modify extended filter tree after compilation
+ * @return Status whether modifications went succesfully
+ */
+static status_val modify_ef_tree()
+{
+	status_val status = STATUS_OK;
+	struct tree_mod *tm = NULL;
+	struct ef_tree *node = NULL;
+
+	glist_foreach (void *e, pc.tree_mods) {
+		tm = (struct tree_mod *)e;
+
+		status = ef_tree_get_node(pc.ef_root, tm->tag, &node);
+		if (status) {
+			LOGF(L_ERR, status, "Failed to find filter:%s", tm->tag);
+			goto end;
+		}
+
+		if (tm->mod) { //pruning
+			ef_tree_foreach(node, false, disable_filter, NULL);
+		} else { //growing
+			ef_tree_root_to_leaf_foreach(pc.ef_root, node, enable_filter, NULL);
+		}
+	}
+
+end:
+	return status;
+}
+
+/**
  * @brief Function to each filter to work with captured data
  * @param[in] *node 	Extended filter tree node to derive packet form
  * @param[in] *data 	Captured packet data
@@ -122,8 +176,9 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 	const unsigned base_read_off = read_off;
 
 	if (node->lvl) { //skiping root root node
-		if (node->par->flt && node->par->flt->hint &&
-			strcmp(node->par->flt->hint, node->flt->filter->packet_tag)) {
+		if ((node->par->flt && node->par->flt->hint &&
+			 strcmp(node->par->flt->hint, node->flt->filter->packet_tag)) ||
+			!node->flt->active) {
 			//this is not hinted filter
 			goto sibling;
 		}
@@ -146,7 +201,7 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 			ef_tree_foreach(node, true, skip, NULL);
 			vlds = VLD_DROP;
 			//if this filter fails, then all children filter must fail.
-			//But nesesserely siblings
+			//But not nesesserely siblings
 			goto sibling;
 		}
 
@@ -193,8 +248,8 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 		}
 	}
 
-	if (node->chld) { //desending down into first child filter if it exists
-		//persist filtering on failure, unless drop all is returned
+	//desending down into first child filter if it exists
+	if (node->chld) {
 		vlds = filter_rec(node->chld, data, args, header, read_off);
 		if (vlds == VLD_DROP_ALL) {
 			return VLD_DROP_ALL;
@@ -202,7 +257,8 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 	}
 
 sibling:
-	if (node->next) { // going to sibling filter
+	// going to sibling filter
+	if (node->next) {
 		//persist filtering on failure, unless drop all is returned
 		vlds = filter_rec(node->next, data, args, header, base_read_off);
 		if (vlds == VLD_DROP_ALL) {
@@ -210,7 +266,7 @@ sibling:
 		}
 	}
 
-	return VLD_PASS;
+	return vlds;
 }
 
 status_val core_init()
@@ -246,6 +302,12 @@ status_val core_init()
 		goto tree_err;
 	}
 
+	status = modify_ef_tree();
+	if (status) {
+		LOG(L_CRIT, status);
+		goto mod_tree_err;
+	}
+
 	status = dctx.open();
 	if (status) {
 		LOG(L_CRIT, status);
@@ -271,6 +333,8 @@ status_val core_init()
 dump_build_err:
 	dctx.close();
 	ef_tree_free(pc.ef_root);
+mod_tree_err:
+	glist_free(pc.tree_mods);
 tree_err:
 	fhmap_shallow_free(pc.f_entries);
 fhmap_err:
@@ -331,9 +395,10 @@ void core_destroy()
 	//do not need to free containing elements; just unlinking
 	glist_free_shallow(pc.single_cap_pkt);
 	glist_free(pc.cap_pkts);
+	glist_free(pc.tree_mods);
 	ef_tree_free(pc.ef_root);
 	fhmap_shallow_free(pc.f_entries);
-	free(pc.bpf);
-	free(pc.dev);
+	/*free(pc.bpf);*/
+	/*free(pc.dev);*/
 }
 

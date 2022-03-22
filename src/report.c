@@ -20,13 +20,14 @@
  */
 static void build_prefix(struct ef_tree *node, void *usr)
 {
-	if (!node->par) {
+	if (!node->par || (node->flt && !node->flt->active)) {
 		return;
 	}
 
 	size_t len = strlen((char *)usr);
 	char *wrt_ptr = ((char *)usr) + len;
-	sprintf(wrt_ptr, "%s", node->next ? "│ " : "  ");
+	sprintf(wrt_ptr, "%s",
+			(node->next && node->next->flt->active) ? "│ " : "  ");
 }
 
 /**
@@ -38,13 +39,37 @@ static void report_one(struct ef_tree *node, void *usr)
 {
 	(void)usr;
 
+	if (node->flt && !node->flt->active) {
+		return;
+	}
+
 	char dent[64] = "";
+	bool more_sib = false, more_chl = false;
+	struct ef_tree *eft;
+
+	eft = node;
+	while ((eft = eft->next)) {
+		if (eft->flt->active) {
+			more_sib = true;
+			break;
+		}
+	}
+
+	if (node->chld) {
+		eft = node->chld;
+		do {
+			if (eft->flt->active) {
+				more_chl = true;
+				break;
+			}
+		} while ((eft = eft->next));
+	}
 
 	ef_tree_root_to_leaf_foreach(pc.ef_root, node->par, build_prefix, dent);
 
-	const char *interc = node->next ? "├─" : "└─";
-	const char *next_br = node->next ? "│ " : "  ";
-	const char *chld_br = node->chld ? "│ " : "  ";
+	const char *interc = more_sib ? "├─" : "└─";
+	const char *next_br = more_sib ? "│ " : "  ";
+	const char *chld_br = more_chl ? "│ " : "  ";
 
 	struct filter *f = node->flt->filter;
 	struct report *r = &node->flt->rep;

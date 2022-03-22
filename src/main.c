@@ -151,13 +151,13 @@ int main(int argc, char *argv[])
 		goto error;
 	}
 
-	status = get_dev();
-	if (status) {
-		LOGM(L_CRIT, status, "Failed to get interface");
-		goto error;
-	}
-
 	if (!pc.sample) {
+		status = get_dev();
+		if (status) {
+			LOGM(L_CRIT, status, "Failed to get interface");
+			goto error;
+		}
+
 		if (pcap_lookupnet(pc.dev, &net, &mask, errbuf) == -1) {
 			LOGF(L_ERR, STATUS_ERROR, "Could not get netmask for device: %s",
 				 pc.dev);
@@ -181,7 +181,7 @@ int main(int argc, char *argv[])
 		}
 	} else {
 		if (!(pc.handle = pcap_open_offline(pc.sample, errbuf))) {
-			LOGF(L_CRIT, STATUS_ERROR, "Could not open sample%s: %s", pc.sample,
+			LOGF(L_CRIT, STATUS_ERROR, "Could not open sample %s: %s", pc.sample,
 				 errbuf);
 			goto error;
 		}
@@ -207,7 +207,6 @@ int main(int argc, char *argv[])
 			pcap_close(pc.handle);
 		}
 
-		free(pc.bpf);
 		goto error;
 	}
 

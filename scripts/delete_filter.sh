@@ -57,7 +57,7 @@ if [ -z "${flt}" ];then
 	usage
 fi
 
-if [[ "${flt}" =~ [^a-zA-Z_] ]];then
+if [[ "${flt}" =~ [^a-zA-Z0-9_] ]];then
 	echo "Bad name format"
 	usage
 	exit 1

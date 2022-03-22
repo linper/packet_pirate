@@ -57,6 +57,15 @@ status_val ef_tree_get(struct ef_tree *root, const char *tag,
 					   struct ext_filter **e);
 
 /**
+ * @brief Gets extended filter indicated by tag from filter tree
+ * @param[in] *root 	Tree root node
+ * @param[in] *tag 		Value to compare too
+ * @param[out] **node 		Pointer to return walue
+ * @return STATUS_OK if succeded
+ */
+status_val ef_tree_get_node(struct ef_tree *root, const char *tag,
+					   struct ef_tree **node);
+/**
  * @brief Checks if tree contains filter identified by given tag
  * @param[in] *root 	Tree root node
  * @param[in] *tag 		Value to compare too

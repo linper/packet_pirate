@@ -49,6 +49,7 @@ CONF := $(patsubst %=y, %, $(CONF))
 CONF := $(subst =",="\", $(CONF))
 CONF := $(subst " ,\"" , $(CONF))
 DEFS += $(patsubst CONFIG_DFN_%, -D%, $(filter CONFIG_DFN_%,$(CONF)))
+DEFS += $(patsubst CONFIG_VERB_%, -DVERB_%, $(filter CONFIG_VERB_%,$(CONF)))
 # TODO add compilation flags from config
 
 ifeq ($(CONFIG_DFN_DUMP_TYPE_SQLITE3),y)

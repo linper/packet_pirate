@@ -44,6 +44,8 @@
  */
 #define BYWHO(b) (b >> 3)
 
+//#define container_of(ptr, type, member) (type *)((char *)(ptr) - (char *) &((type *)0)->member)
+
 /**
  * @brief Macro for filter initiallization. This must exist in each filter.
  * It registers each filter before main() is called. 
@@ -93,6 +95,13 @@ struct prog_ctx {
 	struct glist *cap_pkts; ///< 		List to store filtered packets
 	struct glist *single_cap_pkt; ///< 	List of filtered packets in single capture
 	struct glist *f_reg; ///< 			List of registered filters
+	struct glist *tree_mods; ///< 		List of to modify filter tree
+};
+
+/**@brief Struct to modify filter tree after compilation*/
+struct tree_mod {
+	bool mod; ///< 			Modification type. True - prune; False - include;
+	const char *tag; ///< 	Filter tag to prine/include
 };
 
 /** @brief Global variable for program context*/

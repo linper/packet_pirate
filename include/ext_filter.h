@@ -16,6 +16,7 @@
  * @brief Struct to hold not user definable data about user defind filter
  */
 struct ext_filter {
+	bool active; ///< 					Is this filter active/enbled
 	struct filter *filter; ///< 		User defined filter
 	struct fhmap *mapped_filter; ///< 	Tag=>entry mapped user defined filter
 	struct report rep; ///< 			Session capture statistics

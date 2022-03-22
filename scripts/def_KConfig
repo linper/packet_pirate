@@ -1,49 +1,10 @@
 menu "Defaults"
-config DFN_DEF_USE_BPF
-bool "Use BPF"
-default n
-help
-	Utilize full Berkley packet filter support with query string
 
 config DFN_DEF_BPF
 string "BPF"
 default "tcp"
-depends on DFN_DEF_USE_BPF
-
-config DFN_DEF_DHOST
-string "Destination host"
-default ""
-depends on !DFN_DEF_USE_BPF
-
-config DFN_DEF_DNET
-string "Destination network"
-default ""
-depends on !DFN_DEF_USE_BPF
-
-config DFN_DEF_DPORT
-string "Destination port"
-default ""
-depends on !DFN_DEF_USE_BPF
-
-config DFN_DEF_PROTO
-string "Protocol"
-default "tcp"
-depends on !DFN_DEF_USE_BPF
-
-config DFN_DEF_SHOST
-string "Source host"
-default ""
-depends on !DFN_DEF_USE_BPF
-
-config DFN_DEF_SNET
-string "Source network"
-default ""
-depends on !DFN_DEF_USE_BPF
-
-config DFN_DEF_SPORT
-string "Source port"
-default ""
-depends on !DFN_DEF_USE_BPF
+help
+	Utilize full Berkley packet filter support with query string
 
 config DFN_DEF_SNAPLEN
 int "Snaplength"

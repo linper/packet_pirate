@@ -24,8 +24,7 @@ function gen_filter() {
 		find ${TMP_DIR}/${f_name_l} -type f -not -path '*/\.*' -exec sed -i "s/>>>SELECT_PARENT<<<//g" {} +
 	fi
 
-	cp -r ${TMP_DIR}/${f_name_l} ${FIL_DIR}/${f_name_l}
-	rm -r "${TMP_DIR}/${f_name_l}"
+	mv ${TMP_DIR}/${f_name_l} ${FIL_DIR}/${f_name_l}
 }
 
 f_name_u=
@@ -70,13 +69,13 @@ if [ -z "$f_name_l" ];then
 	exit 1
 fi
 
-if [[ "${f_name_l}" =~ [^a-zA-Z_] ]];then
+if [[ "${f_name_l}" =~ [^a-zA-Z0-9_] ]];then
 	echo "Bad name format"
 	usage
 	exit 1
 fi
 
-if [ -z "{f_parent_l}" ] || [[ "${f_parent_l}" =~ [^a-zA-Z_] ]];then
+if [ -z "{f_parent_l}" ] || [[ "${f_parent_l}" =~ [^a-zA-Z0-9_] ]];then
 	echo "Bad parent name format"
 	usage
 	exit 1
