@@ -29,7 +29,8 @@ const char *argp_program_version = "Packet Pirate 1.0";
 static char doc[] = "Powered by 'Packet Pirate' sniffing framework in C";
 
 /** @brief A description of the arguments we accept to be desplayed in help message */
-static char args_doc[] = "ARG1 ARG2";
+/*static char args_doc[] = "ARG1 ARG2";*/
+static char args_doc[] = {0};
 
 /** @brief The options we understand  to be desplayed in help message */
 static struct argp_option options[] = {
@@ -40,7 +41,7 @@ static struct argp_option options[] = {
 	  "Allows modifications of filter tree. Filter tree node to grow branch to. Works with 'prune' parameter. Can use multiple times",
 	  0 },
 	{ "bpf", 'b', "query", 0,
-	  "BPF program, with full support. If given, overrides all filters above",
+	  "Fully supported BPF query for first stage filter",
 	  0 },
 	{ "sample", 's', "file", 0, "Sample .pcap file for offline analysis", 0 },
 	{ "device", 'd', "device", 0, "Interface/device to sniff", 0 },

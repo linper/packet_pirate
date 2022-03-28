@@ -1,11 +1,11 @@
 #!/bin/bash
 
 function usage() {
-	echo "Usage :  [-p parent name] [-h] <-n name>
-	Options:
-	-n|--name       Provide name for filter
-	-p|--parent     Provide name for parent filter
-	-h|--help       Display this message"
+	echo "Usage: <-n name> [options ...] 
+Options:
+    -n|--name       Provide name for filter
+    -p|--parent     Provide name for parent filter
+    -h|--help       Display this message"
 }
 
 function gen_filter() {

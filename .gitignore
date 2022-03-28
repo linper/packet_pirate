@@ -4,4 +4,3 @@ pp.*
 todo
 build/tmp/*
 build/bin/*
-tmp/*

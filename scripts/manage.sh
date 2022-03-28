@@ -12,9 +12,15 @@ export BLD_TMP_DIR=${BLD_DIR}/tmp
 export FIL_DIR=${SRC_DIR}/filters
 
 function usage () {
-	echo "Usage : [-h] <connamd> <target> [params ...]
-	Options:
-	-h|--help       Display this message"
+echo "Usage: [options ...] <command> <target> [params ...] 
+Commands:
+    delete      Deletes stuff
+    new         Creates stuff
+    update      Updates stuff
+Target:
+    filter      Only network filters (for now)
+Options:
+    -h|--help   Display this message"
 }
 
 if [ $# -eq 0 ]; then

@@ -98,14 +98,15 @@ clean:
 	$(Q)$(RM) $$(cat $(BLD_TMP_DIR)/$(OBJ-Y) | xargs) $(BIN_DIR)/$(TARGET) $(TMP_DIR)/*
 
 help:
-	$(Q)echo -e "Usage : make [options]\n\
+	$(Q)echo -e "Usage: make [options]\n\
 	Options:\n\
-	    [none] | all   Cleans, builds, and tests project\n\
+	    [none] | all   Cleans and builds project\n\
 	    clean          Cleans compiled binaries and temporary data\n\
 	    compile        Builds project\n\
 	    help           Displays this message\n\
-	    menuconfig     Opens 'mconf' based configuration tui\n\
+	    menuconfig     Opens 'mconf' based configuration TUI\n\
 	    run            Runs built project(for development purposes)\n\
 	    test           Runs auto tests\
 	"
+
 
