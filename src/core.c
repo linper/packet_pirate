@@ -172,7 +172,7 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 							 unsigned read_off)
 {
 	status_val status;
-	vld_status vlds;
+	vld_status vlds = VLD_DROP;
 	const unsigned base_read_off = read_off;
 
 	if (node->lvl) { //skiping root root node
@@ -398,7 +398,5 @@ void core_destroy()
 	glist_free(pc.tree_mods);
 	ef_tree_free(pc.ef_root);
 	fhmap_shallow_free(pc.f_entries);
-	/*free(pc.bpf);*/
-	/*free(pc.dev);*/
 }
 
