@@ -8,7 +8,7 @@
 #ifndef H_DUMP
 #define H_DUMP
 
-#include "../utils.h"
+#include "utils.h"
 
 /** @brief Max blob fields count in filter */
 #define PEBA_CAP 128

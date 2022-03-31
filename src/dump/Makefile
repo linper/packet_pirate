@@ -1,8 +1,8 @@
 
-obj-y += dump.o
 obj-$(CONFIG_DFN_DUMP_TYPE_SQLITE3) += sqlite3.o
 obj-$(CONFIG_DFN_DUMP_TYPE_MYSQL) += mysql.o
 obj-$(CONFIG_DFN_DUMP_TYPE_PQ) += pq.o
+obj-$(CONFIG_DFN_DUMP_TYPE_NONE) += none.o
 
 .PHONY all:
 

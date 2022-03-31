@@ -24,10 +24,18 @@ struct ext_filter *ext_filter_new(struct filter *f)
 
 	ef->active = true;
 
+	ef->stash = stash_new();
+	if (!ef->stash) {
+		LOG(L_CRIT, STATUS_OMEM);
+		free(ef);
+		return NULL;
+	}
+
 	struct fhmap *hflt = fhmap_new(f->n_entries * FH_CAP_MULTIPLIER);
 	if (!hflt) {
 		LOG(L_CRIT, STATUS_OMEM);
 		free(ef);
+		stash_free(ef->stash);
 		return NULL;
 	}
 
@@ -62,6 +70,7 @@ void ext_filter_free(struct ext_filter *f)
 		}
 
 		fhmap_shallow_free(f->mapped_filter);
+		stash_free(f->stash);
 		free(f);
 	}
 }

@@ -58,8 +58,10 @@ status_val ube_to_uint(u_char *data, u_int u_len, u_long *res)
 	return STATUS_OK;
 }
 
-static status_val uintle_to_uint(struct p_entry *e)
+static status_val uintle_to_uint(struct stash *st, struct p_entry *e)
 {
+	(void)st;
+
 	status_val status;
 	if ((status = ule_to_uint(e->raw_data, BITOBY(e->raw_len),
 							  &e->conv_data.ulong))) {
@@ -69,8 +71,10 @@ static status_val uintle_to_uint(struct p_entry *e)
 	return status;
 }
 
-static status_val uintbe_to_uint(struct p_entry *e)
+static status_val uintbe_to_uint(struct stash *st, struct p_entry *e)
 {
+	(void)st;
+
 	status_val status;
 	if ((status = ube_to_uint(e->raw_data, BITOBY(e->raw_len),
 							  &e->conv_data.ulong))) {
@@ -80,8 +84,10 @@ static status_val uintbe_to_uint(struct p_entry *e)
 	return status;
 }
 
-static status_val uintbe_to_string(struct p_entry *e)
+static status_val uintbe_to_string(struct stash *st, struct p_entry *e)
 {
+	(void)st;
+
 	status_val status;
 	u_long res = 0;
 	if ((status = ube_to_uint(e->raw_data, BITOBY(e->raw_len), &res))) {
@@ -94,8 +100,10 @@ static status_val uintbe_to_string(struct p_entry *e)
 	return STATUS_OK;
 }
 
-static status_val uintle_to_string(struct p_entry *e)
+static status_val uintle_to_string(struct stash *st, struct p_entry *e)
 {
+	(void)st;
+
 	status_val status;
 	u_long res = 0;
 	if ((status = ule_to_uint(e->raw_data, BITOBY(e->raw_len), &res))) {
@@ -108,9 +116,10 @@ static status_val uintle_to_string(struct p_entry *e)
 	return STATUS_OK;
 }
 
-static status_val to_hex(struct p_entry *e)
+static status_val to_hex(struct stash *st, struct p_entry *e)
 {
-	e->conv_data.string = calloc(5 * BITOBY(e->raw_len) + 8, sizeof(char));
+	e->conv_data.string =
+		stash_alloc(st, (5 * BITOBY(e->raw_len) + 8) * sizeof(char));
 	if (!e->conv_data.string) {
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;
@@ -125,9 +134,10 @@ static status_val to_hex(struct p_entry *e)
 	return STATUS_OK;
 }
 
-static status_val to_hexdump(struct p_entry *e)
+static status_val to_hexdump(struct stash *st, struct p_entry *e)
 {
-	e->conv_data.string = calloc(5 * BITOBY(e->raw_len) + 8, sizeof(char));
+	e->conv_data.string =
+		stash_alloc(st, (5 * BITOBY(e->raw_len) + 8) * sizeof(char));
 	if (!e->conv_data.string) {
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;
@@ -142,9 +152,10 @@ static status_val to_hexdump(struct p_entry *e)
 	return STATUS_OK;
 }
 
-static status_val to_dotted_hex(struct p_entry *e)
+static status_val to_dotted_hex(struct stash *st, struct p_entry *e)
 {
-	e->conv_data.string = calloc(5 * BITOBY(e->raw_len) + 8, sizeof(char));
+	e->conv_data.string =
+		stash_alloc(st, (5 * BITOBY(e->raw_len) + 8) * sizeof(char));
 	if (!e->conv_data.string) {
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;
@@ -159,9 +170,10 @@ static status_val to_dotted_hex(struct p_entry *e)
 	return STATUS_OK;
 }
 
-static status_val to_dotted_byte(struct p_entry *e)
+static status_val to_dotted_byte(struct stash *st, struct p_entry *e)
 {
-	e->conv_data.string = calloc(5 * BITOBY(e->raw_len) + 8, sizeof(char));
+	e->conv_data.string =
+		stash_alloc(st, (5 * (BITOBY(e->raw_len)) + 8) * sizeof(char));
 	if (!e->conv_data.string) {
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;
@@ -169,15 +181,17 @@ static status_val to_dotted_byte(struct p_entry *e)
 
 	char *ptr = (char *)e->conv_data.string;
 	for (long i = 0; i < BITOBY(e->raw_len); ++i) {
-		ptr += sprintf(ptr, "%d%s", e->raw_data[i],
+		ptr += sprintf(ptr, "%hhu%s", e->raw_data[i],
 					   i + 1 == BITOBY(e->raw_len) ? "" : ".");
 	}
 
 	return STATUS_OK;
 }
 
-static status_val to_raw(struct p_entry *e)
+static status_val to_raw(struct stash *st, struct p_entry *e)
 {
+	(void)st;
+
 	//not allocating memory to save time and memory
 	e->conv_data.blob.arr = e->raw_data;
 	e->conv_data.blob.len = BITOBY(e->raw_len);
@@ -185,7 +199,7 @@ static status_val to_raw(struct p_entry *e)
 	return STATUS_OK;
 }
 
-static status_val str_to_str(struct p_entry *e)
+static status_val str_to_str(struct stash *st, struct p_entry *e)
 {
 	u_char is_str = e->wfc == EWFC_STR ? 1 : 0;
 
@@ -196,7 +210,8 @@ static status_val str_to_str(struct p_entry *e)
 		}
 	}
 
-	e->conv_data.string = calloc(BITOBY(e->raw_len) + 1, sizeof(char));
+	e->conv_data.string =
+		stash_alloc(st, (BITOBY(e->raw_len) + 1) * sizeof(char));
 	if (!e->conv_data.string) {
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;
@@ -232,7 +247,7 @@ static u_char b64_dec_t[] = {
 	0,	0,	0,	0,	0,	0,	0,	0,	0
 };
 
-static status_val to_b64(struct p_entry *e)
+static status_val to_b64(struct stash *st, struct p_entry *e)
 {
 	char *out;
 	u_char *in = e->raw_data;
@@ -249,7 +264,7 @@ static status_val to_b64(struct p_entry *e)
 
 	olen = olen / 3 * 4;
 
-	out = malloc(olen + 1);
+	out = stash_alloc(st, olen + 1);
 	if (!out) {
 		return STATUS_OMEM;
 	}
@@ -279,16 +294,16 @@ static status_val to_b64(struct p_entry *e)
 	return STATUS_OK;
 }
 
-static status_val b64_to_bin(struct p_entry *e)
+static status_val b64_to_bin(struct stash *st, struct p_entry *e)
 {
 	size_t i, j, v;
 	u_char *in = e->raw_data;
-	size_t len = strlen((char*)in);
+	size_t len = strlen((char *)in);
 
 	if (in == NULL || (len & 0b11)) {
 		return STATUS_BAD_INPUT;
 	}
-	
+
 	size_t outlen = len / 4 * 3;
 
 	for (i = len; i-- > 0;) {
@@ -299,7 +314,7 @@ static status_val b64_to_bin(struct p_entry *e)
 		}
 	}
 
-	u_char *out = malloc(outlen + 1);
+	u_char *out = stash_alloc(st, outlen + 1);
 
 	if (!out) {
 		return STATUS_OMEM;

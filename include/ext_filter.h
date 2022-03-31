@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "report.h"
+#include "stash.h"
 
 /**
  * @brief Struct to hold not user definable data about user defind filter
@@ -21,6 +22,7 @@ struct ext_filter {
 	struct fhmap *mapped_filter; ///< 	Tag=>entry mapped user defined filter
 	struct report rep; ///< 			Session capture statistics
 	const char *hint; ///< 				Hinting next filter, must be cleared before each capaure
+	struct stash *stash; ///< 			Stash to store packet
 };
 
 /**

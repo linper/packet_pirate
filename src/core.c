@@ -15,7 +15,7 @@
 #include "../include/ext_filter.h"
 #include "../include/packet.h"
 #include "../include/ef_tree.h"
-#include "../include/dump/dump.h"
+#include "../include/dump.h"
 #ifdef DEVEL_SANITY
 #include "../include/sanity.h"
 #endif
@@ -95,6 +95,17 @@ inline static void clear_hint(struct ef_tree *node, void *usr)
 {
 	(void)usr;
 	node->flt->hint = NULL;
+}
+
+/**
+ * @brief Callback to clear rstash and cstash stashes
+ */
+inline static void clear_stash(struct ef_tree *node, void *usr)
+{
+	(void)usr;
+	if (node->flt->stash->in_use) {
+		stash_clear(node->flt->stash);
+	}
 }
 
 /**
@@ -213,7 +224,6 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 					 "Packet for %s failed validation, dropping...\n",
 					 p->packet_tag);
 				node->flt->rep.invalid++;
-				packet_free(p);
 				goto sibling;
 
 			case VLD_DROP_ALL:
@@ -222,7 +232,6 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 					 p->packet_tag);
 				ef_tree_foreach_continue(node, invalidate, NULL);
 				node->flt->rep.invalid++;
-				packet_free(p);
 				return VLD_DROP_ALL;
 
 			case VLD_PASS:
@@ -230,7 +239,6 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 				status = glist_push(pc.single_cap_pkt, p);
 				if (status) {
 					LOG(L_ERR, status);
-					packet_free(p);
 				} else {
 					node->flt->rep.parsed++;
 				}
@@ -241,7 +249,6 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 			status = glist_push(pc.single_cap_pkt, p);
 			if (status) {
 				LOG(L_ERR, status);
-				packet_free(p);
 			} else {
 				node->flt->rep.parsed++;
 			}
@@ -272,15 +279,6 @@ sibling:
 status_val core_init()
 {
 	status_val status;
-
-	pc.cap_pkts = glist_new(2 * DUMP_BATCH);
-	if (!pc.cap_pkts) {
-		LOG(L_CRIT, STATUS_OMEM);
-		status = STATUS_OMEM;
-		goto cp_err;
-	}
-
-	glist_set_free_cb(pc.cap_pkts, (void (*)(void *))packet_free);
 
 	pc.single_cap_pkt = glist_new(64);
 	if (!pc.single_cap_pkt) {
@@ -340,8 +338,6 @@ tree_err:
 fhmap_err:
 	glist_free(pc.single_cap_pkt);
 scp_err:
-	glist_free(pc.cap_pkts);
-cp_err:
 	return status;
 }
 
@@ -354,33 +350,23 @@ void core_filter(u_char *args, const struct pcap_pkthdr *header,
 	vld_status vlds = filter_rec(pc.ef_root, packet, args, header, 0);
 	if (vlds == VLD_DROP_ALL) {
 		//no packets from this capture should be saved
-		glist_clear(pc.single_cap_pkt);
-		goto end;
-
-		//copying elements ot main captured packet list
-	} else if (glist_copy_to(pc.single_cap_pkt, pc.cap_pkts)) {
-		LOG(L_ERR, STATUS_OMEM);
+		glist_clear_shallow(pc.single_cap_pkt);
 		goto end;
 	}
 
-	u_long now = time(NULL);
-	if (glist_count(pc.cap_pkts) >= DUMP_BATCH ||
-		now - pc.last_dump >= DUMP_INTERVAL) {
-		//calling dunp interception hooks for each filter
-		glist_foreach (void *e, pc.f_reg) {
-			if (((struct filter *)e)->itc_dump) {
-				((struct filter *)e)->itc_dump();
-			}
+	glist_foreach (void *e, pc.f_reg) {
+		if (((struct filter *)e)->itc_dump) {
+			((struct filter *)e)->itc_dump();
 		}
-
-		dctx.dump(pc.cap_pkts);
-		glist_clear(pc.cap_pkts);
-		pc.last_dump = now;
 	}
+
+	dctx.dump(pc.single_cap_pkt);
 
 end:
 	pc.next_pid++;
+	glist_clear_shallow(pc.single_cap_pkt);
 	ef_tree_foreach(pc.ef_root, true, clear_hint, NULL);
+	ef_tree_foreach(pc.ef_root, true, clear_stash, NULL);
 }
 
 void core_destroy()
@@ -394,7 +380,6 @@ void core_destroy()
 	dctx.close();
 	//do not need to free containing elements; just unlinking
 	glist_free_shallow(pc.single_cap_pkt);
-	glist_free(pc.cap_pkts);
 	glist_free(pc.tree_mods);
 	ef_tree_free(pc.ef_root);
 	fhmap_shallow_free(pc.f_entries);

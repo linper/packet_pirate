@@ -8,7 +8,7 @@ static struct f_entry ipv4_packet[] = {
 	{"ipv4_ecn", 	E_LEN(2), 		1,	0, 			ERF_UINT_BE, 	EWF_HEX_STR},
 	{"ipv4_len", 	E_LEN(2), 		8,	0, 			ERF_UINT_BE, 	EWF_UINT},
 	{"ipv4_id", 	E_LEN(2), 		8,	0, 			ERF_UINT_BE, 	EWF_UINT},
-	{"ipv4_flags", 	E_LEN(2), 		1, 	0, 			ERF_UINT_BE, 	EWF_HEX_STR},
+	{"ipv4_flags", 	E_LEN(2), 		1, 	0, 			ERF_UINT_BE, 	EWF_UINT},
 	{"ipv4_frag_off", E_LEN(14), 	1, 	0, 			ERF_UINT_BE, 	EWF_HEX_STR},
 	{"ipv4_ttl", 	E_LEN(1), 		8,	0, 			ERF_UINT_BE, 	EWF_UINT},
 	{"ipv4_proto", 	E_LEN(1), 		8,	0, 			ERF_UINT_BE, 	EWF_UINT},

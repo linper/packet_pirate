@@ -18,8 +18,9 @@
 #include "../../include/ef_tree.h"
 #include "../../include/ext_filter.h"
 #include "../../include/filter.h"
-#include "../../include/dump/dump.h"
-#include "../../include/dump/pq.h"
+#include "../../include/dump.h"
+
+static status_val dump_pq_close();
 
 PGconn *db = NULL;
 
@@ -160,7 +161,7 @@ end:
 	return status;
 }
 
-status_val dump_pq_open()
+static status_val dump_pq_open()
 {
 	status_val status = STATUS_DB;
 	char buff[DEVEL_BUF_SIZE] = { 0 };
@@ -330,7 +331,7 @@ end:
 	return status;
 }
 
-status_val dump_pq_build(struct ef_tree *root)
+static status_val dump_pq_build(struct ef_tree *root)
 {
 	status_val status = STATUS_DB;
 	bool ident = false;
@@ -368,7 +369,7 @@ end:
 	return status;
 }
 
-status_val dump_pq_dump(struct glist *lst)
+static status_val dump_pq_dump(struct glist *lst)
 {
 	status_val status = STATUS_DB;
 	const char *pe_blob_arr[PEBA_CAP] = { 0 };
@@ -448,13 +449,20 @@ end:
 	return status;
 }
 
-status_val dump_pq_close()
+static status_val dump_pq_close()
 {
-	dump_pq_dump(pc.cap_pkts); //syncing unwritten data
+	dump_pq_dump(pc.single_cap_pkt); //syncing unwritten data
 	sync_db_context();
 	if (db) {
 		PQfinish(db);
 	}
 	return STATUS_OK;
 }
+
+struct dump_ctx dctx = {
+	.open = dump_pq_open,
+	.build = dump_pq_build,
+	.dump = dump_pq_dump,
+	.close = dump_pq_close,
+};
 

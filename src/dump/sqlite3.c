@@ -17,8 +17,9 @@
 #include "../../include/ef_tree.h"
 #include "../../include/ext_filter.h"
 #include "../../include/filter.h"
-#include "../../include/dump/dump.h"
-#include "../../include/dump/sqlite3.h"
+#include "../../include/dump.h"
+
+static status_val dump_sqlite3_close();
 
 static struct sqlite3 *db;
 
@@ -171,7 +172,7 @@ end:
 	return status;
 }
 
-status_val dump_sqlite3_open()
+static status_val dump_sqlite3_open()
 {
 	int rc;
 	char path[DEVEL_BUF_SIZE] = { 0 };
@@ -245,9 +246,8 @@ status_val dump_sqlite3_open()
 #endif
 }
 
-status_val dump_sqlite3_build(struct ef_tree *root)
+static status_val dump_sqlite3_build(struct ef_tree *root)
 {
-	/*int rc;*/
 	status_val status = STATUS_DB;
 	bool ident = false;
 
@@ -284,7 +284,7 @@ end:
 	return status;
 }
 
-status_val dump_sqlite3_dump(struct glist *lst)
+static status_val dump_sqlite3_dump(struct glist *lst)
 {
 	int rc;
 	struct p_entry *pe_blob_arr[PEBA_CAP] = { 0 };
@@ -371,11 +371,18 @@ end:
 	return status;
 }
 
-status_val dump_sqlite3_close()
+static status_val dump_sqlite3_close()
 {
-	dump_sqlite3_dump(pc.cap_pkts); //syncing unwritten data
+	dump_sqlite3_dump(pc.single_cap_pkt); //syncing unwritten data
 	sync_db_context();
 	sqlite3_close_v2(db);
 	return STATUS_OK;
 }
+
+struct dump_ctx dctx = {
+	.open = dump_sqlite3_open,
+	.build = dump_sqlite3_build,
+	.dump = dump_sqlite3_dump,
+	.close = dump_sqlite3_close,
+};
 

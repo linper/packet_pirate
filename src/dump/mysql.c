@@ -17,8 +17,9 @@
 #include "../../include/ef_tree.h"
 #include "../../include/ext_filter.h"
 #include "../../include/filter.h"
-#include "../../include/dump/dump.h"
-#include "../../include/dump/mysql.h"
+#include "../../include/dump.h"
+
+static status_val dump_mysql_close();
 
 static MYSQL *db;
 
@@ -220,7 +221,7 @@ end:
 	return status;
 }
 
-status_val dump_mysql_open()
+static status_val dump_mysql_open()
 {
 	status_val status = STATUS_DB;
 	char buff[DEVEL_BUF_SIZE] = { 0 };
@@ -305,7 +306,7 @@ end:
 	return status;
 }
 
-status_val dump_mysql_build(struct ef_tree *root)
+static status_val dump_mysql_build(struct ef_tree *root)
 {
 	status_val status = STATUS_DB;
 	bool ident = false;
@@ -343,7 +344,7 @@ end:
 	return status;
 }
 
-status_val dump_mysql_dump(struct glist *lst)
+static status_val dump_mysql_dump(struct glist *lst)
 {
 	struct p_entry *pe_blob_arr[PEBA_CAP] = { 0 };
 	u_int peba_len = 0;
@@ -452,12 +453,18 @@ end:
 	return status;
 }
 
-status_val dump_mysql_close()
+static status_val dump_mysql_close()
 {
-	dump_mysql_dump(pc.cap_pkts); //syncing unwritten data
+	dump_mysql_dump(pc.single_cap_pkt); //syncing unwritten data
 	sync_db_context();
 	mysql_close(db);
 	mysql_library_end();
 	return STATUS_OK;
 }
 
+struct dump_ctx dctx = {
+	.open = dump_mysql_open,
+	.build = dump_mysql_build,
+	.dump = dump_mysql_dump,
+	.close = dump_mysql_close,
+};

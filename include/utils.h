@@ -92,7 +92,6 @@ struct prog_ctx {
 	struct bpf_program bpf_prog; ///< 	Compiled BPF program
 	struct ef_tree *ef_root; ///< 		Root of extended filter tree
 	struct fhmap *f_entries; ///< 		Hashmap of all filter entries
-	struct glist *cap_pkts; ///< 		List to store filtered packets
 	struct glist *single_cap_pkt; ///< 	List of filtered packets in single capture
 	struct glist *f_reg; ///< 			List of registered filters
 	struct glist *tree_mods; ///< 		List of to modify filter tree
@@ -149,7 +148,7 @@ void log_msg(verb lvl, status_val status, const char *file, int line,
  */
 #define LOGF(lvl, status, fmt, ...)                                            \
 	if (lvl != L_QUIET && lvl <= pc.verbosity)                                 \
-	log_msg(lvl, status, __FILE__, __LINE__, fmt, __VA_ARGS__)
+	log_msg(lvl, status, __FUNCTION__, __LINE__, fmt, __VA_ARGS__)
 
 /**
  * @brief Logging macro with constant custom message 
@@ -159,7 +158,7 @@ void log_msg(verb lvl, status_val status, const char *file, int line,
  */
 #define LOGM(lvl, status, msg)                                                 \
 	if (lvl != L_QUIET && lvl <= pc.verbosity)                                 \
-	log_msg(lvl, status, __FILE__, __LINE__, msg)
+	log_msg(lvl, status, __FUNCTION__, __LINE__, msg)
 
 /**
  * @brief Logging macro with default message 
@@ -168,6 +167,6 @@ void log_msg(verb lvl, status_val status, const char *file, int line,
  */
 #define LOG(lvl, status)                                                       \
 	if (lvl != L_QUIET && lvl <= pc.verbosity)                                 \
-	log_msg(lvl, status, __FILE__, __LINE__, NULL)
+	log_msg(lvl, status, __FUNCTION__, __LINE__, NULL)
 
 #endif

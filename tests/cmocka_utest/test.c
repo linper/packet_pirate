@@ -9,6 +9,9 @@
 #include <sys/types.h>
 
 #include "../../include/converter.h"
+#include "../../include/stash.h"
+
+struct stash *st;
 
 void t_ule_to_u(void **state)
 {
@@ -28,7 +31,7 @@ void t_ule_to_u(void **state)
 		.wfc = wfc,
 	};
 
-	int status = (int)converter_mat[EWF_UINT][ERF_UINT_LE](&pe);
+	int status = (int)converter_mat[EWF_UINT][ERF_UINT_LE](st, &pe);
 
 	assert_int_equal(0, status);
 
@@ -69,7 +72,7 @@ void t_ube_to_u(void **state)
 		.wfc = wfc,
 	};
 
-	int status = (int)converter_mat[EWF_UINT][ERF_UINT_BE](&pe);
+	int status = (int)converter_mat[EWF_UINT][ERF_UINT_BE](st, &pe);
 
 	assert_int_equal(0, status);
 
@@ -110,7 +113,7 @@ void t_to_hex(void **state)
 		.wfc = wfc,
 	};
 
-	int status = (int)converter_mat[EWF_HEX_STR][ERF_BIN](&pe);
+	int status = (int)converter_mat[EWF_HEX_STR][ERF_BIN](st, &pe);
 
 	assert_int_equal(0, status);
 
@@ -151,7 +154,7 @@ void t_to_hexdump(void **state)
 		.wfc = wfc,
 	};
 
-	int status = (int)converter_mat[EWF_HEXDUMP][ERF_BIN](&pe);
+	int status = (int)converter_mat[EWF_HEXDUMP][ERF_BIN](st, &pe);
 
 	assert_int_equal(0, status);
 
@@ -192,7 +195,7 @@ void t_to_dhex(void **state)
 		.wfc = wfc,
 	};
 
-	int status = (int)converter_mat[EWF_HEX_DT][ERF_BIN](&pe);
+	int status = (int)converter_mat[EWF_HEX_DT][ERF_BIN](st, &pe);
 
 	assert_int_equal(0, status);
 
@@ -233,7 +236,7 @@ void t_to_dbyte(void **state)
 		.wfc = wfc,
 	};
 
-	int status = (int)converter_mat[EWF_DEC_DT][ERF_BIN](&pe);
+	int status = (int)converter_mat[EWF_DEC_DT][ERF_BIN](st, &pe);
 
 	assert_int_equal(0, status);
 
@@ -275,7 +278,7 @@ void t_str_to_str(void **state)
 		.wfc = wfc,
 	};
 
-	int status = (int)converter_mat[EWFC_STR][ERF_STR](&pe);
+	int status = (int)converter_mat[EWFC_STR][ERF_STR](st, &pe);
 
 	assert_int_equal(0, status);
 
@@ -316,7 +319,7 @@ void t_to_raw(void **state)
 		.wfc = wfc,
 	};
 
-	int status = (int)converter_mat[EWF_RAW][ERF_BIN](&pe);
+	int status = (int)converter_mat[EWF_RAW][ERF_BIN](st, &pe);
 
 	assert_int_equal(0, status);
 
@@ -357,7 +360,7 @@ void t_to_b64(void **state)
 		.wfc = wfc,
 	};
 
-	int status = (int)converter_mat[EWF_B64_STR][ERF_BIN](&pe);
+	int status = (int)converter_mat[EWF_B64_STR][ERF_BIN](st, &pe);
 
 	assert_int_equal(0, status);
 
@@ -398,7 +401,7 @@ void t_b64_to_bin(void **state)
 		.wfc = wfc,
 	};
 
-	int status = (int)converter_mat[EWF_DECODED][ERF_B64_STR](&pe);
+	int status = (int)converter_mat[EWF_DECODED][ERF_B64_STR](st, &pe);
 
 	assert_int_equal(0, status);
 
@@ -423,6 +426,7 @@ void t_b64_to_bin(void **state)
 
 int main(void)
 {
+	st = stash_new();
 	const struct CMUnitTest simple_tests[] = {
 		cmocka_unit_test(t_ule_to_u),	cmocka_unit_test(t_ube_to_u),
 		cmocka_unit_test(t_to_hex),		cmocka_unit_test(t_to_hexdump),
@@ -432,6 +436,8 @@ int main(void)
 	};
 
 	int simple_fails = cmocka_run_group_tests(simple_tests, NULL, NULL);
+
+	stash_free(st);
 
 	return simple_fails;
 }

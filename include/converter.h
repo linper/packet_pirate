@@ -15,9 +15,10 @@
 
 #include "utils.h"
 #include "filter.h"
+#include "stash.h"
 
 /** @brief Format for every converter function */
-typedef status_val (*converter)(struct p_entry *);
+typedef status_val (*converter)(struct stash *, struct p_entry *);
 
 /**
  * @brief Matrix of converter functions. Must Match rw_comp_mat

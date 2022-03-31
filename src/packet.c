@@ -185,6 +185,7 @@ static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 							   u_int *read_off)
 {
 	status_val status;
+	struct stash *st = node->flt->stash;
 
 	e->tag = fe->tag;
 
@@ -231,7 +232,6 @@ static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 				"Faild to split %s %s, packet is longer - %d (%d bits) than SNAPLEN(%d)\n",
 				p->packet_tag, fe->tag, BITOBY(read), read, DEF_SNAPLEN);
 			node->flt->rep.truncated++;
-			free(e->raw_data);
 			return STATUS_OK;
 		}
 
@@ -239,11 +239,11 @@ static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 			L_NOTICE, STATUS_BAD_INPUT,
 			"Faild to split %s %s, too long - %d (%d bits), then possible(%d) probably bad filter\n",
 			p->packet_tag, fe->tag, BITOBY(read), read, header->len);
-		free(e->raw_data);
 		return STATUS_BAD_INPUT;
 	}
 
-	e->raw_data = calloc(BITOBY(e->raw_len) + 1, sizeof(u_char));
+	/*e->raw_data = calloc(BITOBY(e->raw_len) + 1, sizeof(u_char));*/
+	e->raw_data = stash_alloc(st, (BITOBY(e->raw_len) + 1) * sizeof(u_char));
 	if (!e->raw_data) {
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;
@@ -268,7 +268,7 @@ static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 	if (rw_comp_mat[fe->write_form][fe->read_form] &&
 		converter_mat[fe->write_form][fe->read_form]) {
 		//converting to write format
-		status = converter_mat[fe->write_form][fe->read_form](e);
+		status = converter_mat[fe->write_form][fe->read_form](st, e);
 		if (status) {
 			LOGM(L_DEBUG, status,
 				 "Conversion from read to write format failed\n");
@@ -291,10 +291,11 @@ status_val derive_packet(struct glist *pkt_list, struct ef_tree *node,
 {
 	status_val status;
 	struct filter *nf = node->flt->filter;
+	struct stash *st = node->flt->stash;
 
 	node->flt->rep.received++;
 
-	struct packet *p = calloc(1, sizeof(struct packet));
+	struct packet *p = stash_alloc(st, sizeof(struct packet));
 	if (!p) {
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;
@@ -311,10 +312,9 @@ status_val derive_packet(struct glist *pkt_list, struct ef_tree *node,
 	p->packet_tag = nf->packet_tag;
 	p->parent_tag = nf->parent_tag;
 
-	p->entries = calloc(nf->n_entries, sizeof(struct p_entry));
+	p->entries = stash_alloc(st, nf->n_entries * sizeof(struct p_entry));
 	if (!p->entries) {
 		LOG(L_CRIT, STATUS_OMEM);
-		free(p);
 		return STATUS_OMEM;
 	}
 
@@ -326,7 +326,7 @@ status_val derive_packet(struct glist *pkt_list, struct ef_tree *node,
 			if (status) {
 				LOGF(L_NOTICE, status, "Packet:%s(%d) failed to split\n",
 					 nf->entries[i].tag, p->id);
-				packet_free(p);
+				/*packet_free(p);*/
 				return status;
 			}
 
@@ -346,36 +346,3 @@ status_val derive_packet(struct glist *pkt_list, struct ef_tree *node,
 	return STATUS_OK;
 }
 
-void packet_free(struct packet *p)
-{
-	if (p) {
-		struct p_entry *pe;
-		for (u_int i = 0; i < p->e_len; i++) {
-			pe = &p->entries[i];
-			//if raw_data and converted data (string/blob) is the same memory addres.
-			//this may be done to save memory.
-			if (pe->raw_data && pe->wfc == EWFC_STR &&
-				pe->raw_data == (u_char *)pe->conv_data.string) {
-				free(pe->raw_data);
-			} else if (pe->raw_data && pe->wfc == EWFC_BLOB &&
-					   pe->raw_data == pe->conv_data.blob.arr) {
-				free(pe->raw_data);
-			} else { // no shenanigans
-				if (pe->raw_data) {
-					free(pe->raw_data);
-				}
-
-				if (pe->wfc == EWFC_STR && pe->conv_data.string) {
-					free(pe->conv_data.string);
-				}
-
-				if (pe->wfc == EWFC_BLOB && pe->conv_data.blob.arr) {
-					free(pe->conv_data.blob.arr);
-				}
-			}
-		}
-
-		free(p->entries);
-		free(p);
-	}
-}
