@@ -11,24 +11,24 @@
 
 #include "../../include/dump.h"
 
-status_val open()
+static status_val open()
 {
 	return STATUS_OK;
 }
 
-status_val build(struct ef_tree *root)
+static status_val build(struct ef_tree *root)
 {
 	(void)root;
 	return STATUS_OK;
 }
 
-status_val dump(struct glist *lst)
+static status_val dump(struct glist *lst)
 {
 	(void)lst;
 	return STATUS_OK;
 }
 
-status_val close()
+static status_val close()
 {
 	return STATUS_OK;
 }

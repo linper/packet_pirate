@@ -5,9 +5,9 @@
  * @date 2022-02-20
  */
 
+#include <string.h>
 #include "../include/setup.h"
 #include "../include/glist.h"
-#include <string.h>
 
 /** @brief Corresponding struct all command line arrguments */
 #define NEMPTY_STR(s) s &&strcmp(s, "")
@@ -165,7 +165,7 @@ static void defaults_init(struct prog_ctx *prc)
 #endif
 
 #ifndef DEF_AUTO_IF
-	prc->dev = DEF_IF;
+	prc->dev = strdup(DEF_IF);
 #endif
 }
 

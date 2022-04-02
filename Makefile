@@ -21,12 +21,10 @@ OBJ-Y = obj
 INC-Y = inc
 KCONFIG = .config
 Q = @
-#Q =
 
 ######################
 #  COMPILE ARGS  #
 ######################
-TARGET = pp
 export CC = gcc
 export LDFLAGS += -lpcap
 export CFLAGS += -Wall -Wextra -ggdb -std=gnu99
@@ -43,14 +41,18 @@ MAKE = make
 ######################
 #  PRE-BUILD  #
 ######################
-$(foreach conf,$(shell grep -E '.*=.*' $(KCONFIG)),$(eval CONF += $(conf)))
-$(foreach conf,$(CONF),$(eval export $(conf)))
-CONF := $(patsubst %=y, %, $(CONF))
-CONF := $(subst =",="\", $(CONF))
-CONF := $(subst " ,\"" , $(CONF))
-DEFS += $(patsubst CONFIG_DFN_%, -D%, $(filter CONFIG_DFN_%,$(CONF)))
-DEFS += $(patsubst CONFIG_VERB_%, -DVERB_%, $(filter CONFIG_VERB_%,$(CONF)))
-# TODO add compilation flags from config
+
+$(foreach conf,$(shell grep -E '.*=.*' $(KCONFIG) | cut -d '=' -f 1),$(eval CONF += $(conf)))
+
+#This limits usage of '#' symbol. It is not the perfect solution
+$(foreach conf,$(shell grep -E '.*=.*' $(KCONFIG) | tr ' ' '#'),$(eval export $(subst #, ,$(conf))))
+$(foreach conf,$(shell grep -E 'CONFIG_DFN_.*=.*' $(KCONFIG) | tr ' ' '#'),$(eval export $(strip $(subst #, ,$(subst =",="\",$(subst " ,\"",$(conf) ))))))
+
+$(foreach conf,$(filter CONFIG_DFN_%,$(CONF)),$(eval DEFS += $(patsubst CONFIG_DFN_%,-D%,$(conf)=$($(conf)))))
+
+CFLAGS += $(subst ",,$(CONFIG_DEVEL_COMP_FLAGS))
+
+TARGET = $(patsubst "%",%, $(CONFIG_TARGET_NAME))
 
 ifeq ($(CONFIG_DFN_DUMP_TYPE_SQLITE3),y)
    LDFLAGS += -lsqlite3
@@ -69,7 +71,7 @@ compile: clean_tmp collect
 	OBJ=$$(cat $(BLD_TMP_DIR)/$(OBJ-Y) | xargs); \
 	INC=$$(cat $(BLD_TMP_DIR)/$(INC-Y) | xargs); \
 	SRC=$$(echo $${OBJ} | sed 's/\.o/\.c/g'); \
-	$(CC) -o $(BIN_DIR)/$(TARGET) $${INC} $${SRC} $(INC_PATH) $(LDFLAGS) $(CFLAGS) $(DEFS)
+	$(CC) -o $(BIN_DIR)/$(TARGET) $${INC} $${SRC} $(INC_PATH) $(LDFLAGS) $(CFLAGS) $(DEFS) $(COMP_FL)
 
 collect: collect_obj collect_inc
 
@@ -92,10 +94,10 @@ test:
 	$(Q)$(MAKE) -C $(TST_DIR)
 
 run: build
-	$(Q)$(EVAL) $(BIN_DIR)/$(TARGET) $(RUNARGS)
+	$(Q)$(EVAL) $(BIN_DIR)/(TARGET) $(RUNARGS)
 
 clean:
-	$(Q)$(RM) $$(cat $(BLD_TMP_DIR)/$(OBJ-Y) | xargs) $(BIN_DIR)/$(TARGET) $(TMP_DIR)/*
+	$(Q)$(RM) $$(cat $(BLD_TMP_DIR)/$(OBJ-Y) | xargs) $(BIN_DIR)/* $(TMP_DIR)/*
 
 help:
 	$(Q)echo -e "Usage: make [options]\n\

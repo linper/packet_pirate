@@ -1,5 +1,11 @@
 menu "Defaults"
 
+config TARGET_NAME
+string "Name"
+default "pp"
+help
+	Name of compiled binnary
+
 config DFN_DEF_BPF
 string "BPF"
 default "tcp"

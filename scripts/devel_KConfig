@@ -13,7 +13,7 @@ default 512
 help
 	Most common internal buffer size
 
-config DEVEL_COMP
+config DEVEL_COMP_FLAGS
 string "Compilation flags"
 default "-Og -ggdb"
 

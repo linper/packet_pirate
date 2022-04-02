@@ -122,12 +122,16 @@ static status_val create_or_sync_prog_context(char *buff)
 			goto end;
 		}
 
+		PQclear(res);
+
 		res = PQexec(db, "CREATE TABLE context(pp_hash BIGINT, next_idx INT)");
 		if (PQresultStatus(res) != PGRES_COMMAND_OK) {
 			LOGF(L_ERR, STATUS_DB, "%s", PQerrorMessage(db));
 			status = STATUS_DB;
 			goto end;
 		}
+
+		PQclear(res);
 
 		sprintf(buff, "INSERT INTO context VALUES(%ld, 0)", pp_hash);
 
@@ -456,6 +460,7 @@ static status_val dump_pq_close()
 	if (db) {
 		PQfinish(db);
 	}
+
 	return STATUS_OK;
 }
 

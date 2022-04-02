@@ -383,5 +383,6 @@ void core_destroy()
 	glist_free(pc.tree_mods);
 	ef_tree_free(pc.ef_root);
 	fhmap_shallow_free(pc.f_entries);
+	free(pc.dev);
 }
 

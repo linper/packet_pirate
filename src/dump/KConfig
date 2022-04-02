@@ -4,12 +4,13 @@ menu "Data dump"
 config DFN_DUMP_APPEND
 	bool "Append"
 	default y
-	depends on !DFN_DUMP_TYPE_NONE
+	depends on !DFN_DUMP_TYPE_NONETYPE_NONE
 	help
 		"If previous session filter tree, database path, and name is idendical to current, then new filtered packets will be appeded to existing database. Otherwise action will be desided by \"Override\" option."
 
 config DFN_DUMP_OVERRIDE
 	bool "Override"
+	depends on !DFN_DUMP_TYPE_NONE
 	help
 		"If checked, overrides old dump. Otherwise adds integer suffix to name."
 
