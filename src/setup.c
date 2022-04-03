@@ -30,7 +30,7 @@ static char doc[] = "Powered by 'Packet Pirate' sniffing framework in C";
 
 /** @brief A description of the arguments we accept to be desplayed in help message */
 /*static char args_doc[] = "ARG1 ARG2";*/
-static char args_doc[] = {0};
+static char args_doc[] = { 0 };
 
 /** @brief The options we understand  to be desplayed in help message */
 static struct argp_option options[] = {
@@ -41,8 +41,7 @@ static struct argp_option options[] = {
 	  "Allows modifications of filter tree. Filter tree node to grow branch to. Works with 'prune' parameter. Can use multiple times",
 	  0 },
 	{ "bpf", 'b', "query", 0,
-	  "Fully supported BPF query for first stage filter",
-	  0 },
+	  "Fully supported BPF query for first stage filter", 0 },
 	{ "sample", 's', "file", 0, "Sample .pcap file for offline analysis", 0 },
 	{ "device", 'd', "device", 0, "Interface/device to sniff", 0 },
 	{ "verbose", 'v', "verbosity", 0, "Set verbosity [0-6]", 0 },
@@ -91,7 +90,11 @@ static error_t parse_p(int key, char *arg, struct argp_state *state)
 		}
 		break;
 	case 'd':
-		prc->dev = arg;
+		if (prc->dev) {
+			free(prc->dev);
+		}
+
+		prc->dev = strdup(arg);
 		break;
 	case 's':
 		prc->sample = arg;
@@ -125,7 +128,6 @@ static struct argp argp = { .options = options,
  */
 static void parse_params(int argc, char *argv[], struct prog_ctx *args)
 {
-	args->verbosity = L_WARN; //setting default verbosity
 	argp_parse(&argp, argc, argv, 0, 0, args);
 }
 
@@ -175,6 +177,7 @@ static void defaults_init(struct prog_ctx *prc)
 
 status_val setup(int argc, char **argv)
 {
+	pc.verbosity = L_WARN; //setting very default verbosity
 	pc.tree_mods = glist_new(8);
 	if (!pc.tree_mods) {
 		LOG(L_CRIT, STATUS_OMEM);

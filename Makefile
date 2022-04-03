@@ -29,7 +29,7 @@ export CC = gcc
 export LDFLAGS += -lpcap
 export CFLAGS += -Wall -Wextra -ggdb -std=gnu99
 export DEFS += -D_GNU_SOURCE -DDEBUG
-RUNARGS = eno1
+RUNARGS = -d eno1
 export INC_PATH := -I$(INC_DIR)
 
 ######################
@@ -94,7 +94,7 @@ test:
 	$(Q)$(MAKE) -C $(TST_DIR)
 
 run: build
-	$(Q)$(EVAL) $(BIN_DIR)/(TARGET) $(RUNARGS)
+	$(Q)$(EVAL) $(BIN_DIR)/$(TARGET) $(RUNARGS)
 
 clean:
 	$(Q)$(RM) $$(cat $(BLD_TMP_DIR)/$(OBJ-Y) | xargs) $(BIN_DIR)/* $(TMP_DIR)/*

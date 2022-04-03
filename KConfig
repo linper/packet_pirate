@@ -5,7 +5,7 @@ source "src/filters/KConfig"
 source "src/dump/KConfig"
 source "scripts/def_KConfig"
 source "scripts/devel_KConfig"
-source "scripts/tests_KConfig"
+source "tests/KConfig"
     
 choice VERBOSITY
 prompt "Logging"

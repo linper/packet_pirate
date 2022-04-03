@@ -8,13 +8,18 @@ LDFLAGS += -lcmocka
     
 RM = rm -f
     
+ifeq ($(CONFIG_TEST_CMOCKA),y)
 all: clean compile run
+else
+all: skip
+endif
+
+skip:
+	@echo Skipping cmocka unit tests 
 
 compile:
 	$(CC) -o $(BIN) $(SRC) $(DEPS) $(INC_PATH) $(CFLAGS) $(LDFLAGS) $(DEFS)
 
-#.PHONY: clean run
-    
 clean: 
 	$(RM) $(BIN)
 

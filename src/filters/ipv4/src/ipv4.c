@@ -15,7 +15,7 @@ static struct f_entry ipv4_packet[] = {
 	{"ipv4_cksum", 	E_LEN(2), 		8,	0, 			ERF_UINT_BE, 	EWF_UINT},
 	{"ipv4_src", 	E_LEN(4), 		8,	0, 			ERF_UINT_BE, 	EWF_DEC_DT},
 	{"ipv4_dest", 	E_LEN(4), 		8,	0, 			ERF_UINT_BE, 	EWF_DEC_DT},
-	{"ipv4_opt", 	E_PAC_OFF_OF("ipv4_ver", "ipv4_ihl"), 32, EF_OPT, ERF_UINT_BE, EWF_HEX_STR},
+	{"ipv4_opt", 	E_PAC_OFF_OF("ipv4_ver", "ipv4_ihl"), 32, EF_OPT, ERF_BIN, EWF_RAW},
 	{"ipv4_pld", 	E_PAC_OFF_OF("ipv4_ver", "ipv4_len"), 8, EF_PLD_REG, ERF_BIN, EWF_RAW},
 }; 
 
