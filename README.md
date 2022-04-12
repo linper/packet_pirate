@@ -43,7 +43,7 @@ Due to potental differences in instalation location of dependency header files, 
 
 As this is framework and source code is intended to be seen by dirrect user, thus there is no point in distributing this in binnary form  of some sort. Source code can be downloaded by:
 ```sh
-git clone git@github.com:linper/packet_pirate.git
+git clone https://github.com/linper/packet_pirate.git
 cd packet_pirate
 ```
 ### Generating documentation

@@ -75,7 +75,7 @@ static status_val get_dev()
 			pc.dev = NULL;
 
 #ifndef DEF_AUTO_IF
-			LOGM(L_CRIT, STATUS_NOT_FOUND,
+			LOGF(L_CRIT, STATUS_NOT_FOUND,
 				 "No way to get valid interface. Exiting...");
 			goto end;
 #endif
@@ -85,7 +85,7 @@ static status_val get_dev()
 	//checking if interface can be auto selected
 #ifdef DEF_AUTO_IF
 	if (!dev_compat) {
-		LOGM(L_INFO, STATUS_OK, "Trying to autoselect interface");
+		LOGF(L_INFO, STATUS_OK, "Trying to autoselect interface");
 		d = devs;
 
 		while (d->next) {
@@ -122,7 +122,7 @@ static status_val get_dev()
 			goto end;
 		}
 
-		LOGM(L_CRIT, STATUS_NOT_FOUND,
+		LOGF(L_CRIT, STATUS_NOT_FOUND,
 			 "No way to get valid interface. Exiting...");
 	}
 #endif
@@ -147,14 +147,14 @@ int main(int argc, char *argv[])
 
 	status = setup(argc, argv);
 	if (status) {
-		LOGM(L_CRIT, status, "Failed to setup program");
+		LOGF(L_CRIT, status, "Failed to setup program");
 		goto error;
 	}
 
 	if (!pc.sample) {
 		status = get_dev();
 		if (status) {
-			LOGM(L_CRIT, status, "Failed to get interface");
+			LOGF(L_CRIT, status, "Failed to get interface");
 			goto error;
 		}
 

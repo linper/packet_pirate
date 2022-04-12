@@ -148,17 +148,7 @@ void log_msg(verb lvl, status_val status, const char *file, int line,
  */
 #define LOGF(lvl, status, fmt, ...)                                            \
 	if (lvl != L_QUIET && lvl <= pc.verbosity)                                 \
-	log_msg(lvl, status, __FUNCTION__, __LINE__, fmt, __VA_ARGS__)
-
-/**
- * @brief Logging macro with constant custom message 
- * @param[in] lvl 		Verbosity level
- * @param[in] status 	Error type
- * @param[in] msg 		Message to be displayed
- */
-#define LOGM(lvl, status, msg)                                                 \
-	if (lvl != L_QUIET && lvl <= pc.verbosity)                                 \
-	log_msg(lvl, status, __FUNCTION__, __LINE__, msg)
+	log_msg(lvl, status, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
 
 /**
  * @brief Logging macro with default message 

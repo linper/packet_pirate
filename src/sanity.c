@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <strings.h>
 #include <ctype.h>
 
@@ -26,6 +27,12 @@ static status_val check_filter_entry(struct filter *f, struct f_entry *fe)
 {
 	status_val status = STATUS_OK;
 
+	if (!rw_comp_mat[fe->write_form][fe->read_form]) {
+		LOGF(L_CRIT, STATUS_ERROR,
+			 "No complient read-write format pair seledted for: %sd", fe->tag);
+		status = STATUS_ERROR;
+	}
+
 	if (fe->tag[DEVEL_TAG_LEN - 1]) {
 		LOGF(L_CRIT, STATUS_ERROR,
 			 "Filter has entry with tag:%s that is too long. Max:%d", fe->tag,
@@ -41,7 +48,7 @@ static status_val check_filter_entry(struct filter *f, struct f_entry *fe)
 		}
 	}
 
-	if (!fe->tag[0]) {
+	if (!fe->tag[0] || !strlen(fe->tag)) {
 		LOGF(L_CRIT, STATUS_ERROR, "Filter:%s has entry with empty tag",
 			 f->packet_tag);
 		status = STATUS_ERROR;
@@ -141,9 +148,9 @@ static status_val check_filter()
 			}
 		}
 
-		if (!f->packet_tag[0]) {
-			LOGM(L_CRIT, STATUS_ERROR, "Filter's packet_tag is empty");
-			status = STATUS_ERROR;
+		if (!f->packet_tag[0] || !strlen(f->packet_tag)) {
+			LOGF(L_CRIT, STATUS_ERROR, "Filter's packet_tag is empty:%d", strlen(f->packet_tag));
+			LOGF(L_CRIT, STATUS_ERROR, "Filter's packet_tag is empty");
 		}
 
 		if (f->parent_tag[DEVEL_TAG_LEN - 1]) {
@@ -201,7 +208,7 @@ status_val check_sanity()
 	status |= check_filter();
 
 	if (status) {
-		LOGM(L_CRIT, STATUS_ERROR, "Sanity checks failed");
+		LOGF(L_CRIT, STATUS_ERROR, "Sanity checks failed");
 	}
 
 	return status;

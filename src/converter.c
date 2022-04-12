@@ -205,7 +205,7 @@ static status_val str_to_str(struct stash *st, struct p_entry *e)
 
 	for (int i = 0; i < BITOBY(e->raw_len) - is_str; i++) {
 		if (!isprint((int)e->raw_data[i])) {
-			LOGM(L_DEBUG, STATUS_BAD_INPUT, "Unprintable characters");
+			LOGF(L_DEBUG, STATUS_BAD_INPUT, "Unprintable characters");
 			return STATUS_BAD_INPUT;
 		}
 	}

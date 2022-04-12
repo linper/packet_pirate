@@ -113,7 +113,7 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 		}
 
 		if (*read_off > (long)len + pe->glob_bit_off) {
-			LOGM(L_NOTICE, STATUS_BAD_INPUT, "Packet is longer than expected");
+			LOGF(L_NOTICE, STATUS_BAD_INPUT, "Packet is longer than expected");
 			return STATUS_BAD_INPUT;
 		}
 
@@ -143,12 +143,12 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 		if ((status =
 				 fhmap_get(pc.f_entries, fe->len.data.e_pac_off_tag.offset_tag,
 						   &ref_fe))) {
-			LOGM(L_NOTICE, STATUS_BAD_INPUT, "Packet is longer than expected");
+			LOGF(L_NOTICE, STATUS_BAD_INPUT, "Packet is longer than expected");
 			return STATUS_BAD_INPUT;
 		}
 
 		if (*read_off > (long)len + pe->glob_bit_off) {
-			LOGM(L_NOTICE, STATUS_BAD_INPUT, "Packet is longer than expected");
+			LOGF(L_NOTICE, STATUS_BAD_INPUT, "Packet is longer than expected");
 			return STATUS_BAD_INPUT;
 		}
 
@@ -270,7 +270,7 @@ static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 		//converting to write format
 		status = converter_mat[fe->write_form][fe->read_form](st, e);
 		if (status) {
-			LOGM(L_DEBUG, status,
+			LOGF(L_DEBUG, status,
 				 "Conversion from read to write format failed\n");
 			node->flt->rep.unconverted++;
 			return status;

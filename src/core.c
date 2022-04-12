@@ -306,6 +306,14 @@ status_val core_init()
 		goto mod_tree_err;
 	}
 
+#ifdef DEVEL_SANITY
+	status = check_sanity();
+	if (status) {
+		LOG(L_CRIT, status);
+		goto dump_build_err;
+	}
+#endif
+
 	status = dctx.open();
 	if (status) {
 		LOG(L_CRIT, status);
@@ -317,14 +325,6 @@ status_val core_init()
 		LOG(L_CRIT, status);
 		goto dump_build_err;
 	}
-
-#ifdef DEVEL_SANITY
-	status = check_sanity();
-	if (status) {
-		LOG(L_CRIT, status);
-		goto dump_build_err;
-	}
-#endif
 
 	return status;
 

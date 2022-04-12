@@ -408,7 +408,7 @@ static status_val dump_pq_dump(struct glist *lst)
 				break;
 			case EWFC_BLOB:
 				if (peba_len + 1 == PEBA_CAP) {
-					LOGM(L_ERR, STATUS_BAD_INPUT,
+					LOGF(L_ERR, STATUS_BAD_INPUT,
 						 "Too many replaceable parameters(BLOB)");
 					goto end;
 				}
