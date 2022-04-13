@@ -310,7 +310,7 @@ status_val core_init()
 	status = check_sanity();
 	if (status) {
 		LOG(L_CRIT, status);
-		goto dump_build_err;
+		goto mod_tree_err;
 	}
 #endif
 

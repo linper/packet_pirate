@@ -5,4 +5,5 @@ todo
 build/tmp/*
 build/bin/*
 tests/output_test/.config.bkp
+tests/cmocka_utest/test
 
