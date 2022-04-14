@@ -15,6 +15,9 @@ static vld_status validate_eth(struct packet *p, struct ef_tree *node)
 	case 0x0800:
 		HINT(node, "ipv4");
 		break;
+	case 0x86dd:
+		HINT(node, "ipv6");
+		break;
 	case 0x0806:
 		HINT(node, "arp");
 		break;

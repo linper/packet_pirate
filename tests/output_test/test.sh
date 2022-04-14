@@ -1,6 +1,7 @@
 #!/bin/bash
 
 resources="$(ls ./resources | grep ".pcap")"
+target="test_program"
 
 if [ -f ../../.config ]; then
 	cp ../../.config ./.config.bkp
@@ -34,7 +35,7 @@ for res in $resources; do
 
 	echo -n "Filter:$filt Type:$tp Count:$cnt"
 
-	result=$(../../build/bin/pp -s ./resources/$res -v 1 | grep -A 8 -E "─${filt}:")
+	result=$(../../build/bin/${target} -s ./resources/${res} -v 1 | grep -A 8 -E "─${filt}:")
 	[ -z "$result" ] && {
 		echo "Filter: $filt not found, Skipping..."
 		continue

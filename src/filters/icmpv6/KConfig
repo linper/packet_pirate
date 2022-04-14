@@ -1,0 +1,4 @@
+config FILTER_ICMPV6    
+    bool "icmpv6 filter"
+	default n
+	select FILTER_IPV6

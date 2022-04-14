@@ -1,0 +1,4 @@
+config FILTER_IGMP    
+    bool "igmp filter"
+	default n
+	select FILTER_IPV4

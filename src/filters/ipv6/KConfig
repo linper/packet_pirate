@@ -1,0 +1,4 @@
+config FILTER_IPV6    
+    bool "ipv6 filter"
+	default n
+	select FILTER_ETHERNET
