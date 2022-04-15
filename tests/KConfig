@@ -1,0 +1,16 @@
+menu "Tests"
+
+config TEST_CMOCKA
+bool "Cmocka unit tests"
+default y
+help
+	Run unit tests written using Cmocka library
+
+
+config TEST_IMPROV
+bool "Integration tests"
+default y
+help
+	Run impovized integration tests. This uses inout file and capture statistics features to test proogram correctness
+
+endmenu
