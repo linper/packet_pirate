@@ -13,9 +13,13 @@
 #include "utils.h"
 #include <sys/types.h>
 
-#define STASH_DEFAULT_SIZE 64
-#define STASH_GAP 1
-//#define STASH_DEFAULT_SIZE 1024
+#define STASH_DEFAULT_SIZE 1024
+
+#ifdef DEVEL_STASH_DEBUG
+#define STASH_GAP 8
+#else
+#define STASH_GAP 2
+#endif //DEVEL_STASH_DEBUG
 
 /**
  * @brief Implementation of 'stash'
@@ -32,6 +36,20 @@ struct stash_block {
 };
 
 /**
+ * @brief structure to stash debugging
+ */
+struct stash_dbg {
+	/**Next structure*/
+	struct stash_dbg *next;
+	/**Pointer to first byte of the gap*/
+	u_char *gap;
+	/**Source code line where preceeding data was 'allocated'*/
+	int line;
+	/**Function name where preceeding data was 'allocated'*/
+	const char *func;
+};
+
+/**
  * @brief Implementation of 'stash'
  */
 struct stash {
@@ -45,6 +63,12 @@ struct stash {
 	struct stash_block *first;
 	/**Last stash block*/
 	struct stash_block *last;
+#ifdef DEVEL_STASH_DEBUG
+	/**First `stash_dbg` struct*/
+	struct stash_dbg *dbg;
+	/**Data to be written into gaps between 'allocated' data for debugging*/
+	u_char gap_content[STASH_GAP];
+#endif
 };
 
 /**
@@ -57,9 +81,11 @@ struct stash *stash_new();
  * @brief Allocates memory in stash
  * @param[in] *st 		Stash pointer to append item to
  * @param[in] *size 	Size of item to be appended
+ * @param[in] *func 	Current function name e.g. __FUNCTION__
+ * @param[in] *line 	Current line e.g. __LINE__
  * @return pointer to 'allocated' data or NULL if unsuccessfull
  */
-void *stash_alloc(struct stash *st, size_t size);
+void *stash_alloc(struct stash *st, size_t size, const char *func, int line);
 
 /**
  * @brief Cleares all stash data and sets it as not in_use
@@ -74,5 +100,22 @@ status_val stash_clear(struct stash *st);
  * @return Void
  */
 void stash_free(struct stash *st);
+
+/**
+ * @brief Allocates memory in stash
+ * @param[in] *st 		Stash pointer to debug
+ * @param[in] *func 	Current function name e.g. __FUNCTION__
+ * @param[in] *line 	Current line e.g. __LINE__
+ * @return pointer to 'allocated' data or NULL if unsuccessfull
+ */
+void stash_debug(struct stash *st, const char *func, int line);
+
+#ifdef DEVEL_STASH_DEBUG
+#define STASH_ALLOC(st, size) stash_alloc(st, size, __FUNCTION__, __LINE__)
+#define STASH_DEBUG(st) stash_debug(st, __FUNCTION__, __LINE__)
+#else
+#define STASH_ALLOC(st, size) stash_alloc(st, size, NULL, 0)
+#define STASH_DEBUG(st) stash_debug(st, NULL, 0)
+#endif //DEVEL_STASH_DEBUG
 
 #endif

@@ -28,27 +28,27 @@ static struct f_entry tcp_packet[] = {
 static vld_status validate_tcp(struct packet *p, struct ef_tree *node)
 {
 	struct p_entry *pe;
-	struct ef_tree *pn = node->par;
+	(void)node;
 
-	struct packet *pp = get_packet_by_tag(pc.single_cap_pkt, "ipv4");
+	struct packet *pp = get_packet_by_tag(p, "ipv4");
 	if (!pp) {
 		return VLD_DROP;
 	}
 	
 	//udp protocol is indicated as 6 in ipv4 packet
-	pe = PENTRY(pn, pp, "ipv4_proto");
+	pe = PENTRY(pp, "ipv4_proto");
 	if (pe->conv_data.ulong != 6) {
 		return VLD_DROP;
 	}
 
 	//data offset is always [5; 15]
-	pe = PENTRY(node, p, "tcp_dt_off");
+	pe = PENTRY(p, "tcp_dt_off");
 	if (pe->conv_data.ulong < 5) {
 		return VLD_DROP;
 	}
 
 	//rezerved bits should be 0
-	pe = PENTRY(node, p, "tcp_rez");
+	pe = PENTRY(p, "tcp_rez");
 	if (pe->conv_data.ulong) {
 		return VLD_DROP;
 	}

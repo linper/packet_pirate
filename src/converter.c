@@ -119,7 +119,7 @@ static status_val uintle_to_string(struct stash *st, struct p_entry *e)
 static status_val to_hex(struct stash *st, struct p_entry *e)
 {
 	e->conv_data.string =
-		stash_alloc(st, (5 * BITOBY(e->raw_len) + 8) * sizeof(char));
+		STASH_ALLOC(st, (5 * BITOBY(e->raw_len) + 8) * sizeof(char));
 	if (!e->conv_data.string) {
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;
@@ -137,7 +137,7 @@ static status_val to_hex(struct stash *st, struct p_entry *e)
 static status_val to_hexdump(struct stash *st, struct p_entry *e)
 {
 	e->conv_data.string =
-		stash_alloc(st, (5 * BITOBY(e->raw_len) + 8) * sizeof(char));
+		STASH_ALLOC(st, (5 * BITOBY(e->raw_len) + 8) * sizeof(char));
 	if (!e->conv_data.string) {
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;
@@ -155,7 +155,7 @@ static status_val to_hexdump(struct stash *st, struct p_entry *e)
 static status_val to_dotted_hex(struct stash *st, struct p_entry *e)
 {
 	e->conv_data.string =
-		stash_alloc(st, (5 * BITOBY(e->raw_len) + 8) * sizeof(char));
+		STASH_ALLOC(st, (5 * BITOBY(e->raw_len) + 8) * sizeof(char));
 	if (!e->conv_data.string) {
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;
@@ -173,7 +173,7 @@ static status_val to_dotted_hex(struct stash *st, struct p_entry *e)
 static status_val to_dotted_byte(struct stash *st, struct p_entry *e)
 {
 	e->conv_data.string =
-		stash_alloc(st, (5 * (BITOBY(e->raw_len)) + 8) * sizeof(char));
+		STASH_ALLOC(st, (5 * (BITOBY(e->raw_len)) + 8) * sizeof(char));
 	if (!e->conv_data.string) {
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;
@@ -211,7 +211,7 @@ static status_val str_to_str(struct stash *st, struct p_entry *e)
 	}
 
 	e->conv_data.string =
-		stash_alloc(st, (BITOBY(e->raw_len) + 1) * sizeof(char));
+		STASH_ALLOC(st, (BITOBY(e->raw_len) + 1) * sizeof(char));
 	if (!e->conv_data.string) {
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;
@@ -257,14 +257,9 @@ static status_val to_b64(struct stash *st, struct p_entry *e)
 		return STATUS_ERROR;
 	}
 
-	olen = len;
-	if (len & 0b11) {
-		olen += 3 - (len % 3);
-	}
+	olen = 4 * ((len + 2) / 3);
 
-	olen = olen / 3 * 4;
-
-	out = stash_alloc(st, olen + 1);
+	out = STASH_ALLOC(st, olen + 1);
 	if (!out) {
 		return STATUS_OMEM;
 	}
@@ -314,7 +309,7 @@ static status_val b64_to_bin(struct stash *st, struct p_entry *e)
 		}
 	}
 
-	u_char *out = stash_alloc(st, outlen + 1);
+	u_char *out = STASH_ALLOC(st, outlen + 1);
 
 	if (!out) {
 		return STATUS_OMEM;

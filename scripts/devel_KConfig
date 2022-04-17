@@ -15,6 +15,10 @@ config DFN_DEVEL_SANITY
 bool "Sanity checks"
 default y
 
+config DFN_DEVEL_STASH_DEBUG
+bool "Stash debug"
+default n
+
 config DFN_DEVEL_TAG_LEN
 int "Tag length"
 default 16

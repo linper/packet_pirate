@@ -402,7 +402,7 @@ static status_val dump_mysql_dump(struct glist *lst)
 			}
 		}
 
-		if (p->parent_tag[0]) {
+		if (p->prev) {
 			off += sprintf(buff + off, ", %d", p->id);
 		}
 

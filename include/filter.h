@@ -23,8 +23,7 @@
  * @param *tag 		Filter entry's tag to sarch for associated entry
  * @return Pointer to found filtered packet entry
  */
-#define PENTRY(node, packet, tag)                                              \
-	&packet->entries[fe_idx(node->flt->filter, tag)]
+#define PENTRY(packet, tag) &packet->entries[fe_idx(packet->eflt->filter, tag)]
 
 /** 
  * @brief Hints program to expect certain packet after this one
@@ -268,7 +267,8 @@ struct p_entry {
 /** @brief Filtered packet's data */
 struct packet { ///< 				Struct to store received and filtered packet data
 	u_int id; ///< 					UID for received packet
-	const char *parent_tag; ///< 	Tag for parent(lower level) packet
+	struct packet *prev; ///< 		Pointer to previous/parent packet
+	struct ext_filter *eflt; ///< 	Pointer to associated extended filter
 	const char *packet_tag; ///< 	Tag for current packet
 	long e_len; ///< 				Count of entry fields
 	struct p_entry *entries; ///< 	Array of entries
@@ -282,5 +282,21 @@ struct packet { ///< 				Struct to store received and filtered packet data
  * @return Index of filter entry, -1 otherwise
  */
 int fe_idx(struct filter *f, const char *tag);
+
+/**
+ * @brief Iterates packets back to root packet and searches for packet entry with 'tag'
+ * @param[in] *p 	Pointer to starting packet
+ * @param[in] *tag 	Filter entry's tag
+ * @return Pointer to found packet entry or NULL in case of failure
+ */
+struct p_entry *search_pe_by_tag(struct packet *p, const char *tag);
+
+/**
+ * @brief Gets filtered packet. Intended to be used by end user.
+ * @param[in] *p 	Pointer to starting packet
+ * @param[in] *tag 		Tag associated with packet/filter
+ * @return Packet struct if succeded, NULL otherwise
+ */
+struct packet *get_packet_by_tag(struct packet *p, const char *tag);
 
 #endif

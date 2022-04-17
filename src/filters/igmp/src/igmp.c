@@ -13,15 +13,14 @@ static vld_status validate_igmp(struct packet *p, struct ef_tree *node)
 {
 	(void)p;
 	struct p_entry *pe;
-	struct ef_tree *pn = node->par;
 
-	struct packet *pp = get_packet_by_tag(pc.single_cap_pkt, "ipv4");
+	struct packet *pp = get_packet_by_tag(p, "ipv4");
 	if (!pp) {
 		return VLD_DROP;
 	}
 	
 	//igmp protocol is indicated as 2 in ipv4 packet
-	pe = PENTRY(pn, pp, "ipv4_proto");
+	pe = PENTRY(pp, "ipv4_proto");
 	if (pe->conv_data.ulong != 2) {
 		return VLD_DROP;
 	}

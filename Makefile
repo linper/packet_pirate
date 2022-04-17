@@ -27,7 +27,7 @@ Q = @
 ######################
 export CC = gcc
 export LDFLAGS += -lpcap
-export CFLAGS += -Wall -Wextra -ggdb -std=gnu99
+export CFLAGS += -Wall -Wextra -std=gnu99
 export DEFS += -D_GNU_SOURCE -DDEBUG
 RUNARGS = -d eno1
 export INC_PATH := -I$(INC_DIR)

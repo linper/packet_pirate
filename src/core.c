@@ -1,5 +1,4 @@
-/**
- * @file core.c
+/** @file core.c
  * @brief Implementation of core "Packet Pirate's" interface.
  * @author Linas Perkauskas
  * @date 2022-02-20
@@ -98,7 +97,7 @@ inline static void clear_hint(struct ef_tree *node, void *usr)
 }
 
 /**
- * @brief Callback to clear rstash and cstash stashes
+ * @brief Callback to clear stash
  */
 inline static void clear_stash(struct ef_tree *node, void *usr)
 {
@@ -180,11 +179,12 @@ end:
  */
 static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 							 u_char *args, const struct pcap_pkthdr *header,
-							 unsigned read_off)
+							 unsigned read_off, struct packet *last)
 {
 	status_val status;
 	vld_status vlds = VLD_DROP;
 	const unsigned base_read_off = read_off;
+	struct packet *p = NULL;
 
 	if (node->lvl) { //skiping root root node
 		if ((node->par->flt && node->par->flt->hint &&
@@ -194,16 +194,20 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 			goto sibling;
 		}
 
-		struct packet *p = NULL;
-
 		//calling capture intercept hook for every filter
 		if (node->flt->filter->itc_capture) {
 			node->flt->filter->itc_capture(args, header, data);
 		}
 
+		//preparing basic packet for later
+		status = prepare_packet(&p, node->flt, last);
+		if (status) {
+			LOG(L_CRIT, status);
+			return VLD_DROP_ALL;
+		}
+
 		//trying to split data to packet fields
-		status =
-			derive_packet(pc.single_cap_pkt, node, data, header, &read_off, &p);
+		status = derive_packet(p, data, header, &read_off);
 		if (status) {
 			read_off = base_read_off; //reverting read offset
 			LOGF(L_DEBUG, STATUS_NOT_FOUND, "Packet dropped for %s\n",
@@ -257,7 +261,7 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 
 	//desending down into first child filter if it exists
 	if (node->chld) {
-		vlds = filter_rec(node->chld, data, args, header, read_off);
+		vlds = filter_rec(node->chld, data, args, header, read_off, p);
 		if (vlds == VLD_DROP_ALL) {
 			return VLD_DROP_ALL;
 		}
@@ -267,7 +271,7 @@ sibling:
 	// going to sibling filter
 	if (node->next) {
 		//persist filtering on failure, unless drop all is returned
-		vlds = filter_rec(node->next, data, args, header, base_read_off);
+		vlds = filter_rec(node->next, data, args, header, base_read_off, last);
 		if (vlds == VLD_DROP_ALL) {
 			return VLD_DROP_ALL;
 		}
@@ -347,7 +351,7 @@ void core_filter(u_char *args, const struct pcap_pkthdr *header,
 	//clearing old single packet capture list
 	glist_clear_shallow(pc.single_cap_pkt);
 
-	vld_status vlds = filter_rec(pc.ef_root, packet, args, header, 0);
+	vld_status vlds = filter_rec(pc.ef_root, packet, args, header, 0, NULL);
 	if (vlds == VLD_DROP_ALL) {
 		//no packets from this capture should be saved
 		glist_clear_shallow(pc.single_cap_pkt);

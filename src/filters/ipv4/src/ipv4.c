@@ -24,17 +24,17 @@ static vld_status validate_ipv4(struct packet *p, struct ef_tree *node)
 	struct p_entry *pe;
 
 	//vhl is always equal to 4
-	pe = PENTRY(node, p, "ipv4_ver");
+	pe = PENTRY(p, "ipv4_ver");
 	if (pe->conv_data.ulong != 4) {
 		return VLD_DROP;
 	}
 
 	//ihl is always [5; 15]
-	pe = PENTRY(node, p, "ipv4_ihl");
+	pe = PENTRY(p, "ipv4_ihl");
 	if (pe->conv_data.ulong < 5) {
 		return VLD_DROP;
 	} else if (pe->conv_data.ulong > 5) {
-		pe = PENTRY(node, p, "ipv4_opt");
+		pe = PENTRY(p, "ipv4_opt");
 		//if ihl is greater than 5, options must exist
 		if (!pe->raw_len) {
 			return VLD_DROP;
@@ -42,18 +42,18 @@ static vld_status validate_ipv4(struct packet *p, struct ef_tree *node)
 	}
 
 	//total length is always [20; 65535]
-	pe = PENTRY(node, p, "ipv4_len");
+	pe = PENTRY(p, "ipv4_len");
 	if (pe->conv_data.ulong < 20) {
 		return VLD_DROP;
 	}
 
 	//MSB (evil bit) is always 0
-	pe = PENTRY(node, p, "ipv4_flags");
+	pe = PENTRY(p, "ipv4_flags");
 	if (pe->conv_data.ulong & 0x4) { return VLD_DROP;
 	}
 
 	//hinting optimizes filtering
-	pe = PENTRY(node, p, "ipv4_proto");
+	pe = PENTRY(p, "ipv4_proto");
 	switch (pe->conv_data.ulong) {
 	case 1:
 		HINT(node, "icmpv4");

@@ -1,27 +1,20 @@
 #!/bin/bash
 
-resources="$(ls ./resources | grep ".pcap")"
+resources="$(ls ${TST_DIR}/output_test/resources | grep '.pcap')"
 target="test_program"
+ 
+cp "${ROOT_DIR}/.config" "${ROOT_DIR}/.config.bkp"
+cp "${TST_DIR}/output_test/test_config" "${ROOT_DIR}/.config"
 
-if [ -f ../../.config ]; then
-	cp ../../.config ./.config.bkp
-else 
-	cp test_config ./.config.bkp
-fi
-
-cp test_config ../../.config
-
-cwd="$(pwd)"
-cd ../..
-make clean compile > /dev/null
+make -C "${ROOT_DIR}" clean compile > /dev/null
 
 [ $? -ne 0 ] && {
-	echo "Failed to buiild project. Quiting..."
-	cp ./.config.bkp ../../.config
+	echo "Failed to build project. Quiting..."
+	mv "${ROOT_DIR}/.config.bkp" "${ROOT_DIR}/.config"
 	exit 1
 }
 
-cd $cwd
+mv "${ROOT_DIR}/.config.bkp" "${ROOT_DIR}/.config"
 
 for res in $resources; do
 	filt="$(echo $res | cut -d'.' -f 1)"
@@ -35,7 +28,7 @@ for res in $resources; do
 
 	echo -n "Filter:$filt Type:$tp Count:$cnt"
 
-	result=$(../../build/bin/${target} -s ./resources/${res} -v 1 | grep -A 8 -E "─${filt}:")
+	result=$(${BIN_DIR}/${target} -s ${TST_DIR}/output_test/resources/${res} -v 1 | grep -A 8 -E "─${filt}:")
 	[ -z "$result" ] && {
 		echo "Filter: $filt not found, Skipping..."
 		continue
@@ -54,8 +47,6 @@ for res in $resources; do
 		echo " OK"
 	fi
 done
-
-cp ./.config.bkp ../../.config
 
 exit 0
 

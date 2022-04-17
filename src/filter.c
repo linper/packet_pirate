@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../include/ext_filter.h"
 #include "../include/filter.h"
 
 enum ewf_comp wfc_arr[_EWF_COUNT] = {
@@ -28,15 +29,15 @@ enum ewf_comp wfc_arr[_EWF_COUNT] = {
 //lines - write
 //columns - read
 unsigned char rw_comp_mat[_EWF_COUNT][_ERF_COUNT] = {
-	{1, 1, 1, 1, 1},
-	{0, 0, 0, 0, 1},
-	{1, 1, 0, 0, 0},
-	{1, 1, 1, 0, 1},
-	{1, 1, 1, 1, 1},
-	{1, 1, 1, 1, 1},
-	{1, 1, 1, 1, 1},
-	{1, 1, 1, 1, 1},
-	{1, 1, 1, 1, 1},
+	{ 1, 1, 1, 1, 1 },
+	{ 0, 0, 0, 0, 1 },
+	{ 1, 1, 0, 0, 0 },
+	{ 1, 1, 1, 0, 1 },
+	{ 1, 1, 1, 1, 1 },
+	{ 1, 1, 1, 1, 1 },
+	{ 1, 1, 1, 1, 1 },
+	{ 1, 1, 1, 1, 1 },
+	{ 1, 1, 1, 1, 1 },
 };
 
 int fe_idx(struct filter *f, const char *tag)
@@ -49,5 +50,39 @@ int fe_idx(struct filter *f, const char *tag)
 	}
 
 	return -1;
+}
+
+struct p_entry *search_pe_by_tag(struct packet *p, const char *tag)
+{
+	struct packet *cur = p;
+	if (!p) {
+		return NULL;
+	}
+
+	do {
+		for (unsigned i = 0; i < cur->e_len; i++) {
+			if (!strcmp(cur->entries[i].tag, tag)) {
+				return &cur->entries[i];
+			}
+		}
+	} while ((cur = cur->prev));
+
+	return NULL;
+}
+
+struct packet *get_packet_by_tag(struct packet *p, const char *tag)
+{
+	struct packet *cur = p;
+	if (!p) {
+		return NULL;
+	}
+
+	do {
+		if (!strcmp(cur->eflt->filter->packet_tag, tag)) {
+			return cur;
+		}
+	} while ((cur = cur->prev));
+
+	return NULL;
 }
 

@@ -68,14 +68,14 @@ u_long get_global_hash()
 	return g_hash;
 }
 
-void log_msg(verb lvl, status_val status, const char *file, int line,
+void log_msg(verb lvl, status_val status, const char *func, int line,
 			 const char *format, ...)
 {
-	char loc[strlen(file) + strlen(prog_verb_str[lvl]) +
+	char loc[strlen(func) + strlen(prog_verb_str[lvl]) +
 			 strlen(msg_map[status].desc) + 8];
 	char msg[256] = { 0 };
 
-	sprintf(loc, "%s:[%d]:%s:%s", file, line, prog_verb_str[lvl],
+	sprintf(loc, "%s:[%d]:%s:%s", func, line, prog_verb_str[lvl],
 			msg_map[status].desc);
 
 	if (format) {

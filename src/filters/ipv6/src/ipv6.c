@@ -18,13 +18,13 @@ static vld_status validate_ipv6(struct packet *p, struct ef_tree *node)
 	struct p_entry *pe;
 
 	//version is always equal to 6
-	pe = PENTRY(node, p, "ipv6_ver");
+	pe = PENTRY(p, "ipv6_ver");
 	if (pe->conv_data.ulong != 6) {
 		return VLD_DROP;
 	}
 
 	//hinting optimizes filtering
-	pe = PENTRY(node, p, "ipv6_n_head");
+	pe = PENTRY(p, "ipv6_n_head");
 	switch (pe->conv_data.ulong) {
 	case 58:
 		HINT(node, "icmpv6");

@@ -59,20 +59,27 @@ struct stash *stash_new()
 	st->block_count = 1;
 	st->total_cap = STASH_DEFAULT_SIZE;
 
+#ifdef DEVEL_STASH_DEBUG
+	memset(st->gap_content, 0xFF, STASH_GAP);
+#endif //DEVEL_STASH_DEBUG
+
 	return st;
 }
 
-void *stash_alloc(struct stash *st, size_t size)
+void *stash_alloc(struct stash *st, size_t size, const char *func, int line)
 {
+	(void)func;
+	(void)line;
+
 	size_t off = 0;
 	struct stash_block *lsb = st->last;
 	st->in_use = true;
 
-	if (lsb->cap - lsb->used < size) {
+	if (lsb->cap - lsb->used < size + STASH_GAP) {
 		size_t new_tcap = 2 * st->total_cap;
 		size_t new_cap = new_tcap - st->total_cap;
 
-		while (new_cap - STASH_GAP < size) {
+		while (new_cap < size + STASH_GAP) {
 			new_tcap *= 2;
 			new_cap = new_tcap - st->total_cap;
 		}
@@ -93,11 +100,38 @@ void *stash_alloc(struct stash *st, size_t size)
 
 	st->last->used += size + STASH_GAP; //empty byte between blocks
 
+#ifdef DEVEL_STASH_DEBUG
+	stash_debug(st, func, line);
+
+	struct stash_dbg *sdbg = calloc(1, sizeof(struct stash_dbg));
+	sdbg->line = line;
+	sdbg->func = func;
+	sdbg->gap = st->last->arr + (st->last->used - STASH_GAP);
+	memcpy(sdbg->gap, st->gap_content, STASH_GAP);
+	sdbg->next = st->dbg;
+	st->dbg = sdbg;
+#endif //DEVEL_STASH_DEBUG
+
 	return st->last->arr + off;
 }
 
 status_val stash_clear(struct stash *st)
 {
+#ifdef DEVEL_STASH_DEBUG
+	STASH_DEBUG(st);
+
+	if (st && st->dbg) {
+		struct stash_dbg *next = NULL, *st_dbg = st->dbg;
+
+		do {
+			next = st_dbg->next;
+			free(st_dbg);
+		} while ((st_dbg = next));
+	}
+
+	st->dbg = NULL;
+#endif //DEVEL_STASH_DEBUG
+
 	/*We only want 1 stash block*/
 	if (st->block_count > 1) {
 		struct stash_block *sb2, *sb;
@@ -131,10 +165,59 @@ status_val stash_clear(struct stash *st)
 	return STATUS_OK;
 }
 
+void stash_debug(struct stash *st, const char *func, int line)
+{
+	(void)st;
+	(void)func;
+	(void)line;
+#ifdef DEVEL_STASH_DEBUG
+	if (!st || !st->dbg) {
+		return;
+	}
+
+	struct stash_dbg *st_dbg = st->dbg;
+	int found = false;
+
+	do {
+		if (memcmp(st_dbg->gap, st->gap_content, STASH_GAP)) {
+			if (!found) {
+				found = true;
+				printf("STASH DBG %p in %s at:[%d]\n", st, func, line);
+			}
+
+			printf(">>> %s at:[%d]", st_dbg->func, st_dbg->line);
+
+			for (int i = 0; i < STASH_GAP; i++) {
+				printf(" %2X", st->gap_content[i]);
+			}
+			printf(" =>");
+			for (int i = 0; i < STASH_GAP; i++) {
+				printf(" %2X", st_dbg->gap[i]);
+			}
+			printf("\n");
+		}
+	} while ((st_dbg = st_dbg->next));
+#endif //DEVEL_STASH_DEBUG
+}
+
 void stash_free(struct stash *st)
 {
 	if (st) {
 		struct stash_block *sb2, *sb = st->first;
+
+#ifdef DEVEL_STASH_DEBUG
+		STASH_DEBUG(st);
+
+		if (st->dbg) {
+			struct stash_dbg *next = NULL, *st_dbg = st->dbg;
+
+			do {
+				next = st_dbg->next;
+				free(st_dbg);
+			} while ((st_dbg = next));
+		}
+#endif //DEVEL_STASH_DEBUG
+
 		while (sb) {
 			sb2 = sb->next;
 			free(sb->arr);

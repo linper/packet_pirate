@@ -17,7 +17,6 @@
 #include "../include/ext_filter.h"
 #include "../include/ef_tree.h"
 #include "../include/converter.h"
-#include "../include/pkt_list.h"
 #include "../include/packet.h"
 
 /**
@@ -70,16 +69,14 @@ static void copy_bits(struct p_entry *e, const u_char *src, unsigned bit_off,
 
 /**
  * @brief Finds length of packet's entry struct
- * @param[in] *pkt_list 		Generic list that contains already parsed packets from `data``
- * @param[in] *fe 				Filter entry to derive packet's entry form
  * @param[in, out] *p 			Pointer to return packet
+ * @param[in] *fe 				Filter entry to derive packet's entry form
  * @param[in, out] *e 			Pointer to packet entry to return
  * @param[in, out] *read_off 	Pointer to current read position in `data`
  * @return Status whether packet entry's length ware parsed succesfully
  */
-static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
-								   struct packet *p, struct p_entry *e,
-								   u_int *read_off)
+static status_val get_entry_length(struct packet *p, struct f_entry *fe,
+								   struct p_entry *e, u_int *read_off)
 {
 	status_val status;
 	struct p_entry *pe;
@@ -88,8 +85,7 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 
 	switch (fe->len.type) { //switching by entry length extraction method
 	case ELT_TAG:
-		if (!(pe = get_packet_entry_by_tag2(pkt_list, p,
-											fe->len.data.e_len_tag.tag)) ||
+		if (!(pe = search_pe_by_tag(p, fe->len.data.e_len_tag.tag)) ||
 			pe->wfc != EWFC_INT) {
 			LOG(L_ERR, STATUS_BAD_INPUT);
 			return STATUS_BAD_INPUT;
@@ -106,8 +102,7 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 		len = fe->len.data.e_pac_off.length * fe->len_mul;
 
 		//getting previous parssed entry with start position info
-		if (!(pe = get_packet_entry_by_tag2(pkt_list, p,
-											fe->len.data.e_pac_off.tag))) {
+		if (!(pe = search_pe_by_tag(p, fe->len.data.e_pac_off.tag))) {
 			LOG(L_ERR, STATUS_BAD_INPUT);
 			return STATUS_BAD_INPUT;
 		}
@@ -123,18 +118,19 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 
 	case ELT_PAC_OFF_TAG:
 		//getting previous parsed entry with offset info and retreiving its data as uint
-		if (!(pe = get_packet_entry_by_tag2(
-				  pkt_list, p, fe->len.data.e_pac_off_tag.offset_tag)) ||
+		if (!(pe =
+				  search_pe_by_tag(p, fe->len.data.e_pac_off_tag.offset_tag)) ||
 			pe->wfc != EWFC_INT) {
 			LOG(L_ERR, STATUS_BAD_INPUT);
+			LOGF(L_ERR, STATUS_BAD_INPUT, "%s:%s", fe->tag,
+				 fe->len.data.e_pac_off_tag.offset_tag);
 			return STATUS_BAD_INPUT;
 		}
 
 		len = pe->conv_data.ulong * fe->len_mul;
 
 		//getting previous parssed entry with start position info
-		if (!(pe = get_packet_entry_by_tag2(
-				  pkt_list, p, fe->len.data.e_pac_off_tag.start_tag))) {
+		if (!(pe = search_pe_by_tag(p, fe->len.data.e_pac_off_tag.start_tag))) {
 			LOG(L_ERR, STATUS_BAD_INPUT);
 			return STATUS_BAD_INPUT;
 		}
@@ -168,8 +164,6 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
 /**
  * @brief Builds packet entry struct based on filter entry and fills it
  * with supplied data. 
- * @param[in] *node 			Extended filter tree node to derive packet form
- * @param[in] *pkt_list 		Generic list that contains already parsed packets from `data``
  * @param[in, out] *p 			Pointer to return packet
  * @param[in] *fe 				Filter entry to derive packet's entry form
  * @param[in, out] *e 			Pointer to packet entry to return
@@ -178,14 +172,12 @@ static status_val get_entry_length(struct glist *pkt_list, struct f_entry *fe,
  * @param[in, out] *read_off 	Pointer to current read position in `data`
  * @return Status whether packet entry were parsed succesfully
  */
-static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
-							   struct packet *p, struct f_entry *fe,
+static status_val derive_entry(struct packet *p, struct f_entry *fe,
 							   struct p_entry *e, const u_char *data,
 							   const struct pcap_pkthdr *header,
 							   u_int *read_off)
 {
 	status_val status;
-	struct stash *st = node->flt->stash;
 
 	e->tag = fe->tag;
 
@@ -194,12 +186,14 @@ static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 		return STATUS_OK;
 	}
 
+	STASH_DEBUG(p->eflt->stash);
 	//getting data length of current entry
-	if (get_entry_length(pkt_list, fe, p, e, read_off)) {
+	if (get_entry_length(p, fe, e, read_off)) {
 		LOG(L_DEBUG, STATUS_ERROR);
 		return STATUS_ERROR;
 	}
 
+	STASH_DEBUG(p->eflt->stash);
 	// for regular payload field
 	if ((fe->flags & EF_PLD_REG) == EF_PLD_REG) {
 		u_int read = *read_off + e->raw_len;
@@ -210,7 +204,7 @@ static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 					L_DEBUG, STATUS_BAD_INPUT,
 					"Faild to split %s %s, packet is longer - %d (%d bits) than SNAPLEN(%d)\n",
 					p->packet_tag, fe->tag, BITOBY(read), read, DEF_SNAPLEN);
-				node->flt->rep.truncated++;
+				p->eflt->rep.truncated++;
 				return STATUS_OK;
 			}
 
@@ -224,6 +218,7 @@ static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 		return STATUS_OK;
 	}
 
+	STASH_DEBUG(p->eflt->stash);
 	u_int read = *read_off + e->raw_len;
 	if (BITOBY(read) > header->caplen) { //captured packet is not long enough
 		if (BITOBY(read) <= header->len) {
@@ -231,7 +226,7 @@ static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 				L_DEBUG, STATUS_BAD_INPUT,
 				"Faild to split %s %s, packet is longer - %d (%d bits) than SNAPLEN(%d)\n",
 				p->packet_tag, fe->tag, BITOBY(read), read, DEF_SNAPLEN);
-			node->flt->rep.truncated++;
+			p->eflt->rep.truncated++;
 			return STATUS_OK;
 		}
 
@@ -242,17 +237,20 @@ static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 		return STATUS_BAD_INPUT;
 	}
 
-	/*e->raw_data = calloc(BITOBY(e->raw_len) + 1, sizeof(u_char));*/
-	e->raw_data = stash_alloc(st, (BITOBY(e->raw_len) + 1) * sizeof(u_char));
+	STASH_DEBUG(p->eflt->stash);
+	e->raw_data =
+		STASH_ALLOC(p->eflt->stash, (BITOBY(e->raw_len) + 1) * sizeof(u_char));
 	if (!e->raw_data) {
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;
 	}
 
+	STASH_DEBUG(p->eflt->stash);
 	//extracting entry data
 	copy_bits(e, ((u_char *)data) + BYWHO(*read_off), BIREM(*read_off),
 			  e->raw_len);
 
+	STASH_DEBUG(p->eflt->stash);
 	e->glob_bit_off = *read_off;
 
 	if (!(fe->flags & EF_DUB)) {
@@ -265,18 +263,21 @@ static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 		e->wfc = wfc_arr[fe->write_form];
 	}
 
+	STASH_DEBUG(p->eflt->stash);
 	if (rw_comp_mat[fe->write_form][fe->read_form] &&
 		converter_mat[fe->write_form][fe->read_form]) {
 		//converting to write format
-		status = converter_mat[fe->write_form][fe->read_form](st, e);
+		status =
+			converter_mat[fe->write_form][fe->read_form](p->eflt->stash, e);
 		if (status) {
 			LOGF(L_DEBUG, status,
 				 "Conversion from read to write format failed\n");
-			node->flt->rep.unconverted++;
+			p->eflt->rep.unconverted++;
 			return status;
 		}
 	}
 
+	STASH_DEBUG(p->eflt->stash);
 	if (pc.verbosity >= L_DEBUG && !(fe->flags & EF_PLD)) {
 		LOGF(L_DEBUG, STATUS_OK, "entry:%s", e->tag);
 		PRINT_HEX(e->raw_data, BITOBY(e->raw_len));
@@ -285,44 +286,29 @@ static status_val derive_entry(struct ef_tree *node, struct glist *pkt_list,
 	return STATUS_OK;
 }
 
-status_val derive_packet(struct glist *pkt_list, struct ef_tree *node,
-						 const u_char *data, const struct pcap_pkthdr *header,
-						 u_int *read_off, struct packet **pkt_ptr)
+status_val derive_packet(struct packet *p, const u_char *data,
+						 const struct pcap_pkthdr *header, unsigned *read_off)
 {
 	status_val status;
-	struct filter *nf = node->flt->filter;
-	struct stash *st = node->flt->stash;
+	struct filter *nf = p->eflt->filter;
 
-	node->flt->rep.received++;
-
-	struct packet *p = stash_alloc(st, sizeof(struct packet));
-	if (!p) {
-		LOG(L_CRIT, STATUS_OMEM);
-		return STATUS_OMEM;
-	}
-
-	*pkt_ptr = p;
-
-	//assigning packet its ID, will be used for primary and foreign keys in data dump stage
-	//all parent and children packets will have same pid
-	p->id = pc.next_pid;
+	p->eflt->rep.received++;
 	p->glob_bit_off = *read_off;
 
-	//adding tags to indicate position in hierarchy
-	p->packet_tag = nf->packet_tag;
-	p->parent_tag = nf->parent_tag;
-
-	p->entries = stash_alloc(st, nf->n_entries * sizeof(struct p_entry));
+	p->entries =
+		STASH_ALLOC(p->eflt->stash, nf->n_entries * sizeof(struct p_entry));
 	if (!p->entries) {
 		LOG(L_CRIT, STATUS_OMEM);
 		return STATUS_OMEM;
 	}
 
+	STASH_DEBUG(p->eflt->stash);
+
 	for (u_int i = 0; i < nf->n_entries; i++) {
 		if (BITOBY(*read_off) <= header->caplen) {
 			//cutting and parsing entry
-			status = derive_entry(node, pkt_list, p, &nf->entries[i],
-								  &p->entries[i], data, header, read_off);
+			status = derive_entry(p, &nf->entries[i], &p->entries[i], data,
+								  header, read_off);
 			if (status) {
 				LOGF(L_NOTICE, status, "Packet:%s(%d) failed to split\n",
 					 nf->entries[i].tag, p->id);
@@ -342,6 +328,29 @@ status_val derive_packet(struct glist *pkt_list, struct ef_tree *node,
 			return STATUS_ERROR;
 		}
 	}
+
+	return STATUS_OK;
+}
+
+status_val prepare_packet(struct packet **p, struct ext_filter *ef,
+						  struct packet *last)
+{
+	struct packet *pkt = STASH_ALLOC(ef->stash, sizeof(struct packet));
+	if (!p) {
+		LOG(L_CRIT, STATUS_OMEM);
+		return STATUS_OMEM;
+	}
+
+	*p = pkt;
+
+	//assigning packet its ID, will be used for primary and foreign keys in data dump stage
+	//all parent and children packets will have same pid
+	pkt->id = pc.next_pid;
+
+	//adding tags to indicate position in hierarchy
+	pkt->packet_tag = ef->filter->packet_tag;
+	pkt->eflt = ef;
+	pkt->prev = last;
 
 	return STATUS_OK;
 }

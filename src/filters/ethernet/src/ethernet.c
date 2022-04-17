@@ -10,7 +10,7 @@ static struct f_entry ethernet_packet[] = {
 
 static vld_status validate_eth(struct packet *p, struct ef_tree *node)
 {
-	struct p_entry *pe = PENTRY(node, p, "eth_type");
+	struct p_entry *pe = PENTRY(p, "eth_type");
 	switch (pe->conv_data.ulong) {
 	case 0x0800:
 		HINT(node, "ipv4");

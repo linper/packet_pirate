@@ -16,18 +16,18 @@ static struct f_entry arp_packet[] = {
 static vld_status validate_arp(struct packet *p, struct ef_tree *node)
 {
 	(void)p;
+	(void)node;
 	
 	struct p_entry *pe;
-	struct ef_tree *pn = node->par;
 
-	struct packet *pp = get_packet_by_tag(pc.single_cap_pkt, "ethernet");
+	struct packet *pp = get_packet_by_tag(p, "ethernet");
 	if (!pp) {
 		return VLD_DROP;
 	}
 	
 	//arp protocol is indicated as 0x0806 in eternet packet
 	//if hinting is properly done, than this is not nessery
-	pe = PENTRY(pn, pp, "eth_type");
+	pe = PENTRY(pp, "eth_type");
 	if (pe->conv_data.ulong != 0x0806) {
 		return VLD_DROP;
 	}

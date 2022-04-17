@@ -12,14 +12,13 @@ static vld_status validate_icmpv6(struct packet *p, struct ef_tree *node)
 {
 	(void)p;
 	struct p_entry *pe;
-	struct ef_tree *pn = node->par;
 
-	struct packet *pp = get_packet_by_tag(pc.single_cap_pkt, "ipv6");
+	struct packet *pp = get_packet_by_tag(p, "ipv6");
 	if (!pp) {
 		return VLD_DROP;
 	}
 	
-	pe = PENTRY(pn, pp, "ipv6_n_head");
+	pe = PENTRY(pp, "ipv6_n_head");
 	if (pe->conv_data.ulong != 58) {
 		return VLD_DROP;
 	}
