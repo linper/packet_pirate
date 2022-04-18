@@ -1,6 +1,4 @@
 
-inc-y += udp4.h
-
 .PHONY all:
 
 all:

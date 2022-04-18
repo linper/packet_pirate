@@ -1,4 +1,10 @@
-#include "../include/ethernet.h"
+#include <stdlib.h>
+
+#include "../../../../include/utils.h"
+#include "../../../../include/glist.h"
+#include "../../../../include/ef_tree.h"
+#include "../../../../include/ext_filter.h"
+#include "../../../../include/filter.h"
 
 static struct f_entry ethernet_packet[] = {
 /*  TAG 			LENGTH 		MUL	FLAGS 		READ FORMAT 	WRITE FORMAT */
@@ -26,7 +32,7 @@ static vld_status validate_eth(struct packet *p, struct ef_tree *node)
 	return VLD_PASS;
 }
 
-struct filter ethernet_filter = {
+static struct filter ethernet_filter = {
 	.parent_tag = {0},
 	.packet_tag = "ethernet",
 	.validate = validate_eth,

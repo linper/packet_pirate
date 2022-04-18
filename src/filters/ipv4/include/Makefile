@@ -1,7 +1,4 @@
 
-inc-y += ipv4.h
-
-
 .PHONY all:
 
 all:

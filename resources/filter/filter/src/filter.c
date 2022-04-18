@@ -1,6 +1,14 @@
-#include "../include/>>>FILTER_NAME<<<.h"
+#include <stdlib.h>
 
-static struct f_entry >>>FILTER_NAME<<<_packet[] = {
+#include "../../../../include/utils.h"
+#include "../../../../include/glist.h"
+#include "../../../../include/ef_tree.h"
+#include "../../../../include/ext_filter.h"
+#include "../../../../include/filter.h"
+
+static struct filter filter;
+
+static struct f_entry filter_arr[] = {
 	/*ethernet packet example*/
 /*  TAG 			LENGTH 		MUL	FLAGS 		READ FORMAT 	WRITE FORMAT */
 	/*{"eth_dhost", 	E_LEN(6), 	8,	0, 			ERF_STR, 		EWF_HEX_DT},*/
@@ -15,32 +23,32 @@ struct my_struct {
 	.text = "Hello world!",
 };
 
-static void itc_capture_>>>FILTER_NAME<<<(u_char *args, const struct pcap_pkthdr *header, const u_char *packet) {
+static void itc_capture(u_char *args, const struct pcap_pkthdr *header, const u_char *packet) {
 	(void)args;
 	(void)header;
 	(void)packet;
 
-	LOGF(L_NOTICE, STATUS_OK, "Intercepted packet filtering for %s\n", >>>FILTER_NAME<<<_packet->tag);
+	LOGF(L_NOTICE, STATUS_OK, "Intercepted packet filtering for %s\n", filter.packet_tag);
 	return;
 }
 
-static void itc_dump_>>>FILTER_NAME<<<() {
+static void itc_dump() {
 	LOGF(L_NOTICE, STATUS_OK, "Next packet index will be %d\n", pc.next_pid);
 	return;
 }
 
-static void init_>>>FILTER_NAME<<<() {
-	LOGF(L_NOTICE, STATUS_OK, "%s\n", ((struct my_struct*)>>>FILTER_NAME<<<_filter.usr)->text);
-	strcpy(((struct my_struct*)>>>FILTER_NAME<<<_filter.usr)->text, "Goodbye cruel world!");
+static void filter_init() {
+	LOGF(L_NOTICE, STATUS_OK, "%s\n", ((struct my_struct*)filter.usr)->text);
+	strcpy(((struct my_struct*)filter.usr)->text, "Goodbye cruel world!");
 	return;
 }
 
-static void exit_>>>FILTER_NAME<<<() {
-	LOGF(L_NOTICE, STATUS_OK, "%s\n", ((struct my_struct*)>>>FILTER_NAME<<<_filter.usr)->text);
+static void filter_exit() {
+	LOGF(L_NOTICE, STATUS_OK, "%s\n", ((struct my_struct*)filter.usr)->text);
 	return;
 }
 
-static vld_status validate_>>>FILTER_NAME<<<(struct packet *p, struct ef_tree *node)
+static vld_status validate(struct packet *p, struct ef_tree *node)
 {
 	(void)p;
 	(void)node;
@@ -48,18 +56,18 @@ static vld_status validate_>>>FILTER_NAME<<<(struct packet *p, struct ef_tree *n
 	return VLD_PASS;
 }
 
-struct filter >>>FILTER_NAME<<<_filter = {
+static struct filter filter = {
 	.parent_tag = >>>PARENT_BUF_NAME<<<,
 	.packet_tag = ">>>FILTER_NAME<<<",
-	.init_filter = init_>>>FILTER_NAME<<<,
-	.exit_filter = exit_>>>FILTER_NAME<<<,
-	.itc_capture = itc_capture_>>>FILTER_NAME<<<,
-	.itc_dump = itc_dump_>>>FILTER_NAME<<<,
-	.validate = validate_>>>FILTER_NAME<<<,
-	.entries = >>>FILTER_NAME<<<_packet,
-	.n_entries = FILTER_LEN(>>>FILTER_NAME<<<_packet),
+	.init_filter = filter_init,
+	.exit_filter = filter_exit,
+	.itc_capture = itc_capture,
+	.itc_dump = itc_dump,
+	.validate = validate,
+	.entries = filter_arr,
+	.n_entries = FILTER_LEN(filter_arr),
 	.usr = &mystruct,
 };
 
-INIT_FILTER(>>>FILTER_NAME<<<_filter)
+INIT_FILTER(filter)
 

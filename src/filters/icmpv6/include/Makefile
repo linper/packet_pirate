@@ -1,6 +1,4 @@
 
-inc-y += icmpv6.h
-
 .PHONY all:
 
 all:

@@ -1,4 +1,10 @@
-#include "../include/ipv6.h"
+#include <stdlib.h>
+
+#include "../../../../include/utils.h"
+#include "../../../../include/glist.h"
+#include "../../../../include/ef_tree.h"
+#include "../../../../include/ext_filter.h"
+#include "../../../../include/filter.h"
 
 static struct f_entry ipv6_packet[] = {
 /*  TAG 				LENGTH 			MUL		FLAGS 	READ FORMAT 	WRITE FORMAT */
@@ -34,7 +40,7 @@ static vld_status validate_ipv6(struct packet *p, struct ef_tree *node)
 	return VLD_PASS;
 }
 
-struct filter ipv6_filter = {
+static struct filter ipv6_filter = {
 	.parent_tag = "ethernet",
 	.packet_tag = "ipv6",
 	.validate = validate_ipv6,

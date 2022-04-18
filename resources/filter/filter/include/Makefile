@@ -1,6 +1,6 @@
 
-inc-y += >>>FILTER_NAME<<<.h
-
+#inc-y += put some header fle her e
+ 
 .PHONY all:
 
 all:

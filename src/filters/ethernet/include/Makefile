@@ -1,6 +1,4 @@
 
-inc-y += ethernet.h
-
 .PHONY all:
 
 all:

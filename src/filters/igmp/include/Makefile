@@ -1,6 +1,4 @@
 
-inc-y += igmp.h
-
 .PHONY all:
 
 all:

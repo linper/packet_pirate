@@ -1,4 +1,10 @@
-#include "../include/igmp.h"
+#include <stdlib.h>
+
+#include "../../../../include/utils.h"
+#include "../../../../include/glist.h"
+#include "../../../../include/ef_tree.h"
+#include "../../../../include/ext_filter.h"
+#include "../../../../include/filter.h"
 
 static struct f_entry igmp_packet[] = {
 /*  TAG 			LENGTH 			MUL	FLAGS 		READ FORMAT 	WRITE FORMAT */
@@ -12,6 +18,8 @@ static struct f_entry igmp_packet[] = {
 static vld_status validate_igmp(struct packet *p, struct ef_tree *node)
 {
 	(void)p;
+	(void)node;
+
 	struct p_entry *pe;
 
 	struct packet *pp = get_packet_by_tag(p, "ipv4");
@@ -28,7 +36,7 @@ static vld_status validate_igmp(struct packet *p, struct ef_tree *node)
 	return VLD_PASS;
 }
 
-struct filter igmp_filter = {
+static struct filter igmp_filter = {
 	.parent_tag = "ipv4",
 	.packet_tag = "igmp",
 	.validate = validate_igmp,

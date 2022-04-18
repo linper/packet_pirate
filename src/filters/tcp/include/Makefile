@@ -1,6 +1,4 @@
 
-inc-y += tcp.h
-
 .PHONY all:
 
 all:

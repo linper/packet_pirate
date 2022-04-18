@@ -10,7 +10,6 @@ Options:
 
 function gen_filter() {
 	cp -r ${RES_DIR}/filter/filter ${TMP_DIR}/${f_name_l} 
-	mv ${TMP_DIR}/${f_name_l}/include/filter.h ${TMP_DIR}/${f_name_l}/include/${f_name_l}.h
 	mv ${TMP_DIR}/${f_name_l}/src/filter.c ${TMP_DIR}/${f_name_l}/src/${f_name_l}.c
 
 	find ${TMP_DIR}/${f_name_l} -type f -not -path '*/\.*' -exec sed -i "s/>>>FILTER_UNAME<<</${f_name_u}/g" {} +

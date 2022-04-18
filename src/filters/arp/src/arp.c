@@ -1,4 +1,10 @@
-#include "../include/arp.h"
+#include <stdlib.h>
+
+#include "../../../../include/utils.h"
+#include "../../../../include/glist.h"
+#include "../../../../include/ef_tree.h"
+#include "../../../../include/ext_filter.h"
+#include "../../../../include/filter.h"
 
 static struct f_entry arp_packet[] = {
 /*  TAG 			LENGTH 					MUL	FLAGS 	READ FORMAT 	WRITE FORMAT */
@@ -35,7 +41,7 @@ static vld_status validate_arp(struct packet *p, struct ef_tree *node)
 	return VLD_PASS;
 }
 
-struct filter arp_filter = {
+static struct filter arp_filter = {
 	.parent_tag = "ethernet",
 	.packet_tag = "arp",
 	.validate = validate_arp,

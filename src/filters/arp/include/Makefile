@@ -1,6 +1,4 @@
 
-inc-y += arp.h
-
 .PHONY all:
 
 all:

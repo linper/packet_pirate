@@ -1,4 +1,10 @@
-#include "../include/udp4.h"
+#include <stdlib.h>
+
+#include "../../../../include/utils.h"
+#include "../../../../include/glist.h"
+#include "../../../../include/ef_tree.h"
+#include "../../../../include/ext_filter.h"
+#include "../../../../include/filter.h"
 
 static struct f_entry udp4_packet[] = {
 /*  TAG 			LENGTH 		MUL 	FLAGS 	READ FORMAT 	WRITE FORMAT */
@@ -29,7 +35,7 @@ static vld_status validate_udp4(struct packet *p, struct ef_tree *node)
 	return VLD_PASS;
 }
 
-struct filter udp4_filter = {
+static struct filter udp4_filter = {
 	.parent_tag = "ipv4",
 	.packet_tag = "udp4",
 	.validate = validate_udp4,

@@ -51,7 +51,7 @@
  * It registers each filter before main() is called. 
  */
 #define INIT_FILTER(filter)                                                    \
-	void __attribute__((constructor)) init_##filter()                          \
+	static void __attribute__((constructor)) init_filter()                          \
 	{                                                                          \
 		glist_push(pc.f_reg, &filter);                                         \
 	}

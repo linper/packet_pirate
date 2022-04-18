@@ -1,4 +1,10 @@
-#include "../include/ipv4.h"
+#include <stdlib.h>
+
+#include "../../../../include/utils.h"
+#include "../../../../include/glist.h"
+#include "../../../../include/ef_tree.h"
+#include "../../../../include/ext_filter.h"
+#include "../../../../include/filter.h"
 
 static struct f_entry ipv4_packet[] = {
 /*  TAG 			LENGTH 			MUL	FLAGS 		READ FORMAT 	WRITE FORMAT */
@@ -72,7 +78,7 @@ static vld_status validate_ipv4(struct packet *p, struct ef_tree *node)
 	return VLD_PASS;
 }
 
-struct filter ipv4_filter = {
+static struct filter ipv4_filter = {
 	.parent_tag = "ethernet",
 	.packet_tag = "ipv4",
 	.validate = validate_ipv4,

@@ -69,14 +69,14 @@ all: clean compile
 
 compile: clean_tmp collect
 	OBJ=$$(cat $(BLD_TMP_DIR)/$(OBJ-Y) | xargs); \
-	INC=$$(cat $(BLD_TMP_DIR)/$(INC-Y) | xargs); \
+	INC=$$(cat $(BLD_TMP_DIR)/$(INC-Y) 2> /dev/null | xargs); \
 	SRC=$$(echo $${OBJ} | sed 's/\.o/\.c/g'); \
 	$(CC) -o $(BIN_DIR)/$(TARGET) $${INC} $${SRC} $(INC_PATH) $(LDFLAGS) $(CFLAGS) $(DEFS) $(COMP_FL)
 
 collect: collect_obj collect_inc
 
 clean_tmp:
-	$(Q)rm -rf $(BLD_TMP_DIR)/*
+	$(Q)$(RM) $(BLD_TMP_DIR)/*
 
 collect_inc:
 	$(Q)$(MAKE) -C $(SRC_DIR) dir=$(SRC_DIR) obj=$(INC-Y)
@@ -96,8 +96,8 @@ test:
 run: build
 	$(Q)$(EVAL) $(BIN_DIR)/$(TARGET) $(RUNARGS)
 
-clean:
-	$(Q)$(RM) $$(cat $(BLD_TMP_DIR)/$(OBJ-Y) | xargs) $(BIN_DIR)/* $(TMP_DIR)/*
+clean: clean_tmp
+	$(Q)$(RM) $(BLD_TMP_DIR)/* $(BIN_DIR)/* $(TMP_DIR)/*
 
 help:
 	$(Q)echo -e "Usage: make [options]\n\
