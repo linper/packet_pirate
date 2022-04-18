@@ -7,7 +7,7 @@ cp "${ROOT_DIR}/.config" "${ROOT_DIR}/.config.bkp"
 cp "${TST_DIR}/output_test/test_config" "${ROOT_DIR}/.config"
 
 # Reseting environment for compilation
-env -i HOME="$HOME" bash -l -c "make -C ${ROOT_DIR} clean compile"
+env -i HOME="$HOME" bash -l -c "make -s -C ${ROOT_DIR} clean compile"
 [ $? -ne 0 ] && {
 	echo "Failed to build project. Quiting..."
 	mv "${ROOT_DIR}/.config.bkp" "${ROOT_DIR}/.config"

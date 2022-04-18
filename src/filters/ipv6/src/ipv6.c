@@ -32,6 +32,9 @@ static vld_status validate_ipv6(struct packet *p, struct ef_tree *node)
 	//hinting optimizes filtering
 	pe = PENTRY(p, "ipv6_n_head");
 	switch (pe->conv_data.ulong) {
+	case 17:
+		HINT(node, "udp");
+		break;
 	case 58:
 		HINT(node, "icmpv6");
 		break;

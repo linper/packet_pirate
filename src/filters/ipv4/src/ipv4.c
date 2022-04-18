@@ -71,7 +71,7 @@ static vld_status validate_ipv4(struct packet *p, struct ef_tree *node)
 		HINT(node, "tcp");
 		break;
 	case 17:
-		HINT(node, "udp4");
+		HINT(node, "udp");
 		break;
 	}
 

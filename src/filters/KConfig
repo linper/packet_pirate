@@ -9,7 +9,7 @@ source "src/filters/igmp/KConfig"
 source "src/filters/ipv4/KConfig"
 source "src/filters/ipv6/KConfig"
 source "src/filters/tcp/KConfig"
-source "src/filters/udp4/KConfig"
+source "src/filters/udp/KConfig"
 
 endmenu
 

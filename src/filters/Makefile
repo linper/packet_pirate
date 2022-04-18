@@ -15,8 +15,8 @@ obj-$(CONFIG_FILTER_IPV6) += ipv6/
 inc-$(CONFIG_FILTER_IPV6) += ipv6/
 obj-$(CONFIG_FILTER_TCP) += tcp/
 inc-$(CONFIG_FILTER_TCP) += tcp/
-obj-$(CONFIG_FILTER_UDP4) += udp4/
-inc-$(CONFIG_FILTER_UDP4) += udp4/
+obj-$(CONFIG_FILTER_UDP) += udp/
+inc-$(CONFIG_FILTER_UDP) += udp/
 
 .PHONY all:
 

@@ -4,5 +4,5 @@ objs_sel := $(patsubst %/,%,$(filter-out %/, $(objs)))
 
 collect:
 	@for ob in $(objs_sel); do echo $(dir)/$$ob >> $(BLD_TMP_DIR)/$(obj);done
-	@for sub in $(subdirs); do $(MAKE) -C $(dir)/$$sub dir=$(dir)/$$sub obj=$(obj);done
+	@for sub in $(subdirs); do $(MAKE) -s -C $(dir)/$$sub dir=$(dir)/$$sub obj=$(obj);done
 

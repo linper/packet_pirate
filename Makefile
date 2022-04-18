@@ -79,10 +79,10 @@ clean_tmp:
 	$(Q)$(RM) $(BLD_TMP_DIR)/*
 
 collect_inc:
-	$(Q)$(MAKE) -C $(SRC_DIR) dir=$(SRC_DIR) obj=$(INC-Y)
+	$(Q)$(MAKE) -s -C $(SRC_DIR) dir=$(SRC_DIR) obj=$(INC-Y)
 
 collect_obj:
-	$(Q)$(MAKE) -C $(SRC_DIR) dir=$(SRC_DIR) obj=$(OBJ-Y)
+	$(Q)$(MAKE) -s -C $(SRC_DIR) dir=$(SRC_DIR) obj=$(OBJ-Y)
 
 
 .PHONY: clean run menuconfig help test

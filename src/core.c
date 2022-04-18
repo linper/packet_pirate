@@ -179,17 +179,16 @@ end:
  */
 static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 							 u_char *args, const struct pcap_pkthdr *header,
-							 unsigned read_off, struct packet *last)
+							 unsigned read_off, struct packet *last,
+							 bool was_hinted)
 {
 	status_val status;
 	vld_status vlds = VLD_DROP;
 	const unsigned base_read_off = read_off;
 	struct packet *p = NULL;
 
-	if (node->lvl) { //skiping root root node
-		if ((node->par->flt && node->par->flt->hint &&
-			 strcmp(node->par->flt->hint, node->flt->filter->packet_tag)) ||
-			!node->flt->active) {
+	if (node->lvl) { //skiping root node
+		if (!node->flt->active) {
 			//this is not hinted filter
 			goto sibling;
 		}
@@ -219,6 +218,8 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 			//But not nesesserely siblings
 			goto sibling;
 		}
+
+		clear_hint(node, NULL);
 
 		if (node->flt->filter->validate) {
 			vlds = node->flt->filter->validate(p, node);
@@ -259,9 +260,21 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 		}
 	}
 
+	struct ef_tree *hinted = NULL;
+	if (node->flt && node->flt->hint) {
+		status = ef_tree_get_node(pc.ef_root, node->flt->hint, &hinted);
+		if (status) {
+			LOGF(L_NOTICE, status, "Hinted non existing filter '%s'",
+				 node->flt->hint);
+			return vlds;
+		}
+
+		return filter_rec(hinted, data, args, header, read_off, p, true);
+	}
+
 	//desending down into first child filter if it exists
 	if (node->chld) {
-		vlds = filter_rec(node->chld, data, args, header, read_off, p);
+		vlds = filter_rec(node->chld, data, args, header, read_off, p, false);
 		if (vlds == VLD_DROP_ALL) {
 			return VLD_DROP_ALL;
 		}
@@ -269,12 +282,10 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 
 sibling:
 	// going to sibling filter
-	if (node->next) {
+	if (node->next && !was_hinted) {
 		//persist filtering on failure, unless drop all is returned
-		vlds = filter_rec(node->next, data, args, header, base_read_off, last);
-		if (vlds == VLD_DROP_ALL) {
-			return VLD_DROP_ALL;
-		}
+		vlds = filter_rec(node->next, data, args, header, base_read_off, last,
+						  false);
 	}
 
 	return vlds;
@@ -351,7 +362,8 @@ void core_filter(u_char *args, const struct pcap_pkthdr *header,
 	//clearing old single packet capture list
 	glist_clear_shallow(pc.single_cap_pkt);
 
-	vld_status vlds = filter_rec(pc.ef_root, packet, args, header, 0, NULL);
+	vld_status vlds =
+		filter_rec(pc.ef_root, packet, args, header, 0, NULL, false);
 	if (vlds == VLD_DROP_ALL) {
 		//no packets from this capture should be saved
 		glist_clear_shallow(pc.single_cap_pkt);
