@@ -55,7 +55,8 @@ static vld_status validate_ipv4(struct packet *p, struct ef_tree *node)
 
 	//MSB (evil bit) is always 0
 	pe = PENTRY(p, "ipv4_flags");
-	if (pe->conv_data.ulong & 0x4) { return VLD_DROP;
+	if (pe->conv_data.ulong & 0x4) {
+		return VLD_DROP;
 	}
 
 	//hinting optimizes filtering
@@ -71,7 +72,7 @@ static vld_status validate_ipv4(struct packet *p, struct ef_tree *node)
 		HINT(node, "tcp");
 		break;
 	case 17:
-		HINT(node, "udp");
+		HINT(node, "udp4");
 		break;
 	}
 

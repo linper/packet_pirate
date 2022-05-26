@@ -266,12 +266,18 @@ static vld_status filter_rec(struct ef_tree *node, const u_char *data,
 		if (status) {
 			LOGF(L_NOTICE, status, "Hinted non existing filter '%s'",
 				 node->flt->hint);
-			return vlds;
+			goto child;
 		}
 
-		return filter_rec(hinted, data, args, header, read_off, p, true);
+		vlds = filter_rec(hinted, data, args, header, read_off, p, true);
+		if (vlds == VLD_DROP_ALL) {
+			return VLD_DROP_ALL;
+		}
+
+		goto sibling;
 	}
 
+child:
 	//desending down into first child filter if it exists
 	if (node->chld) {
 		vlds = filter_rec(node->chld, data, args, header, read_off, p, false);

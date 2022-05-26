@@ -34,8 +34,8 @@ struct ext_filter *ext_filter_new(struct filter *f)
 	struct fhmap *hflt = fhmap_new(f->n_entries * FH_CAP_MULTIPLIER);
 	if (!hflt) {
 		LOG(L_CRIT, STATUS_OMEM);
-		free(ef);
 		stash_free(ef->stash);
+		free(ef);
 		return NULL;
 	}
 
